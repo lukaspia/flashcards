@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="19d7ed0a-a492-44de-b8cc-f6a10e50dba6" name="Changes" comment="" />
+    <list default="true" id="19d7ed0a-a492-44de-b8cc-f6a10e50dba6" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -174,6 +177,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "ASKED_MARK_IGNORED_FILES_AS_EXCLUDED": "true",
     "RunOnceActivity.ChatTagsLlmMigration": "true",
     "RunOnceActivity.CodyAccountHistoryMigration": "true",
     "RunOnceActivity.CodyAccountsIdsRefresh": "true",
@@ -240,7 +244,7 @@
       <workItem from="1746625930732" duration="1292000" />
       <workItem from="1746627369581" duration="100000" />
       <workItem from="1746627483135" duration="981000" />
-      <workItem from="1746628504625" duration="325000" />
+      <workItem from="1746628504625" duration="613000" />
     </task>
     <task id="LOCAL-00001" summary="Add gitignore file">
       <option name="closed" value="true" />
@@ -250,7 +254,15 @@
       <option name="project" value="LOCAL" />
       <updated>1746626044699</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Install symfony">
+      <option name="closed" value="true" />
+      <created>1746628958336</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1746628958336</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -269,6 +281,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Add gitignore file" />
-    <option name="LAST_COMMIT_MESSAGE" value="Add gitignore file" />
+    <MESSAGE value="Install symfony" />
+    <option name="LAST_COMMIT_MESSAGE" value="Install symfony" />
   </component>
 </project>
