@@ -5,7 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="19d7ed0a-a492-44de-b8cc-f6a10e50dba6" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -191,7 +191,7 @@
     "RunOnceActivity.ToggleCodyToolWindowAfterMigration": "true",
     "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "//wsl.localhost/Ubuntu/home/lukasz/workspace/2025/flashcards/app/flashcards",
+    "last_opened_file_path": "//wsl.localhost/Ubuntu/home/lukasz/workspace/2025/flashcards/app/flashcards/templates/pages",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -203,6 +203,7 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="\\wsl.localhost\Ubuntu\home\lukasz\workspace\2025\flashcards\app\flashcards\templates\pages" />
       <recent name="\\wsl.localhost\Ubuntu\home\lukasz\workspace\2025\flashcards\app\flashcards" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
@@ -244,7 +245,7 @@
       <workItem from="1746625930732" duration="1292000" />
       <workItem from="1746627369581" duration="100000" />
       <workItem from="1746627483135" duration="981000" />
-      <workItem from="1746628504625" duration="613000" />
+      <workItem from="1746628504625" duration="2033000" />
     </task>
     <task id="LOCAL-00001" summary="Add gitignore file">
       <option name="closed" value="true" />
@@ -262,7 +263,15 @@
       <option name="project" value="LOCAL" />
       <updated>1746628958336</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Add .idea to .gintignore">
+      <option name="closed" value="true" />
+      <created>1746629205065</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1746629205065</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -282,6 +291,7 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Add gitignore file" />
     <MESSAGE value="Install symfony" />
-    <option name="LAST_COMMIT_MESSAGE" value="Install symfony" />
+    <MESSAGE value="Add .idea to .gintignore" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add .idea to .gintignore" />
   </component>
 </project>
