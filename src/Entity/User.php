@@ -4,33 +4,19 @@ namespace App\Entity;
 
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Serializer\Annotation\Groups;
-use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_USERNAME', fields: ['username'])]
-#[UniqueEntity(
-    fields: ['username'],
-    message: 'This username is already in use.'
-)]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
-    public const ROLE_ADMIN = 'ROLE_ADMIN';
-    public const ROLE_USER = 'ROLE_USER';
-
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups('lesson:read')]
     private ?int $id = null;
 
     #[ORM\Column(length: 180)]
-    #[Assert\NotBlank(message: 'Username is required.')]
-    #[Assert\Length(min: 6, minMessage: 'Username should be at least {{ limit }} characters.')]
-    #[Groups('lesson:read')]
     private ?string $username = null;
 
     /**
@@ -43,18 +29,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var string The hashed password
      */
     #[ORM\Column]
-    #[Assert\NotBlank(message: 'Password is required.')]
-    #[Assert\Length(min: 8, minMessage: 'Your password should be at least {{ limit }} characters.')]
     private ?string $password = null;
 
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function setId(?int $id): void
-    {
-        $this->id = $id;
     }
 
     public function getUsername(): ?string
@@ -76,7 +55,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getUserIdentifier(): string
     {
-        return (string)$this->username;
+        return (string) $this->username;
     }
 
     /**
@@ -86,7 +65,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $roles = $this->roles;
         // guarantee every user at least has ROLE_USER
-        $roles[] = self::ROLE_USER;
+        $roles[] = 'ROLE_USER';
 
         return array_unique($roles);
     }
@@ -121,6 +100,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function eraseCredentials(): void
     {
-
+        // If you store any temporary, sensitive data on the user, clear it here
+        // $this->plainPassword = null;
     }
 }
