@@ -1,0 +1,14 @@
+<header>
+    <div id="header">
+        <div class="row">
+            <div class="col-md-4">
+                {% if app.user %}
+                    Logged as {{ app.user.userIdentifier }}, <a href="{{ path('app_logout') }}">Logout</a>
+                {% endif %}
+            </div>
+            <div class="col-md-4 text-center">
+                <h5 class="main-title">Flashcards</h5>
+            </div>
+        </div>
+    </div>
+</header>
