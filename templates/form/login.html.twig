@@ -6,13 +6,13 @@
 
         {% if app.user %}
             <div class="mb-3">
-                Jesteś zalogowany jako {{ app.user.userIdentifier }}, <a href="{{ path('app_logout') }}">Wyloguj</a>
+                {{ 'You are logged in as'|trans([], 'security') }} {{ app.user.userIdentifier }}, <a href="{{ path('app_logout') }}">{{ 'Log out'|trans([], 'security') }}</a>
             </div>
         {% endif %}
 
-        <label for="username">Login</label>
+        <label for="username">{{ 'Login'|trans([], 'security') }}</label>
         <input type="text" value="{{ last_username }}" name="_username" id="username" class="form-control" autocomplete="username" required autofocus>
-        <label for="password">Hasło</label>
+        <label for="password">{{ 'Password'|trans([], 'security') }}</label>
         <input type="password" name="_password" id="password" class="form-control" autocomplete="current-password" required>
 
         <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
@@ -20,7 +20,7 @@
         <br/>
         <div class="text-center">
             <button class="btn btn-lg btn-primary" type="submit">
-                Zaloguj
+                {{ 'Sign in'|trans([], 'security') }}
             </button>
         </div>
         <br/>

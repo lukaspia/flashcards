@@ -3,11 +3,11 @@
         <div class="row">
             <div class="col-md-4">
                 {% if app.user %}
-                    Zalogowany jako {{ app.user.userIdentifier }}, <a href="{{ path('app_logout') }}">Wyloguj</a>
+                    {{ 'You are logged in as'|trans([], 'security') }} {{ app.user.userIdentifier }}, <a href="{{ path('app_logout') }}">{{ 'Log out'|trans([], 'security') }}</a>
                 {% endif %}
             </div>
             <div class="col-md-4 text-center">
-                <h2 class="main-title">Fiszki</h2>
+                <h2 class="main-title">{{ 'Flashcards'|trans([], 'app') }}</h2>
             </div>
         </div>
     </div>
