@@ -1,0 +1,28 @@
+{% block login %}
+    <form method="post" action="{{ path('app_home') }}">
+        {% if error %}
+            <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+        {% endif %}
+
+        {% if app.user %}
+            <div class="mb-3">
+                {{ 'You are logged in as'|trans([], 'security') }} {{ app.user.userIdentifier }}, <a href="{{ path('app_logout') }}">{{ 'Log out'|trans([], 'security') }}</a>
+            </div>
+        {% endif %}
+
+        <label for="username">{{ 'Login'|trans([], 'security') }}</label>
+        <input type="text" value="{{ last_username }}" name="_username" id="username" class="form-control" autocomplete="username" required autofocus>
+        <label for="password">{{ 'Password'|trans([], 'security') }}</label>
+        <input type="password" name="_password" id="password" class="form-control" autocomplete="current-password" required>
+
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+        <br/>
+        <div class="text-center">
+            <button class="btn btn-lg btn-primary" type="submit">
+                {{ 'Sign in'|trans([], 'security') }}
+            </button>
+        </div>
+        <br/>
+    </form>
+{% endblock %}
