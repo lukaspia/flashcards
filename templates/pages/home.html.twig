@@ -1,11 +1,14 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}
-    Flashcards
+    Fiszki
 {% endblock %}
 
 {% block body %}
-    <div>
-        Home page
+    <div class="row">
+        <div class="col-md-5"></div>
+        <div class="col-md-2">
+            {% include 'form/login.html.twig' %}
+        </div>
     </div>
 {% endblock %}
