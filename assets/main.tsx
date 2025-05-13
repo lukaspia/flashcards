@@ -1,6 +1,7 @@
 import React, { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import {BrowserRouter as Router, Routes, Route} from "react-router";
+import LessonsList from "./components/lessons-list";
 
 const NotFound = () => <h1>Page Not Found</h1>;
 
@@ -8,7 +9,7 @@ function Main() {
     return(
         <Router>
             <Routes>
-                <Route path="/panel" element={<h1>Home</h1>} />
+                <Route path="/panel" element={<LessonsList />} />
                 <Route path="/*" element={<NotFound />} />
             </Routes>
         </Router>
