@@ -1,13 +1,25 @@
 import React, { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import {BrowserRouter as Router, Routes, Route} from "react-router";
+
+
+function Main() {
+    return(
+        <Router>
+            <Routes>
+                <Route path="/panel" element={<h1>Home</h1>} />
+            </Routes>
+        </Router>
+    );
+}
+
 
 const rootElement = document.getElementById("root");
 
-// New as of React v18.x
 const root = createRoot(rootElement!);
 
 root.render(
     <StrictMode>
-        Test
+        <Main />
     </StrictMode>
 );
