@@ -3,9 +3,9 @@
 namespace App\Tests\Command;
 
 use App\Command\AddUserCommand;
-use App\DTO\OperationResponse;
 use App\Entity\User;
-use App\Service\User\UserServiceInterface;
+use App\Service\Response\OperationResponse;
+use App\Service\User\UserService;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
@@ -16,13 +16,13 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AddUserCommandTest extends TestCase
 {
-    private UserServiceInterface $userService;
+    private UserService $userService;
     private ValidatorInterface $validator;
     private CommandTester $commandTester;
 
     protected function setUp(): void
     {
-        $this->userService = $this->createMock(UserServiceInterface::class);
+        $this->userService = $this->createMock(UserService::class);
         $this->validator = $this->createMock(ValidatorInterface::class);
 
         $command = new AddUserCommand($this->userService, $this->validator);
@@ -51,18 +51,17 @@ class AddUserCommandTest extends TestCase
 
     public function testExecuteWithProvidedArguments(): void
     {
-        $this->validator->expects($this->exactly(2))
-            ->method('validatePropertyValue')
-            ->willReturn(new ConstraintViolationList());
+        // Configure validator to return no errors
+        $this->validator->expects($this->never())
+            ->method('validatePropertyValue');
 
+        // Configure user service to return success
         $successResponse = new OperationResponse(true, 'User test_user created successfully');
 
         $this->userService->expects($this->once())
             ->method('addUser')
             ->with('test_user', 'test_password', false)
             ->willReturn($successResponse);
-
-        $this->commandTester->setInputs(['test_password']);
 
         $this->commandTester->execute([
                                           'username' => 'test_user',
@@ -76,10 +75,12 @@ class AddUserCommandTest extends TestCase
 
     public function testExecuteWithInteractiveInput(): void
     {
+        // Configure validator to return no errors
         $this->validator->expects($this->exactly(2))
             ->method('validatePropertyValue')
             ->willReturn(new ConstraintViolationList());
 
+        // Configure user service to return success
         $successResponse = new OperationResponse(true, 'User interactive_user created successfully');
 
         $this->userService->expects($this->once())
@@ -87,7 +88,7 @@ class AddUserCommandTest extends TestCase
             ->with('interactive_user', 'interactive_password', false)
             ->willReturn($successResponse);
 
-        $this->commandTester->setInputs(['interactive_user', 'interactive_password', 'interactive_password']);
+        $this->commandTester->setInputs(['interactive_user', 'interactive_password']);
 
         $this->commandTester->execute([]);
 
@@ -98,18 +99,17 @@ class AddUserCommandTest extends TestCase
 
     public function testExecuteWithAdminOption(): void
     {
-        $this->validator->expects($this->exactly(2))
-            ->method('validatePropertyValue')
-            ->willReturn(new ConstraintViolationList());
+        // Configure validator to return no errors
+        $this->validator->expects($this->never())
+            ->method('validatePropertyValue');
 
+        // Configure user service to return success
         $successResponse = new OperationResponse(true, 'Admin user admin_user created successfully');
 
         $this->userService->expects($this->once())
             ->method('addUser')
             ->with('admin_user', 'admin_password', true)
             ->willReturn($successResponse);
-
-        $this->commandTester->setInputs(['admin_password']);
 
         $this->commandTester->execute([
                                           'username' => 'admin_user',
@@ -124,11 +124,13 @@ class AddUserCommandTest extends TestCase
 
     public function testExecuteWithInvalidUsername(): void
     {
+        // Create a constraint violation for username
         $violation = $this->createMock(ConstraintViolation::class);
         $violation->method('getMessage')->willReturn('Username is too short');
 
         $violationList = new ConstraintViolationList([$violation]);
 
+        // Configure validator to return errors for username
         $this->validator->expects($this->once())
             ->method('validatePropertyValue')
             ->with(User::class, 'username', 'u')
@@ -147,20 +149,22 @@ class AddUserCommandTest extends TestCase
 
     public function testExecuteWithInvalidPassword(): void
     {
+        // Create a constraint violation for password
         $violation = $this->createMock(ConstraintViolation::class);
         $violation->method('getMessage')->willReturn('Password is too weak');
         $violationList = new ConstraintViolationList([$violation]);
 
+        // Configure validator with consecutive calls
         $this->validator->expects($this->exactly(2))
             ->method('validatePropertyValue')
             ->willReturnOnConsecutiveCalls(
-                new ConstraintViolationList(),
-                $violationList
+                new ConstraintViolationList(), // First call returns empty list (valid username)
+                $violationList                 // Second call returns violations (invalid password)
             );
 
         $this->userService->expects($this->never())->method('addUser');
 
-        $this->commandTester->setInputs(['valid_user', 'weak', 'weak']);
+        $this->commandTester->setInputs(['valid_user', 'weak']);
 
         $this->commandTester->execute([]);
 
@@ -171,18 +175,17 @@ class AddUserCommandTest extends TestCase
 
     public function testExecuteWithUserServiceFailure(): void
     {
-        $this->validator->expects($this->exactly(2))
-        ->method('validatePropertyValue')
-            ->willReturn(new ConstraintViolationList());
+        // Configure validator to return no errors
+        $this->validator->expects($this->never())
+            ->method('validatePropertyValue');
 
+        // Configure user service to return failure
         $failureResponse = new OperationResponse(false, 'Username already exists');
 
         $this->userService->expects($this->once())
             ->method('addUser')
             ->with('existing_user', 'test_password', false)
             ->willReturn($failureResponse);
-
-        $this->commandTester->setInputs(['test_password']);
 
         $this->commandTester->execute([
                                           'username' => 'existing_user',
@@ -195,3 +198,4 @@ class AddUserCommandTest extends TestCase
         $this->assertEquals(Command::FAILURE, $this->commandTester->getStatusCode());
     }
 }
+

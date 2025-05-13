@@ -2,7 +2,7 @@
 
 namespace App\Command;
 
-use App\Service\User\UserServiceInterface;
+use App\Service\User\UserService;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -18,11 +18,18 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class DeleteUserCommand extends Command
 {
     /**
-     * @param \App\Service\User\UserService $userService
+     * @var \App\Service\UserService
      */
-    public function __construct(private readonly UserServiceInterface $userService)
+    private UserService $userService;
+
+    /**
+     * @param \App\Service\UserService $userService
+     */
+    public function __construct(UserService $userService)
     {
         parent::__construct();
+
+        $this->userService = $userService;
     }
 
     /**
@@ -32,11 +39,7 @@ class DeleteUserCommand extends Command
     {
         $this
             ->setHelp('This command allows you to delete a user...')
-            ->addArgument(
-                'username',
-                InputArgument::OPTIONAL,
-                'The username of the new user'
-            );
+            ->addArgument('username', InputArgument::OPTIONAL, 'The username of the new user');
     }
 
     /**
@@ -47,6 +50,7 @@ class DeleteUserCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
+
         $io->info($this->getHelp());
 
         if (!($username = $input->getArgument('username'))) {
