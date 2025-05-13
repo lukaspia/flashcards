@@ -1,0 +1,24 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    {{ 'Panel'|trans([], 'app') }}
+{% endblock %}
+
+{% block body %}
+    <div id="panel">
+        <div class="row">
+            <div class="col-2">
+                {% block leftPanel %}
+                {% endblock %}
+            </div>
+            <div class="col-8">
+                {% block content %}
+                {% endblock %}
+            </div>
+            <div class="col-2">
+                {% block rightPanel %}
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
