@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, {useState} from 'react';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
@@ -12,7 +12,15 @@ interface FormDialogProps {
     handleClose: () => void;
 }
 
-export default function FormDialog({open, handleClose}: FormDialogProps): React.ReactElement {
+export default function AddLessonDialog({open, handleClose}: FormDialogProps): React.ReactElement {
+    const [name, setName] = useState('');
+
+    const handleSaveLesson = () => {
+        const formData = new FormData();
+        formData.append('name', name);
+        //console.log(formData.get('name'));
+    };
+
     return (
         <React.Fragment>
             <Dialog open={open} onClose={handleClose}>
@@ -31,11 +39,12 @@ export default function FormDialog({open, handleClose}: FormDialogProps): React.
                         type="text"
                         fullWidth
                         variant="standard"
+                        onChange={(e) => setName(e.target.value)}
                     />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleClose}>Anuluj</Button>
-                    <Button type="submit">Dodaj</Button>
+                    <Button onClick={handleSaveLesson} type="submit">Dodaj</Button>
                 </DialogActions>
             </Dialog>
         </React.Fragment>
