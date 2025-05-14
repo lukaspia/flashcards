@@ -6,6 +6,7 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
+import axios from "axios";
 
 interface FormDialogProps {
     open: boolean;
@@ -14,16 +15,35 @@ interface FormDialogProps {
 
 export default function AddLessonDialog({open, handleClose}: FormDialogProps): React.ReactElement {
     const [name, setName] = useState('');
+    const [nameError, setNameError] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
 
-    const handleSaveLesson = () => {
-        const formData = new FormData();
-        formData.append('name', name);
-        //console.log(formData.get('name'));
+    const handleAddLesson = () => {
+        if(name == '') {
+            setNameError(true);
+        } else {
+            const formData = new FormData();
+            formData.append('name', name);
+            axios.post('/api/v1/lesson', formData)
+                .then((response: any) => {
+                    resetForm();
+                    handleClose();
+                }).catch((error: any) => {
+                console.error(error);
+                setIsSaving(false);
+            });
+        }
+    };
+
+    const resetForm = () => {
+        setIsSaving(false);
+        setName('');
+        setNameError(false);
     };
 
     return (
         <React.Fragment>
-            <Dialog open={open} onClose={handleClose}>
+            <Dialog open={open} onClose={handleClose} aria-hidden={!open}>
                 <DialogTitle>Dodawanie lekcji</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
@@ -40,11 +60,13 @@ export default function AddLessonDialog({open, handleClose}: FormDialogProps): R
                         fullWidth
                         variant="standard"
                         onChange={(e) => setName(e.target.value)}
+                        error={nameError}
+                        helperText={nameError ? "Wprowadź nazwę lekcji" : ""}
                     />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleClose}>Anuluj</Button>
-                    <Button onClick={handleSaveLesson} type="submit">Dodaj</Button>
+                    <Button disabled={isSaving} onClick={handleAddLesson} type="submit">Dodaj</Button>
                 </DialogActions>
             </Dialog>
         </React.Fragment>

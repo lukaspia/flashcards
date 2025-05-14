@@ -46,17 +46,4 @@ abstract class AbstractApiController extends AbstractController
 
         return $this->json($response, $statusCode, [], [ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER=>function ($obj){return $obj->getId();}]);
     }
-
-    /**
-     * @param \Symfony\Component\HttpFoundation\Request $request
-     * @return bool
-     */
-    protected function isValidRequest(Request $request): bool
-    {
-        if (!$request->isXmlHttpRequest()) {
-            return false;
-        }
-
-        return true;
-    }
 }

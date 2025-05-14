@@ -6,6 +6,7 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 
+use App\Entity\Lesson;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,6 +22,15 @@ class LessonController extends AbstractApiController
     #[Route('/lesson', name: 'lesson', methods: ['POST'])]
     public function addLesson(Request $request): JsonResponse
     {
-        return $this->createResponse([]);
+        $name = $request->request->get('name');
+
+        $lesson = new Lesson();
+        $lesson->setName($name);
+        $lesson->setAddDate(new \DateTime());
+
+        $this->entityManager->persist($lesson);
+        $this->entityManager->flush();
+
+        return $this->createResponse([$name]);
     }
 }
