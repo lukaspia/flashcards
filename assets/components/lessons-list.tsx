@@ -1,6 +1,6 @@
 import React from 'react';
 import Button from '@mui/material/Button';
-import FormDialog from './dialog';
+import FormDialog from './lesson-dialog';
 
 export default function LessonsList(): React.ReactElement {
     const [open, setOpen] = React.useState(false);
