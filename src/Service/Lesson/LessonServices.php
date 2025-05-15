@@ -8,6 +8,7 @@ namespace App\Service\Lesson;
 
 use App\Entity\Lesson;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Validator\Exception\InvalidArgumentException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class LessonServices

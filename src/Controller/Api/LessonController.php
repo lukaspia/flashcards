@@ -6,12 +6,15 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 
-use App\Form\LessonType;
+use App\Entity\Lesson;
 use App\Service\Lesson\LessonServices;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Serializer\Exception\ExceptionInterface;
+use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
+use Symfony\Component\Validator\Exception\InvalidArgumentException;
 
 class LessonController extends AbstractApiController
 {
@@ -19,50 +22,31 @@ class LessonController extends AbstractApiController
      * @var \App\Service\Lesson\LessonServices
      */
     private LessonServices $lessonServices;
+    /**
+     * @var \Symfony\Component\Serializer\Normalizer\DenormalizerInterface
+     */
+    private DenormalizerInterface $denormalizer;
 
-    public function __construct(EntityManagerInterface $entityManager, LessonServices $lessonServices)
+    public function __construct(EntityManagerInterface $entityManager, DenormalizerInterface $denormalizer, LessonServices $lessonServices)
     {
         parent::__construct($entityManager);
         $this->lessonServices = $lessonServices;
+        $this->denormalizer = $denormalizer;
     }
 
     #[Route('/lesson', name: 'lesson', methods: ['POST'])]
     public function addLesson(Request $request): JsonResponse
     {
-        $form = $this->createForm(LessonType::class);
-        $form->handleRequest($this->getFormRequest($request));
+        $data = $request->request->all();
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $lesson = $form->getData();
-            $lesson->setAddDate(new \DateTime());
+        try {
+            $lesson = $this->denormalizer->denormalize($data, Lesson::class);
 
-            try {
-                $this->lessonServices->addLesson($lesson);
-            } catch (\Exception $ex) {
-                return $this->createResponse('Lesson not created', [$ex], 400);
-            }
+            $this->lessonServices->addLesson($lesson);
 
-            return $this->createResponse('Lesson created successfully', [], 201);
+            return $this->createResponse([$lesson], ['Lesson created successfully'], 201);
+        } catch (ExceptionInterface|InvalidArgumentException $e) {
+            return $this->createResponse(null, ['Lesson not created', $e], 400);
         }
-
-        return $this->createResponse('Lesson not created', $this->getFormErrors($form), 400);
-    }
-
-    private function getFormRequest(Request $request): Request
-    {
-        if(empty($request->request->all('lesson'))) {
-            $request->request->set('lesson', $request->request->all());
-        }
-
-        return $request;
-    }
-
-    private function getFormErrors($form): array
-    {
-        $errors = [];
-        foreach ($form->getErrors(true) as $error) {
-            $errors[] = $error->getMessage();
-        }
-        return $errors;
     }
 }

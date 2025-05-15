@@ -7,6 +7,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: LessonRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 class Lesson
 {
     #[ORM\Id]
@@ -19,7 +20,7 @@ class Lesson
     private string $name;
 
     #[ORM\Column(type: 'datetime')]
-    private ?\DateTime $addDate;
+    private ?\DateTime $addDate = null;
 
     public function getId(): ?int
     {
@@ -44,5 +45,13 @@ class Lesson
     public function setName(string $name): void
     {
         $this->name = $name;
+    }
+
+    #[ORM\PrePersist]
+    public function setPersistAddDate(): void
+    {
+        if ($this->addDate === null) {
+            $this->setAddDate(new \DateTime());
+        }
     }
 }
