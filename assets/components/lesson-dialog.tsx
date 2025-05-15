@@ -24,8 +24,16 @@ export default function AddLessonDialog({open, handleClose}: FormDialogProps): R
         } else {
             const formData = new FormData();
             formData.append('name', name);
+            /*const dataToSend = {
+                name: 'John Doe',
+                age: 30,
+                city: 'Wrocław'
+            };*/
+
+
             axios.post('/api/v1/lesson', formData)
                 .then((response: any) => {
+                    console.log(response.data);
                     resetForm();
                     handleClose();
                 }).catch((error: any) => {
@@ -44,7 +52,7 @@ export default function AddLessonDialog({open, handleClose}: FormDialogProps): R
     return (
         <React.Fragment>
             <Dialog open={open} onClose={handleClose} aria-hidden={!open}>
-                <DialogTitle>Dodawanie lekcji</DialogTitle>
+                <DialogTitle>Dodawanie lekcji y</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
                     Wpisz nazwę lekcji

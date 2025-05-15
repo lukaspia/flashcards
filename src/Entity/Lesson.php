@@ -19,19 +19,19 @@ class Lesson
     private string $name;
 
     #[ORM\Column(type: 'datetime')]
-    private \DateTime $addDate;
+    private ?\DateTime $addDate;
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getAddDate(): \DateTime
+    public function getAddDate(): ?\DateTime
     {
         return $this->addDate;
     }
 
-    public function setAddDate(\DateTime $addDate): void
+    public function setAddDate(?\DateTime $addDate): void
     {
         $this->addDate = $addDate;
     }
