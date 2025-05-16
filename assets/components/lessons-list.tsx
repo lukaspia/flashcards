@@ -1,6 +1,7 @@
 import React from 'react';
 import Button from '@mui/material/Button';
 import AddLessonDialog from './lesson-dialog';
+import LessonsListRows from "./lessons-list-rows";
 
 export default function LessonsList(): React.ReactElement {
     const [open, setOpen] = React.useState(false);
@@ -18,6 +19,7 @@ export default function LessonsList(): React.ReactElement {
             <h1>Lista lekcji</h1>
             <Button className="btn btn-primary" variant="contained" onClick={handleClickOpen}>Dodaj lekcję</Button>
             <AddLessonDialog open={open} handleClose={handleClose} />
+            <LessonsListRows />
         </div>
     );
 };
