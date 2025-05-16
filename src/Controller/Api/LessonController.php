@@ -34,6 +34,14 @@ class LessonController extends AbstractApiController
         $this->denormalizer = $denormalizer;
     }
 
+    #[Route('/lessons', name: 'lessons', methods: ['GET'])]
+    public function index(Request $request): JsonResponse
+    {
+        $lessons = $this->entityManager->getRepository(Lesson::class)->findAll();
+
+        return $this->createResponse($lessons);
+    }
+
     #[Route('/lesson', name: 'lesson', methods: ['POST'])]
     public function addLesson(Request $request): JsonResponse
     {
