@@ -7,9 +7,11 @@ namespace App\Service\Lesson;
 
 
 use App\Entity\Lesson;
+use App\Event\AddLessonEvent;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Validator\Exception\InvalidArgumentException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 class LessonServices
 {
@@ -21,11 +23,16 @@ class LessonServices
      * @var \Symfony\Component\Validator\Validator\ValidatorInterface
      */
     private ValidatorInterface $validator;
+    /**
+     * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
+     */
+    private EventDispatcherInterface $eventDispatcher;
 
-    public function __construct(EntityManagerInterface $entityManager, ValidatorInterface $validator)
+    public function __construct(EntityManagerInterface $entityManager, ValidatorInterface $validator, EventDispatcherInterface $eventDispatcher)
     {
         $this->entityManager = $entityManager;
         $this->validator = $validator;
+        $this->eventDispatcher = $eventDispatcher;
     }
 
     /**
@@ -42,6 +49,8 @@ class LessonServices
 
         $this->entityManager->persist($lesson);
         $this->entityManager->flush();
+
+        $this->eventDispatcher->dispatch(new AddLessonEvent($lesson), AddLessonEvent::NAME);
 
         return $lesson;
     }
