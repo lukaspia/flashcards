@@ -38,10 +38,14 @@ class LessonController extends AbstractApiController
     public function index(Request $request): JsonResponse
     {
         $page = $request->query->get('page') ? (int) $request->query->get('page') : 1;
+        $limit = $this->getParameter('pagination_default_limit');
 
-        $lessons = $this->entityManager->getRepository(Lesson::class)->findPaginatedLessons([], null, 10, $page);
+        $lessons = $this->entityManager->getRepository(Lesson::class)->findPaginatedLessons([], null, $limit, $page);
 
-        return $this->createResponse($lessons);
+        $totalItems = $this->entityManager->getRepository(Lesson::class)->countLessonsByCriteria([]);
+        $totalPages = ceil($totalItems / $limit);
+
+        return $this->createResponse(['lessons' => $lessons, 'page' => $page, 'totalItems' => $totalItems, 'totalPages' => $totalPages,]);
     }
 
     #[Route('/lesson', name: 'lesson', methods: ['POST'])]

@@ -15,7 +15,7 @@ export default function LessonsList(): React.ReactElement {
     const fetchLessons = () => {
         axios.get("/api/v1/lessons")
             .then((response) => {
-                setLessons(response.data.data);
+                setLessons(response.data.data.lessons);
             })
             .catch((error) => {
                 console.log(error);

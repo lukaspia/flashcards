@@ -22,4 +22,9 @@ class LessonRepository extends ServiceEntityRepository
 
         return $this->findBy($criteria, $order, $limit, $offset);
     }
+
+    public function countLessonsByCriteria(array $criteria = []): int
+    {
+        return $this->count($criteria);
+    }
 }
