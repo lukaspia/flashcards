@@ -39,8 +39,9 @@ class LessonController extends AbstractApiController
     {
         $page = $request->query->get('page') ? (int) $request->query->get('page') : 1;
         $limit = $this->getParameter('pagination_default_limit');
+        $order = ['id' => 'DESC'];
 
-        $lessons = $this->entityManager->getRepository(Lesson::class)->findPaginatedLessons([], null, $limit, $page);
+        $lessons = $this->entityManager->getRepository(Lesson::class)->findPaginatedLessons([], $order, $limit, $page);
 
         $totalItems = $this->entityManager->getRepository(Lesson::class)->countLessonsByCriteria([]);
         $totalPages = ceil($totalItems / $limit);
@@ -58,7 +59,7 @@ class LessonController extends AbstractApiController
 
             $this->lessonServices->addLesson($lesson);
 
-            return $this->createResponse([$lesson], ['Lesson created successfully'], 201);
+            return $this->createResponse(['lesson' => $lesson], ['Lesson created successfully'], 201);
         } catch (ExceptionInterface|InvalidArgumentException $e) {
             return $this->createResponse(null, ['Lesson not created', $e], 400);
         }
