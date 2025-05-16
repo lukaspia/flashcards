@@ -37,7 +37,9 @@ class LessonController extends AbstractApiController
     #[Route('/lessons', name: 'lessons', methods: ['GET'])]
     public function index(Request $request): JsonResponse
     {
-        $lessons = $this->entityManager->getRepository(Lesson::class)->findAll();
+        $page = $request->query->get('page') ? (int) $request->query->get('page') : 1;
+
+        $lessons = $this->entityManager->getRepository(Lesson::class)->findPaginatedLessons([], null, 10, $page);
 
         return $this->createResponse($lessons);
     }

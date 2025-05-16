@@ -16,28 +16,10 @@ class LessonRepository extends ServiceEntityRepository
         parent::__construct($registry, Lesson::class);
     }
 
-//    /**
-//     * @return Lesson[] Returns an array of Lesson objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('l')
-//            ->andWhere('l.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('l.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+    public function findPaginatedLessons(array $criteria = [], ?array $order = null, int $limit = 10, int $page = 1): array
+    {
+        $offset = ($page - 1) * $limit;
 
-//    public function findOneBySomeField($value): ?Lesson
-//    {
-//        return $this->createQueryBuilder('l')
-//            ->andWhere('l.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+        return $this->findBy($criteria, $order, $limit, $offset);
+    }
 }
