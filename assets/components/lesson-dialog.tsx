@@ -12,9 +12,10 @@ interface FormDialogProps {
     open: boolean;
     handleClose: () => void;
     fetchLessons: () => void;
+    handleShowSuccessAlert: () => void;
 }
 
-export default function AddLessonDialog({open, handleClose, fetchLessons}: FormDialogProps): React.ReactElement {
+export default function AddLessonDialog({open, handleClose, fetchLessons, handleShowSuccessAlert}: FormDialogProps): React.ReactElement {
     const [name, setName] = useState('');
     const [nameError, setNameError] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -28,6 +29,7 @@ export default function AddLessonDialog({open, handleClose, fetchLessons}: FormD
             axios.post('/api/v1/lesson', formData)
                 .then((response: any) => {
                     fetchLessons();
+                    handleShowSuccessAlert();
                     resetForm();
                     handleClose();
                 }).catch((error: any) => {
