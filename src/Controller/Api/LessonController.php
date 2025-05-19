@@ -42,12 +42,12 @@ class LessonController extends AbstractApiController
         $limit = $this->getParameter('pagination_default_limit');
         $order = ['id' => 'DESC'];
 
-        $lessons = $this->entityManager->getRepository(Lesson::class)->findPaginatedLessons([], $order, $limit, $page);
+        $lessons = $this->entityManager->getRepository(Lesson::class)->findPaginatedLessons(['user' => $this->getUser()], $order, $limit, $page);
 
-        $totalItems = $this->entityManager->getRepository(Lesson::class)->countLessonsByCriteria([]);
+        $totalItems = $this->entityManager->getRepository(Lesson::class)->countLessonsByCriteria(['user' => $this->getUser()]);
         $totalPages = ceil($totalItems / $limit);
 
-        return $this->createResponse(['lessons' => $lessons, 'page' => $page, 'totalItems' => $totalItems, 'totalPages' => $totalPages, 'user' => $this->getUser()->getId()], [], Response::HTTP_OK, ['groups' => 'lesson:read']);
+        return $this->createResponse(['lessons' => $lessons, 'page' => $page, 'totalItems' => $totalItems, 'totalPages' => $totalPages], [], Response::HTTP_OK, ['groups' => 'lesson:read']);
     }
 
     #[Route('/lesson', name: 'add_lesson', methods: ['POST'])]
@@ -57,6 +57,8 @@ class LessonController extends AbstractApiController
 
         try {
             $lesson = $this->denormalizer->denormalize($data, Lesson::class);
+
+            $lesson->setUser($this->getUser());
 
             $this->lessonServices->addLesson($lesson);
 

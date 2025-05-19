@@ -27,9 +27,6 @@ export default function LessonsList(): React.ReactElement {
     const fetchLessons = (page: number = 1) => {
         axios.get("/api/v1/lessons?page=" + page)
             .then((response) => {
-
-                console.log(response.data.data);
-
                 setLessons(response.data.data.lessons);
                 setTotalPages(response.data.data.totalPages);
                 setPage(page);
