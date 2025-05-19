@@ -6,19 +6,48 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import axios from "axios";
+import Lesson from "./lesson";
 
 interface FormDialogProps {
     open: boolean;
     handleClose: () => void;
     fetchLessons: () => void;
     handleShowSuccessRemoveAlert: () => void;
-    lesson: {id: number, name: string}|null;
+    lesson: Lesson|null;
 }
 
 export default function LessonRemoveDialog({open, handleClose, lesson, fetchLessons, handleShowSuccessRemoveAlert}: FormDialogProps): React.ReactElement {
-    const [isSaving, setIsSaving] = useState(false);
+    const [isRemoving, setIsRemoving] = useState(false);
 
     const handleRemoveLesson = () => {
+        if(lesson != null) {
+            console.log(lesson.id);
+
+            /*setIsRemoving(true);
+            axios.delete('/api/v1/lesson/' + lesson.id)
+                .then((response: any) => {
+                    fetchLessons();
+                    handleShowSuccessRemoveAlert();
+                    handleClose();
+                    setIsRemoving(false);
+                }).catch((error: any) => {
+                console.error(error);
+                setIsRemoving(false);
+            });*/
+        }
+
+        /*axios.delete('/api/v1/lesson/' + lesson.id)
+            .then((response: any) => {
+                fetchLessons();
+                handleShowSuccessRemoveAlert();
+                handleClose();
+            }).catch((error: any) => {
+            console.error(error);
+            setIsRemoving(false);
+        });*/
+
+
+
         /*if(name == '') {
             setNameError(true);
         } else {
@@ -49,7 +78,7 @@ export default function LessonRemoveDialog({open, handleClose, lesson, fetchLess
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleClose}>Anuluj</Button>
-                    <Button disabled={isSaving} onClick={handleRemoveLesson} type="submit">Usuń</Button>
+                    <Button disabled={isRemoving} onClick={handleRemoveLesson} type="submit">Usuń</Button>
                 </DialogActions>
             </Dialog>
         </React.Fragment>

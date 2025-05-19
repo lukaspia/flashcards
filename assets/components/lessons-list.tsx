@@ -8,13 +8,13 @@ import AddIcon from "@mui/icons-material/Add";
 import {Collapse, Alert, IconButton} from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import LessonRemoveDialog from "./lesson-remove-dialog";
-
+import Lesson from "./lesson";
 
 export default function LessonsList(): React.ReactElement {
     const [open, setOpen] = useState(false);
     const [openSuccess, setOpenSuccess] = useState(false);
     const [openRemove, setOpenRemove] = useState(false);
-    const [lessonToRemove, setLessonToRemove] = useState<{id: number, name: string}|null>(null);
+    const [lessonToRemove, setLessonToRemove] = useState<Lesson|null>(null);
     const [lessons, setLessons] = useState([]);
     const [totalPages, setTotalPages] = useState(0);
     const [page, setPage] = useState(1);
@@ -43,7 +43,7 @@ export default function LessonsList(): React.ReactElement {
         setOpen(false);
     };
 
-    const handleRemoveClickOpen = (lesson: {id: number, name: string}) => {
+    const handleRemoveClickOpen = (lesson: Lesson) => {
         setLessonToRemove(lesson);
         setOpenRemove(true);
     }

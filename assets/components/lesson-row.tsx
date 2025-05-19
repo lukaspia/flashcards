@@ -4,10 +4,11 @@ import IconButton  from "@mui/material/IconButton";
 import EditIcon from '@mui/icons-material/Edit';
 import QuizIcon from '@mui/icons-material/Quiz';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import Lesson from "./lesson";
 
 interface LessonRowProps {
     lesson: {id: number, name: string};
-    handleRemoveClickOpen: (lesson: {id: number, name: string}) => void;
+    handleRemoveClickOpen: (lesson: Lesson) => void;
 }
 
 export default function LessonRow({lesson, handleRemoveClickOpen}: LessonRowProps): React.ReactElement {

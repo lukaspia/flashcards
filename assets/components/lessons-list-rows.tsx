@@ -1,9 +1,10 @@
 import React, {useEffect, useState} from "react";
 import LessonRow from "./lesson-row";
+import Lesson from "./lesson";
 
 interface LessonListRowsProps {
     lessons: Array<{id: number, name: string}>;
-    handleRemoveClickOpen: (lesson: {id: number, name: string}) => void;
+    handleRemoveClickOpen: (lesson: Lesson) => void;
 }
 
 export default function LessonsListRows({lessons, handleRemoveClickOpen}: LessonListRowsProps): React.ReactElement {
