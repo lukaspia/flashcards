@@ -11,6 +11,7 @@ use App\Service\Lesson\LessonServices;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
@@ -46,7 +47,7 @@ class LessonController extends AbstractApiController
         $totalItems = $this->entityManager->getRepository(Lesson::class)->countLessonsByCriteria([]);
         $totalPages = ceil($totalItems / $limit);
 
-        return $this->createResponse(['lessons' => $lessons, 'page' => $page, 'totalItems' => $totalItems, 'totalPages' => $totalPages,]);
+        return $this->createResponse(['lessons' => $lessons, 'page' => $page, 'totalItems' => $totalItems, 'totalPages' => $totalPages, 'user' => $this->getUser()->getId()], [], Response::HTTP_OK, ['groups' => 'lesson:read']);
     }
 
     #[Route('/lesson', name: 'add_lesson', methods: ['POST'])]
