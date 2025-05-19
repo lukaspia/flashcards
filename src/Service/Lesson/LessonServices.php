@@ -54,4 +54,18 @@ class LessonServices
 
         return $lesson;
     }
+
+    /**
+     * @param \App\Entity\Lesson $lesson
+     * @return \App\Entity\Lesson
+     */
+    public function removeLesson(Lesson $lesson): Lesson
+    {
+        $this->entityManager->remove($lesson);
+        $this->entityManager->flush();
+
+        $this->eventDispatcher->dispatch(new AddLessonEvent($lesson), AddLessonEvent::NAME);
+
+        return $lesson;
+    }
 }

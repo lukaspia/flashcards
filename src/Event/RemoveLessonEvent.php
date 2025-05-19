@@ -12,15 +12,15 @@ use Symfony\Contracts\EventDispatcher\Event;
 /**
  *
  */
-class AddLessonEvent extends Event
+class RemoveLessonEvent extends Event
 {
     /**
      *
      */
-    public const NAME = 'lesson.added';
+    public const NAME = 'lesson.remove';
 
     /**
-     * @var \App\Entity\User
+     * @var \App\Entity\Lesson
      */
     protected Lesson $lesson;
 

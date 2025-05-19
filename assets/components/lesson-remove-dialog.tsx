@@ -21,9 +21,7 @@ export default function LessonRemoveDialog({open, handleClose, lesson, fetchLess
 
     const handleRemoveLesson = () => {
         if(lesson != null) {
-            console.log(lesson.id);
-
-            /*setIsRemoving(true);
+            setIsRemoving(true);
             axios.delete('/api/v1/lesson/' + lesson.id)
                 .then((response: any) => {
                     fetchLessons();
@@ -33,7 +31,7 @@ export default function LessonRemoveDialog({open, handleClose, lesson, fetchLess
                 }).catch((error: any) => {
                 console.error(error);
                 setIsRemoving(false);
-            });*/
+            });
         }
 
         /*axios.delete('/api/v1/lesson/' + lesson.id)

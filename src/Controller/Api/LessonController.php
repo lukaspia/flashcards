@@ -49,7 +49,7 @@ class LessonController extends AbstractApiController
         return $this->createResponse(['lessons' => $lessons, 'page' => $page, 'totalItems' => $totalItems, 'totalPages' => $totalPages,]);
     }
 
-    #[Route('/lesson', name: 'lesson', methods: ['POST'])]
+    #[Route('/lesson', name: 'add_lesson', methods: ['POST'])]
     public function addLesson(Request $request): JsonResponse
     {
         $data = $request->request->all();
@@ -62,6 +62,18 @@ class LessonController extends AbstractApiController
             return $this->createResponse(['lesson' => $lesson], ['Lesson created successfully'], 201);
         } catch (ExceptionInterface|InvalidArgumentException $e) {
             return $this->createResponse(null, ['Lesson not created', $e], 400);
+        }
+    }
+
+    #[Route('/lesson/{id}', name: 'remove_lesson', methods: ['DELETE'])]
+    public function removeLesson(Lesson $lesson): JsonResponse
+    {
+        try {
+            $this->lessonServices->removeLesson($lesson);
+
+            return $this->createResponse(['lesson' => $lesson], ['Lesson remove successfully'], 201);
+        } catch (\Exception $e) {
+            return $this->createResponse($lesson, ['Lesson remove error',  $e], 400);
         }
     }
 }
