@@ -19,6 +19,10 @@ class Lesson
     #[Assert\NotBlank(message: "Lesson name is required")]
     private string $name;
 
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: "user", referencedColumnName: "id", onDelete: "CASCADE")]
+    private User $user;
+
     #[ORM\Column(type: 'datetime')]
     private ?\DateTime $addDate = null;
 
