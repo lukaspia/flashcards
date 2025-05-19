@@ -7,11 +7,14 @@ import axios from "axios";
 import AddIcon from "@mui/icons-material/Add";
 import {Collapse, Alert, IconButton} from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
+import LessonRemoveDialog from "./lesson-remove-dialog";
 
 
 export default function LessonsList(): React.ReactElement {
     const [open, setOpen] = useState(false);
     const [openSuccess, setOpenSuccess] = useState(false);
+    const [openRemove, setOpenRemove] = useState(false);
+    const [lessonToRemove, setLessonToRemove] = useState<{id: number, name: string}|null>(null);
     const [lessons, setLessons] = useState([]);
     const [totalPages, setTotalPages] = useState(0);
     const [page, setPage] = useState(1);
@@ -40,12 +43,25 @@ export default function LessonsList(): React.ReactElement {
         setOpen(false);
     };
 
+    const handleRemoveClickOpen = (lesson: {id: number, name: string}) => {
+        setLessonToRemove(lesson);
+        setOpenRemove(true);
+    }
+
+    const handleRemoveClose = () => {
+        setOpenRemove(false);
+    }
+
     const handlePaginationChange = (event: React.ChangeEvent<unknown>, value: number) => {
         fetchLessons(value);
     };
 
     const handleShowSuccessAlert = () => {
         setOpenSuccess(true);
+    }
+
+    const handleShowSuccessRemoveAlert = () => {
+        console.log('success');
     }
 
     return (
@@ -72,7 +88,8 @@ export default function LessonsList(): React.ReactElement {
             </Collapse>
             <Button className="btn btn-primary" variant="contained" onClick={handleClickOpen} endIcon={<AddIcon />}>Dodaj lekcję</Button>
             <AddLessonDialog open={open} handleClose={handleClose} fetchLessons={fetchLessons} handleShowSuccessAlert={handleShowSuccessAlert} />
-            <LessonsListRows lessons={lessons} />
+            <LessonRemoveDialog open={openRemove} handleClose={handleRemoveClose} lesson={lessonToRemove} fetchLessons={fetchLessons} handleShowSuccessRemoveAlert={handleShowSuccessRemoveAlert} />
+            <LessonsListRows lessons={lessons} handleRemoveClickOpen={handleRemoveClickOpen} />
             <Pagination count={totalPages} page={page} variant="outlined" shape="rounded" onChange={handlePaginationChange} />
         </div>
     );

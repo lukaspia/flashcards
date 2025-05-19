@@ -2,10 +2,11 @@ import React, {useEffect, useState} from "react";
 import LessonRow from "./lesson-row";
 
 interface LessonListRowsProps {
-    lessons: Array<{name: string}>;
+    lessons: Array<{id: number, name: string}>;
+    handleRemoveClickOpen: (lesson: {id: number, name: string}) => void;
 }
 
-export default function LessonsListRows({lessons}: LessonListRowsProps): React.ReactElement {
+export default function LessonsListRows({lessons, handleRemoveClickOpen}: LessonListRowsProps): React.ReactElement {
     return (
         <div className="lesson-list-rows">
             <table>
@@ -20,7 +21,7 @@ export default function LessonsListRows({lessons}: LessonListRowsProps): React.R
                         lessons.map((lesson, key) => {
                             return (
                                 <tr key={key}>
-                                    <LessonRow lesson={lesson} />
+                                    <LessonRow lesson={lesson} handleRemoveClickOpen={handleRemoveClickOpen} />
                                 </tr>
                             )
                         })
