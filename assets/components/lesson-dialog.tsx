@@ -26,6 +26,7 @@ export default function AddLessonDialog({open, handleClose, fetchLessons, handle
         } else {
             const formData = new FormData();
             formData.append('name', name);
+            setIsSaving(true);
             axios.post('/api/v1/lesson', formData)
                 .then((response: any) => {
                     fetchLessons();

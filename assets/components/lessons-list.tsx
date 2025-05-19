@@ -13,6 +13,7 @@ import Lesson from "./lesson";
 export default function LessonsList(): React.ReactElement {
     const [open, setOpen] = useState(false);
     const [openSuccess, setOpenSuccess] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
     const [openRemove, setOpenRemove] = useState(false);
     const [lessonToRemove, setLessonToRemove] = useState<Lesson|null>(null);
     const [lessons, setLessons] = useState([]);
@@ -57,11 +58,13 @@ export default function LessonsList(): React.ReactElement {
     };
 
     const handleShowSuccessAlert = () => {
+        setSuccessMessage('Lekcja została dodana.');
         setOpenSuccess(true);
     }
 
     const handleShowSuccessRemoveAlert = () => {
-        console.log('success');
+        setSuccessMessage('Lekcja została usunięta.');
+        setOpenSuccess(true);
     }
 
     return (
@@ -83,7 +86,7 @@ export default function LessonsList(): React.ReactElement {
                     }
                     sx={{ mb: 2 }}
                 >
-                    Lekcja dodana!
+                    {successMessage}
                 </Alert>
             </Collapse>
             <Button className="btn btn-primary" variant="contained" onClick={handleClickOpen} endIcon={<AddIcon />}>Dodaj lekcję</Button>

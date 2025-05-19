@@ -33,35 +33,6 @@ export default function LessonRemoveDialog({open, handleClose, lesson, fetchLess
                 setIsRemoving(false);
             });
         }
-
-        /*axios.delete('/api/v1/lesson/' + lesson.id)
-            .then((response: any) => {
-                fetchLessons();
-                handleShowSuccessRemoveAlert();
-                handleClose();
-            }).catch((error: any) => {
-            console.error(error);
-            setIsRemoving(false);
-        });*/
-
-
-
-        /*if(name == '') {
-            setNameError(true);
-        } else {
-            const formData = new FormData();
-            formData.append('name', name);
-            axios.post('/api/v1/lesson', formData)
-                .then((response: any) => {
-                    fetchLessons();
-                    handleShowSuccessAlert();
-                    resetForm();
-                    handleClose();
-                }).catch((error: any) => {
-                console.error(error);
-                setIsSaving(false);
-            });
-        }*/
     };
 
     // @ts-ignore
