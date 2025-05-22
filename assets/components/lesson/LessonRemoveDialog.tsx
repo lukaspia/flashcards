@@ -5,8 +5,8 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
-import axios from "axios";
-import Lesson from "./lesson";
+import {Lesson} from "./Lesson";
+import {removeLessons} from "../../services/api/lessonApi";
 
 interface FormDialogProps {
     open: boolean;
@@ -19,19 +19,20 @@ interface FormDialogProps {
 export default function LessonRemoveDialog({open, handleClose, lesson, fetchLessons, handleShowSuccessRemoveAlert}: FormDialogProps): React.ReactElement {
     const [isRemoving, setIsRemoving] = useState(false);
 
-    const handleRemoveLesson = () => {
+    const handleRemoveLesson = async () => {
         if(lesson != null) {
             setIsRemoving(true);
-            axios.delete('/api/v1/lesson/' + lesson.id)
-                .then((response: any) => {
+            removeLessons(lesson)
+                .then(() => {
                     fetchLessons();
                     handleShowSuccessRemoveAlert();
                     handleClose();
+                }).catch((error) => {
+                    console.error(error);
+                }).finally(() => {
                     setIsRemoving(false);
-                }).catch((error: any) => {
-                console.error(error);
-                setIsRemoving(false);
-            });
+                });
+
         }
     };
 

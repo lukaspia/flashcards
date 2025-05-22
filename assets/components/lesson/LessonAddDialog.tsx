@@ -6,7 +6,7 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
-import axios from "axios";
+import {addLesson} from "../../services/api/lessonApi";
 
 interface FormDialogProps {
     open: boolean;
@@ -20,23 +20,26 @@ export default function AddLessonDialog({open, handleClose, fetchLessons, handle
     const [nameError, setNameError] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
-    const handleAddLesson = () => {
+    const handleAddLesson = async () => {
         if(name == '') {
             setNameError(true);
         } else {
             const formData = new FormData();
             formData.append('name', name);
+
             setIsSaving(true);
-            axios.post('/api/v1/lesson', formData)
-                .then((response: any) => {
+            addLesson(formData)
+                .then(() => {
                     fetchLessons();
                     handleShowSuccessAlert();
                     resetForm();
                     handleClose();
-                }).catch((error: any) => {
-                console.error(error);
-                setIsSaving(false);
-            });
+                })
+                .catch((error) => {
+                    console.error(error);
+                }).finally(() => {
+                    setIsSaving(false);
+                });
         }
     };
 

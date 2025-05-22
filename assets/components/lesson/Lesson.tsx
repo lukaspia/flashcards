@@ -1,4 +1,4 @@
-export default interface Lesson {
+export interface Lesson {
     id: number;
     name: string;
 }

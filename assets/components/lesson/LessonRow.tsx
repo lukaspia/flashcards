@@ -1,10 +1,9 @@
 import React from "react";
-import Button from "@mui/material/Button";
 import IconButton  from "@mui/material/IconButton";
 import EditIcon from '@mui/icons-material/Edit';
 import QuizIcon from '@mui/icons-material/Quiz';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import Lesson from "./lesson";
+import {Lesson} from "./Lesson";
 
 interface LessonRowProps {
     lesson: {id: number, name: string};

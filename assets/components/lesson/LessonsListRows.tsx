@@ -1,9 +1,9 @@
-import React, {useEffect, useState} from "react";
-import LessonRow from "./lesson-row";
-import Lesson from "./lesson";
+import React from "react";
+import LessonRow from "./LessonRow";
+import {Lesson} from "./Lesson";
 
 interface LessonListRowsProps {
-    lessons: Array<{id: number, name: string}>;
+    lessons: Lesson[];
     handleRemoveClickOpen: (lesson: Lesson) => void;
 }
 
