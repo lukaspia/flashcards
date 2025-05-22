@@ -30,10 +30,14 @@ abstract class AbstractApiController extends AbstractController
      * @param int $statusCode
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    protected function createResponse(mixed $data = null, array $messages = [], int $statusCode = Response::HTTP_OK, $context = []): JsonResponse
-    {
+    protected function createResponse(
+        mixed $data = null,
+        array $messages = [],
+        int $statusCode = Response::HTTP_OK,
+        $context = []
+    ): JsonResponse {
         $status = 'error';
-        if($statusCode >= 200 && $statusCode < 299) {
+        if ($statusCode >= 200 && $statusCode < 299) {
             $status = 'success';
         }
 
@@ -43,7 +47,11 @@ abstract class AbstractApiController extends AbstractController
             'message' => $messages
         ];
 
-        $context = array_merge($context, [ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER=>function ($obj){return $obj->getId();}]);
+        $context = array_merge($context, [
+            ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER => function ($obj) {
+                return $obj->getId();
+            }
+        ]);
 
         return $this->json($response, $statusCode, [], $context);
     }

@@ -27,7 +27,7 @@ final class LessonVoter extends Voter
             return false;
         }
 
-        return match($attribute) {
+        return match ($attribute) {
             self::VIEW => true,
             self::EDIT => true,
             self::DELETE => $this->canDelete($subject, $user),

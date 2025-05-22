@@ -24,57 +24,49 @@ class LessonController extends AbstractApiController
     private const LESSON_READ_GROUP = 'lesson:read';
     private const DEFAULT_PAGINATION_LIMIT_PARAM = 'pagination_default_limit';
 
-    /**
-     * @var \App\Service\Lesson\LessonServices
-     */
-    private LessonServices $lessonServices;
-    /**
-     * @var \Symfony\Component\Serializer\Normalizer\DenormalizerInterface
-     */
-    private DenormalizerInterface $denormalizer;
-    /**
-     * @var \Psr\Log\LoggerInterface
-     */
-    private LoggerInterface $logger;
-
     public function __construct(
         EntityManagerInterface $entityManager,
-        DenormalizerInterface $denormalizer,
-        LessonServices $lessonServices,
-        LoggerInterface $logger
+        private DenormalizerInterface $denormalizer,
+        private LessonServices $lessonServices,
+        private LoggerInterface $logger,
+        private ValidatorInterface $validator
     ) {
         parent::__construct($entityManager);
-        $this->lessonServices = $lessonServices;
-        $this->denormalizer = $denormalizer;
-        $this->logger = $logger;
     }
 
     #[Route('/lessons', name: 'lessons', methods: ['GET'])]
     public function index(Request $request): JsonResponse
     {
-        $page = $request->query->get('page') ? (int)$request->query->get('page') : 1;
-        $limit = $this->getParameter(self::DEFAULT_PAGINATION_LIMIT_PARAM);
-        $order = ['id' => 'DESC'];
-
         if (!($user = $this->getUser())) {
             return $this->createResponse(null, ['Authentication required.'], Response::HTTP_UNAUTHORIZED);
         }
 
+        $page = $request->query->getInt('page', 1);
+        $limit = $this->getParameter(self::DEFAULT_PAGINATION_LIMIT_PARAM);
+        $criteria = ['user' => $user];
+        $order = ['id' => 'DESC'];
+
+        /** @var \App\Repository\LessonRepository $lessonRepository */
         $lessonRepository = $this->entityManager->getRepository(Lesson::class);
 
-        $lessons = $lessonRepository->findPaginatedLessons(['user' => $user], $order, $limit, $page);
-        $totalItems = $lessonRepository->countLessonsByCriteria(['user' => $user]);
-        $totalPages = ceil($totalItems / $limit);
+        try {
+            $lessons = $lessonRepository->findPaginatedLessons($criteria, $order, $limit, $page);
+            $totalItems = $lessonRepository->countLessonsByCriteria($criteria);
+            $totalPages = ceil($totalItems / $limit);
 
-        return $this->createResponse(
-            ['lessons' => $lessons, 'page' => $page, 'totalItems' => $totalItems, 'totalPages' => $totalPages], [],
-            Response::HTTP_OK,
-            ['groups' => self::LESSON_READ_GROUP]
-        );
+            return $this->createResponse(
+                ['lessons' => $lessons, 'page' => $page, 'totalItems' => $totalItems, 'totalPages' => $totalPages], [],
+                Response::HTTP_OK,
+                ['groups' => self::LESSON_READ_GROUP]
+            );
+        } catch (\Exception $e) {
+            $this->logger->error('Error fetching lessons: ' . $e->getMessage(), ['exception' => $e]);
+            return $this->createResponse(null, ['An error occurred while fetching lessons.'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     #[Route('/lesson', name: 'add_lesson', methods: ['POST'])]
-    public function addLesson(Request $request, ValidatorInterface $validator): JsonResponse
+    public function addLesson(Request $request): JsonResponse
     {
         $data = $request->request->all();
 
@@ -86,7 +78,7 @@ class LessonController extends AbstractApiController
             }
             $lesson->setUser($user);
 
-            $errors = $validator->validate($lesson);
+            $errors = $this->validator->validate($lesson);
 
             if ($errors->count() > 0) {
                 $errorMessages = [];

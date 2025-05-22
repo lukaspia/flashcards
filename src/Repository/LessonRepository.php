@@ -16,8 +16,12 @@ class LessonRepository extends ServiceEntityRepository
         parent::__construct($registry, Lesson::class);
     }
 
-    public function findPaginatedLessons(array $criteria = [], ?array $order = null, int $limit = 10, int $page = 1): array
-    {
+    public function findPaginatedLessons(
+        array $criteria = [],
+        ?array $order = null,
+        int $limit = 10,
+        int $page = 1
+    ): array {
         $offset = ($page - 1) * $limit;
 
         return $this->findBy($criteria, $order, $limit, $offset);

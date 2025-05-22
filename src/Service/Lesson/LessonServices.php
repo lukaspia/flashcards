@@ -28,8 +28,11 @@ class LessonServices
      */
     private EventDispatcherInterface $eventDispatcher;
 
-    public function __construct(EntityManagerInterface $entityManager, ValidatorInterface $validator, EventDispatcherInterface $eventDispatcher)
-    {
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        ValidatorInterface $validator,
+        EventDispatcherInterface $eventDispatcher
+    ) {
         $this->entityManager = $entityManager;
         $this->validator = $validator;
         $this->eventDispatcher = $eventDispatcher;
@@ -43,8 +46,8 @@ class LessonServices
     {
         $errors = $this->validator->validate($lesson);
 
-        if(count($errors) > 0) {
-            throw new InvalidArgumentException((string) $errors);
+        if (count($errors) > 0) {
+            throw new InvalidArgumentException((string)$errors);
         }
 
         $this->entityManager->persist($lesson);
