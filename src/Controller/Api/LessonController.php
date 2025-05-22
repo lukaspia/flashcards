@@ -16,6 +16,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Validator\Exception\InvalidArgumentException;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class LessonController extends AbstractApiController
 {
@@ -51,7 +52,7 @@ class LessonController extends AbstractApiController
     }
 
     #[Route('/lesson', name: 'add_lesson', methods: ['POST'])]
-    public function addLesson(Request $request): JsonResponse
+    public function addLesson(Request $request, ValidatorInterface $validator): JsonResponse
     {
         $data = $request->request->all();
 
@@ -60,23 +61,38 @@ class LessonController extends AbstractApiController
 
             $lesson->setUser($this->getUser());
 
+            $errors = $validator->validate($lesson);
+
+            if($errors->count() > 0) {
+                $errorMessages = [];
+                foreach ($errors as $error) {
+                    $errorMessages[$error->getPropertyPath()] = $error->getMessage();
+                }
+
+                return $this->createResponse(['errors' => $errorMessages], ['Validation failed'], Response::HTTP_BAD_REQUEST);
+            }
+
             $this->lessonServices->addLesson($lesson);
 
-            return $this->createResponse(['lesson' => $lesson], ['Lesson created successfully'], 201);
-        } catch (ExceptionInterface|InvalidArgumentException $e) {
-            return $this->createResponse(null, ['Lesson not created', $e], 400);
+            return $this->createResponse(['lesson' => $lesson], ['Lesson created successfully'], Response::HTTP_CREATED, ['groups' => 'lesson:read']);
+        } catch (ExceptionInterface|InvalidArgumentException|\Exception $e) {
+            return $this->createResponse(null, ['Lesson not created', $e], Response::HTTP_BAD_REQUEST);
         }
     }
 
     #[Route('/lesson/{id}', name: 'remove_lesson', methods: ['DELETE'])]
     public function removeLesson(Lesson $lesson): JsonResponse
     {
+        if (!$this->isGranted('LESSON_DELETE', $lesson)) {
+            return $this->createResponse(null, ['You are not authorized to delete this lesson.'], Response::HTTP_FORBIDDEN);
+        }
+
         try {
             $this->lessonServices->removeLesson($lesson);
 
-            return $this->createResponse(['lesson' => $lesson], ['Lesson remove successfully'], 201);
+            return $this->createResponse(null, ['Lesson remove successfully'], Response::HTTP_OK);
         } catch (\Exception $e) {
-            return $this->createResponse($lesson, ['Lesson remove error',  $e], 400);
+            return $this->createResponse(null, ['Lesson remove error: ' . $e->getMessage()], Response::HTTP_BAD_REQUEST);
         }
     }
 }
