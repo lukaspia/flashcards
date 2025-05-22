@@ -4,6 +4,7 @@
 /*--------------*/
 /*----THEMES----*/
 @import 'themes/theme';
+@import "themes/icons";
 /*--------------*/
 /*----LAYOUT----*/
 //@import 'layout/header';
@@ -11,4 +12,7 @@
 /*--------------*/
 /*----COMPONENTS----*/
 //@import 'components/buttons';
+/*--------------*/
+/*----LIB----*/
+@import "~bootstrap/scss/bootstrap";
 /*--------------*/
