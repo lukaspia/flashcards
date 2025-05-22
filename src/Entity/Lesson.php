@@ -3,60 +3,37 @@
 namespace App\Entity;
 
 use App\Repository\LessonRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: LessonRepository::class)]
 #[ORM\HasLifecycleCallbacks]
-#[Groups('lesson:read')]
 class Lesson
 {
-    public const LESSON_READ_GROUP = 'lesson:read';
-    public const LESSON_WRITE_GROUP = 'lesson:write';
-
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups('lesson:read')]
     private ?int $id = null;
 
-    #[ORM\Column(type: "string", length: 255)]
+    #[ORM\Column(type: "text")]
     #[Assert\NotBlank(message: "Lesson name is required")]
-    #[Groups('lesson:write')]
+    #[Groups('lesson:read')]
     private string $name;
-
-    #[ORM\Column(type: "string", length: 10)]
-    private string $sourceLanguage = 'pl-PL';
-
-    #[ORM\Column(type: "string", length: 10)]
-    private string $targetLanguage = 'en-US';
 
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(name: "user", referencedColumnName: "id", onDelete: "CASCADE")]
+    #[Groups('lesson:read')]
     private User $user;
 
     #[ORM\Column(type: 'datetime')]
+    #[Groups('lesson:read')]
     private ?\DateTime $addDate = null;
-
-    #[ORM\OneToMany(targetEntity: Word::class, mappedBy: 'lesson', cascade: ['persist'], orphanRemoval: true)]
-    #[ORM\OrderBy(['sequence' => 'ASC'])]
-    private ?Collection $words;
-
-    public function __construct()
-    {
-        $this->words = new ArrayCollection();
-    }
 
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function setId(?int $id): void
-    {
-        $this->id = $id;
     }
 
     public function getAddDate(): ?\DateTime
@@ -79,26 +56,6 @@ class Lesson
         $this->name = $name;
     }
 
-    public function getSourceLanguage(): string
-    {
-        return $this->sourceLanguage;
-    }
-
-    public function setSourceLanguage(string $sourceLanguage): void
-    {
-        $this->sourceLanguage = $sourceLanguage;
-    }
-
-    public function getTargetLanguage(): string
-    {
-        return $this->targetLanguage;
-    }
-
-    public function setTargetLanguage(string $targetLanguage): void
-    {
-        $this->targetLanguage = $targetLanguage;
-    }
-
     public function getUser(): User
     {
         return $this->user;
@@ -109,34 +66,11 @@ class Lesson
         $this->user = $user;
     }
 
-    public function getWords(): ?Collection
-    {
-        return $this->words;
-    }
-
-    public function setWords(?Collection $words): void
-    {
-        $this->words = $words;
-    }
-
     #[ORM\PrePersist]
     public function setPersistAddDate(): void
     {
         if ($this->addDate === null) {
             $this->setAddDate(new \DateTime());
-        }
-    }
-
-    #[ORM\PreFlush]
-    public function updateWordsOrder(): void
-    {
-        $order = 1;
-        /**
-         * @var Word $word
-         */
-        foreach ($this->words as $word) {
-            $word->setSequence($order);
-            $order++;
         }
     }
 }

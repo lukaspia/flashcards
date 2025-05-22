@@ -5,41 +5,62 @@ import AddLessonDialog from '../components/lesson/LessonAddDialog';
 import LessonsListRows from "../components/lesson/LessonsListRows";
 import AddIcon from "@mui/icons-material/Add";
 import LessonRemoveDialog from "../components/lesson/LessonRemoveDialog";
-import {Lesson} from '../types/lesson.types';
+import {Lesson} from '../components/lesson/Lesson';
 import useLessons from "../hooks/useLessons";
 import CollapseSuccessAlert from "../components/ui/CollapseSuccessAlert";
-import LoadingPreloader from "../components/ui/LoadingPreloader";
-import { useDialog } from "../hooks/useDialog";
-import { useSuccessAlert } from "../hooks/useSuccessAlert";
+import CircularProgress from '@mui/material/CircularProgress';
 
 export default function LessonsList(): React.ReactElement {
-    const { isOpen: openAddDialog, handleOpen: handleOpenAddDialog, handleClose: handleCloseAddDialog } = useDialog();
-    const { isOpen: openRemoveDialog, data: lessonToRemove, handleOpen: handleOpenRemoveDialog, handleClose: handleCloseRemoveDialog } = useDialog<Lesson>();
+    const [openAddDialog, setOpenAddDialog] = useState(false);
+    const [openRemoveDialog, setOpenRemoveDialog] = useState(false);
+    const [lessonToRemove, setLessonToRemove] = useState<Lesson|null>(null);
+    const [openSuccessAlert, setOpenSuccessAlert] = useState(false);
+    const [successAlertMessage, setSuccessAlertMessage] = useState('');
+    const [lessons, currentPage, totalPages, isLoading, isError, fetchLessons] = useLessons();
 
-    const { openSuccessAlert, successAlertMessage, showSuccessAlert, handleCloseSuccessAlert } = useSuccessAlert();
+    const handleOpenAddDialog = useCallback(() => {
+        setOpenAddDialog(true)
+    }, []);
 
-    const [lessons, currentPage, totalPages, isLoading, isError, setPage, refresh] = useLessons();
+    const handleCloseAddDialog = useCallback(() => {
+        setOpenAddDialog(false)
+    }, []);
+
+    const handleOpenRemoveDialog = useCallback((lesson: Lesson) => {
+        setLessonToRemove(lesson);
+        setOpenRemoveDialog(true);
+    }, []);
+
+    const handleCloseRemoveDialog = useCallback(() => {
+        setOpenRemoveDialog(false)
+    }, []);
+
+    const showSuccessAlert = useCallback((message: string) => {
+        setSuccessAlertMessage(message);
+        setOpenSuccessAlert(true);
+    }, []);
+
+    const handleCloseSuccessAlert = useCallback(() => {
+        setSuccessAlertMessage('');
+        setOpenSuccessAlert(false);
+    }, []);
 
     const handlePaginationChange = useCallback((event: React.ChangeEvent<unknown>, value: number) => {
-        setPage(value);
-    }, [setPage]);
+        fetchLessons(value);
+    }, [fetchLessons]);
 
     const refreshLessons = useCallback(() => {
-        refresh();
-        setPage(1);
-    }, [setPage]);
+        fetchLessons(1);
+    }, [fetchLessons]);
 
     return (
         <div className="lesson-list">
-            <div className="lesson-list-header lesson-list-section">
-                <h4>Lista lekcji</h4>
-
-                <LoadingPreloader isLoading={isLoading} />
-
+            <div className="lesson-list-header">
+                <h1>Lista lekcji</h1>
                 <Button
-                    className="btn button-primary"
+                    className="btn btn-primary"
                     variant="contained"
-                    onClick={() => handleOpenAddDialog()}
+                    onClick={handleOpenAddDialog}
                     endIcon={<AddIcon />}>
                     Dodaj lekcję
                 </Button>
@@ -51,12 +72,14 @@ export default function LessonsList(): React.ReactElement {
                 handleCloseSuccessAlert={handleCloseSuccessAlert}
             />
 
+            {isLoading ? (<div className='progress-container'><CircularProgress size="30px" /></div>) : (<div></div>)}
+
             <LessonsListRows
                 lessons={lessons}
-                handleRemoveClickOpen={(lesson: Lesson) => handleOpenRemoveDialog(lesson)}
+                handleRemoveClickOpen={handleOpenRemoveDialog}
             />
 
-            <div className="pagination-container lesson-list-section">
+            <div className="pagination-container">
                 <Pagination
                     count={totalPages}
                     page={currentPage}

@@ -1,6 +1,6 @@
 import React from "react";
 import LessonRow from "./LessonRow";
-import {Lesson} from "../../types/lesson.types";
+import {Lesson} from "./Lesson";
 
 interface LessonListRowsProps {
     lessons: Lesson[];
@@ -14,7 +14,6 @@ export default function LessonsListRows({lessons, handleRemoveClickOpen}: Lesson
                 <thead>
                 <tr>
                     <th>Nazwa</th>
-                    <th>Słowa</th>
                     <th>Opcje</th>
                 </tr>
                 </thead>

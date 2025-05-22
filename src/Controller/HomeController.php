@@ -20,7 +20,7 @@ class HomeController extends AbstractController
     #[Route('/', name: 'app_home')]
     public function home(AuthenticationUtils $authenticationUtils): Response
     {
-        if($this->getUser()) {
+        if ($this->getUser()) {
             return $this->redirectToRoute('app_panel');
         }
 

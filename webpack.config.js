@@ -21,27 +21,9 @@ Encore
      * and one CSS file (e.g. app.css) if your JavaScript imports CSS.
      */
     .addEntry('app', './assets/app.js')
-    .addStyleEntry('app-styles', './assets/styles/app.scss')
 
     // When enabled, Webpack "splits" your files into smaller pieces for greater optimization.
     .splitEntryChunks()
-    .configureSplitChunks((splitChunks) => {
-        splitChunks.cacheGroups = {
-            // MUI and other vendor styles load first
-            vendor: {
-                test: /[\\/]node_modules[\\/]/,
-                name: 'vendors',
-                chunks: 'all',
-                priority: 10
-            },
-            // Your custom styles load after
-            default: {
-                minChunks: 2,
-                priority: 20,
-                reuseExistingChunk: true
-            }
-        };
-    })
 
     // enables the Symfony UX Stimulus bridge (used in assets/bootstrap.js)
     .enableStimulusBridge('./assets/controllers.json')
@@ -93,7 +75,6 @@ Encore
 
     // uncomment if you're having problems with a jQuery plugin
     //.autoProvidejQuery()
-    //.enablePostCssLoader();
 ;
 
 module.exports = Encore.getWebpackConfig();

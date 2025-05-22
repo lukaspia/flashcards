@@ -20,10 +20,16 @@ class RemoveLessonEvent extends Event
     public const NAME = 'lesson.remove';
 
     /**
+     * @var \App\Entity\Lesson
+     */
+    protected Lesson $lesson;
+
+    /**
      * @param \App\Entity\Lesson $lesson
      */
-    public function __construct(protected Lesson $lesson)
+    public function __construct(Lesson $lesson)
     {
+        $this->lesson = $lesson;
     }
 
     /**

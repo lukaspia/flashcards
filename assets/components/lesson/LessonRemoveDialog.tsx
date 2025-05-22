@@ -1,13 +1,11 @@
-import React, {useState, useEffect} from 'react';
-import {
-    Button,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogContentText,
-    DialogTitle,
-} from '@mui/material';
-import {Lesson} from "../../types/lesson.types";
+import React, {useState} from 'react';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import {Lesson} from "./Lesson";
 import {removeLessons} from "../../services/api/lessonApi";
 
 interface FormDialogProps {
@@ -21,34 +19,26 @@ interface FormDialogProps {
 export default function LessonRemoveDialog({open, handleClose, lesson, fetchLessons, handleShowSuccessRemoveAlert}: FormDialogProps): React.ReactElement {
     const [isRemoving, setIsRemoving] = useState(false);
 
-    useEffect(() => {
-        if (!open) {
-            setIsRemoving(false);
-        }
-    }, [open]);
-
     const handleRemoveLesson = async () => {
-        if (lesson === null) {
-            console.warn("Attempted to remove a null lesson.");
-            handleClose();
-            return;
-        }
+        if(lesson != null) {
+            setIsRemoving(true);
+            removeLessons(lesson)
+                .then(() => {
+                    fetchLessons();
+                    handleShowSuccessRemoveAlert();
+                    handleClose();
+                }).catch((error) => {
+                    console.error(error);
+                }).finally(() => {
+                    setIsRemoving(false);
+                });
 
-        setIsRemoving(true);
-        removeLessons(lesson)
-        .then(() => {
-            fetchLessons();
-            handleShowSuccessRemoveAlert();
-            handleClose();
-        }).catch((error) => {
-            console.error(error);
-        }).finally(() => {
-            setIsRemoving(false);
-        });
+        }
     };
 
+    // @ts-ignore
     return (
-        <>
+        <React.Fragment>
             <Dialog open={open} onClose={handleClose} aria-hidden={!open}>
                 <DialogTitle>Usuwanie lekcji</DialogTitle>
                 <DialogContent>
@@ -57,10 +47,10 @@ export default function LessonRemoveDialog({open, handleClose, lesson, fetchLess
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleClose} disabled={isRemoving}>Anuluj</Button>
-                    <Button type="submit" disabled={isRemoving} onClick={handleRemoveLesson}>Usuń</Button>
+                    <Button onClick={handleClose}>Anuluj</Button>
+                    <Button disabled={isRemoving} onClick={handleRemoveLesson} type="submit">Usuń</Button>
                 </DialogActions>
             </Dialog>
-        </>
+        </React.Fragment>
     );
 }

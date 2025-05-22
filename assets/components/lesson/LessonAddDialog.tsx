@@ -1,13 +1,11 @@
-import React, {useState, useEffect} from 'react';
-import {
-    Button,
-    TextField,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogContentText,
-    DialogTitle
-} from '@mui/material';
+import React, {useState} from 'react';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
 import {addLesson} from "../../services/api/lessonApi";
 
 interface FormDialogProps {
@@ -22,11 +20,28 @@ export default function AddLessonDialog({open, handleClose, fetchLessons, handle
     const [nameError, setNameError] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
-    useEffect(() => {
-        if (!open) {
-            resetForm();
+    const handleAddLesson = async () => {
+        if(name == '') {
+            setNameError(true);
+        } else {
+            const formData = new FormData();
+            formData.append('name', name);
+
+            setIsSaving(true);
+            addLesson(formData)
+                .then(() => {
+                    fetchLessons();
+                    handleShowSuccessAlert();
+                    resetForm();
+                    handleClose();
+                })
+                .catch((error) => {
+                    console.error(error);
+                }).finally(() => {
+                    setIsSaving(false);
+                });
         }
-    }, [open]);
+    };
 
     const resetForm = () => {
         setIsSaving(false);
@@ -34,69 +49,34 @@ export default function AddLessonDialog({open, handleClose, fetchLessons, handle
         setNameError(false);
     };
 
-    const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setName(e.target.value);
-        if (nameError && e.target.value !== '') {
-            setNameError(false);
-        }
-    };
-
-    const handleAddLesson = async (event: React.FormEvent) => {
-        event.preventDefault();
-
-        if(name.trim() == '') {
-            setNameError(true);
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('name', name);
-
-        setIsSaving(true);
-        addLesson(formData)
-        .then(() => {
-            fetchLessons();
-            handleShowSuccessAlert();
-            resetForm();
-            handleClose();
-        })
-        .catch((error) => {
-            console.error(error);
-        }).finally(() => {
-            setIsSaving(false);
-        });
-    };
-
     return (
-        <>
+        <React.Fragment>
             <Dialog open={open} onClose={handleClose} aria-hidden={!open}>
                 <DialogTitle>Dodawanie lekcji</DialogTitle>
-                <form onSubmit={handleAddLesson}>
-                    <DialogContent>
-                        <DialogContentText>
-                            Wpisz nazwę lekcji
-                        </DialogContentText>
-                        <TextField
-                            autoFocus
-                            required
-                            margin="dense"
-                            id="lesson-name"
-                            name="lesson_name"
-                            label="Nazwa lekcji"
-                            type="text"
-                            fullWidth
-                            variant="standard"
-                            onChange={handleNameChange}
-                            error={nameError}
-                            helperText={nameError ? "Wprowadź nazwę lekcji" : ""}
-                        />
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={handleClose} disabled={isSaving}>Anuluj</Button>
-                        <Button type="submit" disabled={isSaving}>Dodaj</Button>
-                    </DialogActions>
-                </form>
+                <DialogContent>
+                    <DialogContentText>
+                    Wpisz nazwę lekcji
+                    </DialogContentText>
+                    <TextField
+                        autoFocus
+                        required
+                        margin="dense"
+                        id="lesson-name"
+                        name="lesson_name"
+                        label="Nazwa lekcji"
+                        type="text"
+                        fullWidth
+                        variant="standard"
+                        onChange={(e) => setName(e.target.value)}
+                        error={nameError}
+                        helperText={nameError ? "Wprowadź nazwę lekcji" : ""}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleClose}>Anuluj</Button>
+                    <Button disabled={isSaving} onClick={handleAddLesson} type="submit">Dodaj</Button>
+                </DialogActions>
             </Dialog>
-        </>
+        </React.Fragment>
     );
 }

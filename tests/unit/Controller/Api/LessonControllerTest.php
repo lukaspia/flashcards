@@ -6,8 +6,9 @@ use App\Controller\Api\LessonController;
 use App\Entity\Lesson;
 use App\Entity\User;
 use App\Repository\LessonRepository;
-use App\Service\Lesson\LessonServiceInterface;
+use App\Service\Lesson\LessonServices;
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,9 +17,6 @@ use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use App\Factory\LessonFactoryInterface;
-use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\HttpFoundation\JsonResponse;
 
 class LessonControllerTest extends WebTestCase
 {
@@ -30,19 +28,15 @@ class LessonControllerTest extends WebTestCase
     private $lessonRepository;
     private $controller;
     private $user;
-    private $serializer;
-    private $lessonFactory;
 
     protected function setUp(): void
     {
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->denormalizer = $this->createMock(DenormalizerInterface::class);
-        $this->lessonServices = $this->createMock(LessonServiceInterface::class);
+        $this->lessonServices = $this->createMock(LessonServices::class);
         $this->logger = $this->createMock(LoggerInterface::class);
         $this->validator = $this->createMock(ValidatorInterface::class);
         $this->lessonRepository = $this->createMock(LessonRepository::class);
-        $this->serializer = $this->createMock(SerializerInterface::class);
-        $this->lessonFactory = $this->createMock(LessonFactoryInterface::class);
 
         $this->user = new User();
         $this->user->setId(1);
@@ -52,16 +46,14 @@ class LessonControllerTest extends WebTestCase
             ->with(Lesson::class)
             ->willReturn($this->lessonRepository);
 
-        $this->controller = $this->getMockBuilder(LessonController::class)
-            ->setConstructorArgs([
-                                     $this->entityManager,
-                                     $this->lessonServices,
-                                     $this->logger,
-                                     $this->lessonFactory,
-                                 ])
-            ->onlyMethods(['getUser', 'createResponse'])
-            ->getMock();
+        $this->controller = new LessonController(
+            $this->entityManager,
+            $this->denormalizer,
+            $this->lessonServices,
+            $this->logger
+        );
 
+        // Set container with parameters
         $container = $this->createMock(\Symfony\Component\DependencyInjection\ContainerInterface::class);
         $container->method('getParameter')
             ->with('pagination_default_limit')
@@ -94,9 +86,9 @@ class LessonControllerTest extends WebTestCase
         $controller = $this->getMockBuilder(LessonController::class)
             ->setConstructorArgs([
                                      $this->entityManager,
+                                     $this->denormalizer,
                                      $this->lessonServices,
-                                     $this->logger,
-                                     $this->createMock(LessonFactoryInterface::class)
+                                     $this->logger
                                  ])
             ->onlyMethods(['getUser'])
             ->getMock();
@@ -151,9 +143,9 @@ class LessonControllerTest extends WebTestCase
         $controller = $this->getMockBuilder(LessonController::class)
             ->setConstructorArgs([
                                      $this->entityManager,
+                                     $this->denormalizer,
                                      $this->lessonServices,
-                                     $this->logger,
-                                     $this->createMock(LessonFactoryInterface::class)
+                                     $this->logger
                                  ])
             ->onlyMethods(['getUser', 'createResponse'])
             ->getMock();
@@ -181,199 +173,9 @@ class LessonControllerTest extends WebTestCase
         $this->assertEquals(Response::HTTP_OK, $response->getStatusCode());
     }
 
-    public function testAddLessonWithoutAuthentication(): void
-    {
-        $content = json_encode(['name' => 'Test Lesson']);
-        $request = Request::create(
-            '/api/lessons',
-            'POST',
-            [],
-            [],
-            [],
-            ['CONTENT_TYPE' => 'application/json'],
-            $content
-        );
-
-        $container = new \Symfony\Component\DependencyInjection\ContainerBuilder();
-        $container->set('serializer', $this->serializer);
-        $container->set('logger', $this->logger);
-
-        $controller = $this->getMockBuilder(LessonController::class)
-            ->setConstructorArgs([
-                                     $this->entityManager,
-                                     $this->lessonServices,
-                                     $this->logger,
-                                     $this->createMock(LessonFactoryInterface::class)
-                                 ])
-            ->onlyMethods(['getUser', 'createResponse'])
-            ->getMock();
-
-        $controller->method('getUser')->willReturn(null);
-
-        $controller->setContainer($container);
-
-        $controller->method('createResponse')
-            ->willReturnCallback(function ($data, $messages, $status) {
-                return new JsonResponse([
-                                            'status' => $status >= 200 && $status < 300 ? 'success' : 'error',
-                                            'data' => $data,
-                                            'message' => $messages
-                                        ], $status);
-            });
-
-        $response = $controller->addLesson($request, $this->validator);
-
-        $this->assertEquals(Response::HTTP_UNAUTHORIZED, $response->getStatusCode());
-        $responseData = json_decode($response->getContent(), true);
-        $this->assertEquals('Authentication required.', $responseData['message'][0]);
-    }
-
-    public function testAddLessonWithValidationErrors(): void
-    {
-        $content = json_encode(['name' => '']);
-        $request = Request::create(
-            '/api/lessons',
-            'POST',
-            [],
-            [],
-            [],
-            ['CONTENT_TYPE' => 'application/json'],
-            $content
-        );
-
-        $violation = $this->createMock(ConstraintViolation::class);
-        $violation->method('getMessage')->willReturn('This value should not be blank.');
-        $violation->method('getPropertyPath')->willReturn('name');
-
-        $errors = new ConstraintViolationList([$violation]);
-
-        $this->validator->method('validate')
-            ->willReturn($errors);
-
-        $container = new \Symfony\Component\DependencyInjection\ContainerBuilder();
-        $container->set('serializer', $this->serializer);
-        $container->set('logger', $this->logger);
-
-        $controller = $this->getMockBuilder(LessonController::class)
-            ->setConstructorArgs([
-                                     $this->entityManager,
-                                     $this->lessonServices,
-                                     $this->logger,
-                                     $this->createMock(LessonFactoryInterface::class)
-                                 ])
-            ->onlyMethods(['getUser', 'createResponse'])
-            ->getMock();
-
-        $controller->method('getUser')->willReturn($this->user);
-
-        $controller->expects($this->once())
-            ->method('createResponse')
-            ->with(
-                null,
-                $this->isType('array'),
-                Response::HTTP_BAD_REQUEST
-            )
-            ->willReturnCallback(function ($data, $messages, $status) {
-                return new JsonResponse([
-                                            'status' => 'error',
-                                            'data' => $data,
-                                            'message' => $messages
-                                        ], $status);
-            });
-
-        $controller->setContainer($container);
-
-        $response = $controller->addLesson($request, $this->validator);
-
-        $this->assertEquals(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
-        $responseData = json_decode($response->getContent(), true);
-        $this->assertEquals('error', $responseData['status']);
-        $this->assertIsArray($responseData['message']);
-    }
-
-    public function testAddLessonSuccess(): void
-    {
-        $request = new Request([], [
-            'name' => 'Test Lesson',
-            'sourceLanguage' => 'pl-PL',
-            'targetLanguage' => 'en-US',
-        ]);
-
-        $lesson = new Lesson();
-        $lesson->setName('Test Lesson');
-
-        $this->lessonFactory->expects($this->once())
-            ->method('createFromRequestData')
-            ->with($request->request->all(), $this->user)
-            ->willReturn($lesson);
-
-        $this->lessonServices->expects($this->once())
-            ->method('addLesson')
-            ->with($lesson);
-
-        $this->controller->expects($this->any())
-            ->method('getUser')
-            ->willReturn($this->user);
-
-        $this->controller->expects($this->once())
-            ->method('createResponse')
-            ->with(
-                ['lesson' => $lesson],
-                ['Lesson created successfully'],
-                Response::HTTP_CREATED,
-                ['groups' => Lesson::LESSON_READ_GROUP]
-            )
-            ->willReturn(new JsonResponse(
-                             ['lesson' => ['name' => 'Test Lesson'], 'message' => ['Lesson created successfully']],
-                             Response::HTTP_CREATED
-                         ));
-
-        $response = $this->controller->addLesson($request);
-
-        $this->assertEquals(Response::HTTP_CREATED, $response->getStatusCode());
-        $responseData = json_decode($response->getContent(), true);
-        $this->assertEquals('Test Lesson', $responseData['lesson']['name']);
-    }
-
-    public function testAddLessonException()
+    public function testAddLessonWithoutAuthentication()
     {
         $request = new Request();
-        $request->setMethod('POST');
-        $request->request->set('title', 'Test Lesson');
-
-        $entityManager = $this->createMock(EntityManagerInterface::class);
-        $lessonServices = $this->createMock(LessonServiceInterface::class);
-        $logger = $this->createMock(LoggerInterface::class);
-        $lessonFactory = $this->createMock(LessonFactoryInterface::class);
-
-        $lessonFactory->method('createFromRequestData')
-            ->willThrowException(new \RuntimeException('Test exception'));
-
-        $controller = $this->getMockBuilder(LessonController::class)
-            ->setConstructorArgs([
-                                     $entityManager,
-                                     $lessonServices,
-                                     $logger,
-                                     $lessonFactory
-                                 ])
-            ->onlyMethods(['getUser', 'createResponse'])
-            ->getMock();
-
-        $controller->method('getUser')->willReturn($this->user);
-        $controller->expects($this->once())
-            ->method('createResponse')
-            ->with(
-                null,
-                $this->callback(function ($messages) {
-                    return $messages[0] === 'Lesson not created' &&
-                        $messages[1]->getMessage() === 'Test exception';
-                }),
-                Response::HTTP_BAD_REQUEST
-            )
-            ->willReturn(new \Symfony\Component\HttpFoundation\JsonResponse(
-                             ['error' => 'Lesson not created'],
-                             Response::HTTP_BAD_REQUEST
-                         ));
 
         $parameterBag = $this->createMock(\Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface::class);
         $parameterBag->method('get')
@@ -387,12 +189,226 @@ class LessonControllerTest extends WebTestCase
             });
         $container->method('get')
             ->willReturnCallback(function($id) use ($parameterBag) {
-                return $id === 'parameter_bag' ? $parameterBag : null;
+                if ($id === 'parameter_bag') {
+                    return $parameterBag;
+                }
+                return null;
             });
+
+        $controller = $this->getMockBuilder(LessonController::class)
+            ->setConstructorArgs([
+                                     $this->entityManager,
+                                     $this->denormalizer,
+                                     $this->lessonServices,
+                                     $this->logger
+                                 ])
+            ->onlyMethods(['getUser'])
+            ->getMock();
+
+        $controller->method('getUser')->willReturn(null);
+        $controller->setContainer($container);
+
+        $lesson = new Lesson();
+        $this->denormalizer->method('denormalize')
+            ->willReturn($lesson);
+
+        $response = $controller->addLesson($request, $this->validator);
+
+        $this->assertEquals(Response::HTTP_UNAUTHORIZED, $response->getStatusCode());
+        $this->assertStringContainsString('Authentication required', $response->getContent());
+    }
+
+    public function testAddLessonWithValidationErrors()
+    {
+        $request = new Request();
+        $request->request->set('title', 'Test Lesson');
+
+        $lesson = new Lesson();
+        $this->denormalizer->method('denormalize')
+            ->willReturn($lesson);
+
+        $violation = $this->createMock(ConstraintViolation::class);
+        $violation->method('getPropertyPath')->willReturn('title');
+        $violation->method('getMessage')->willReturn('Title is too short');
+
+        $violationList = new ConstraintViolationList([$violation]);
+
+        $this->validator->method('validate')
+            ->with($lesson)
+            ->willReturn($violationList);
+
+        $parameterBag = $this->createMock(\Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface::class);
+        $parameterBag->method('get')
+            ->with('pagination_default_limit')
+            ->willReturn(10);
+
+        $container = $this->createMock(\Symfony\Component\DependencyInjection\ContainerInterface::class);
+        $container->method('has')
+            ->willReturnCallback(function($id) {
+                return $id === 'parameter_bag';
+            });
+        $container->method('get')
+            ->willReturnCallback(function($id) use ($parameterBag) {
+                if ($id === 'parameter_bag') {
+                    return $parameterBag;
+                }
+                return null;
+            });
+
+        $controller = $this->getMockBuilder(LessonController::class)
+            ->setConstructorArgs([
+                                     $this->entityManager,
+                                     $this->denormalizer,
+                                     $this->lessonServices,
+                                     $this->logger
+                                 ])
+            ->onlyMethods(['getUser', 'createResponse'])
+            ->getMock();
+
+        $controller->method('getUser')->willReturn($this->user);
+        $controller->expects($this->once())
+            ->method('createResponse')
+            ->with(
+                ['errors' => ['title' => 'Title is too short']],
+                ['Validation failed'],
+                Response::HTTP_BAD_REQUEST
+            )
+            ->willReturn(
+                new \Symfony\Component\HttpFoundation\JsonResponse(
+                    ['errors' => ['title' => 'Title is too short']],
+                    Response::HTTP_BAD_REQUEST
+                )
+            );
 
         $controller->setContainer($container);
 
-        $response = $controller->addLesson($request);
+        $response = $controller->addLesson($request, $this->validator);
+
+        $this->assertEquals(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+    }
+
+    public function testAddLessonSuccess()
+    {
+        $request = new Request();
+        $request->request->set('title', 'Test Lesson');
+
+        $lesson = new Lesson();
+        $this->denormalizer->method('denormalize')
+            ->willReturn($lesson);
+
+        $this->validator->method('validate')
+            ->with($lesson)
+            ->willReturn(new ConstraintViolationList());
+
+        $this->lessonServices->expects($this->once())
+            ->method('addLesson')
+            ->with($lesson);
+
+        $this->logger->expects($this->once())
+            ->method('info')
+            ->with('Lesson created successfully', ['lesson' => $lesson]);
+
+        $parameterBag = $this->createMock(\Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface::class);
+        $parameterBag->method('get')
+            ->with('pagination_default_limit')
+            ->willReturn(10);
+
+        $container = $this->createMock(\Symfony\Component\DependencyInjection\ContainerInterface::class);
+        $container->method('has')
+            ->willReturnCallback(function($id) {
+                return $id === 'parameter_bag';
+            });
+        $container->method('get')
+            ->willReturnCallback(function($id) use ($parameterBag) {
+                if ($id === 'parameter_bag') {
+                    return $parameterBag;
+                }
+                return null;
+            });
+
+        $controller = $this->getMockBuilder(LessonController::class)
+            ->setConstructorArgs([
+                                     $this->entityManager,
+                                     $this->denormalizer,
+                                     $this->lessonServices,
+                                     $this->logger
+                                 ])
+            ->onlyMethods(['getUser', 'createResponse'])
+            ->getMock();
+
+        $controller->method('getUser')->willReturn($this->user);
+        $controller->expects($this->once())
+            ->method('createResponse')
+            ->with(
+                ['lesson' => $lesson],
+                ['Lesson created successfully'],
+                Response::HTTP_CREATED,
+                ['groups' => 'lesson:read']
+            )
+            ->willReturn(new \Symfony\Component\HttpFoundation\JsonResponse(['lesson' => []], Response::HTTP_CREATED));
+
+        $controller->setContainer($container);
+
+        $response = $controller->addLesson($request, $this->validator);
+
+        $this->assertEquals(Response::HTTP_CREATED, $response->getStatusCode());
+    }
+
+    public function testAddLessonException()
+    {
+        $request = new Request();
+        $request->request->set('title', 'Test Lesson');
+
+        $this->denormalizer->method('denormalize')
+            ->willThrowException(new \Exception('Denormalization error'));
+
+        $this->logger->expects($this->once())
+            ->method('error')
+            ->with('Lesson not created: Denormalization error');
+
+        $parameterBag = $this->createMock(\Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface::class);
+        $parameterBag->method('get')
+            ->with('pagination_default_limit')
+            ->willReturn(10);
+
+        $container = $this->createMock(\Symfony\Component\DependencyInjection\ContainerInterface::class);
+        $container->method('has')
+            ->willReturnCallback(function($id) {
+                return $id === 'parameter_bag';
+            });
+        $container->method('get')
+            ->willReturnCallback(function($id) use ($parameterBag) {
+                if ($id === 'parameter_bag') {
+                    return $parameterBag;
+                }
+                return null;
+            });
+
+        $controller = $this->getMockBuilder(LessonController::class)
+            ->setConstructorArgs([
+                                     $this->entityManager,
+                                     $this->denormalizer,
+                                     $this->lessonServices,
+                                     $this->logger
+                                 ])
+            ->onlyMethods(['getUser', 'createResponse'])
+            ->getMock();
+
+        $controller->method('getUser')->willReturn($this->user);
+        $controller->expects($this->once())
+            ->method('createResponse')
+            ->with(
+                null,
+                $this->callback(function ($messages) {
+                    return $messages[0] === 'Lesson not created';
+                }),
+                Response::HTTP_BAD_REQUEST
+            )
+            ->willReturn(new \Symfony\Component\HttpFoundation\JsonResponse(['error' => 'Lesson not created'], Response::HTTP_BAD_REQUEST));
+
+        $controller->setContainer($container);
+
+        $response = $controller->addLesson($request, $this->validator);
 
         $this->assertEquals(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
     }
@@ -422,9 +438,9 @@ class LessonControllerTest extends WebTestCase
         $controller = $this->getMockBuilder(LessonController::class)
             ->setConstructorArgs([
                                      $this->entityManager,
+                                     $this->denormalizer,
                                      $this->lessonServices,
-                                     $this->logger,
-                                     $this->createMock(LessonFactoryInterface::class)
+                                     $this->logger
                                  ])
             ->onlyMethods(['isGranted', 'createResponse'])
             ->getMock();
@@ -474,9 +490,9 @@ class LessonControllerTest extends WebTestCase
         $controller = $this->getMockBuilder(LessonController::class)
             ->setConstructorArgs([
                                      $this->entityManager,
+                                     $this->denormalizer,
                                      $this->lessonServices,
-                                     $this->logger,
-                                     $this->createMock(LessonFactoryInterface::class)
+                                     $this->logger
                                  ])
             ->onlyMethods(['isGranted', 'createResponse'])
             ->getMock();
@@ -491,7 +507,7 @@ class LessonControllerTest extends WebTestCase
 
         $this->logger->expects($this->once())
             ->method('info')
-            ->with('Lesson removed successfully', $this->isType('array'));
+            ->with('Lesson removed', ['lesson' => $lesson]);
 
         $controller->expects($this->once())
             ->method('createResponse')
@@ -535,9 +551,9 @@ class LessonControllerTest extends WebTestCase
         $controller = $this->getMockBuilder(LessonController::class)
             ->setConstructorArgs([
                                      $this->entityManager,
+                                     $this->denormalizer,
                                      $this->lessonServices,
-                                     $this->logger,
-                                     $this->createMock(LessonFactoryInterface::class)
+                                     $this->logger
                                  ])
             ->onlyMethods(['isGranted', 'createResponse'])
             ->getMock();

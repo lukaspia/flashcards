@@ -59,7 +59,7 @@ class ListUserCommand extends Command
         $users = $this->entityManager->getRepository(User::class)->findAll();
 
         $usersTable = [];
-        if(!empty($users)) {
+        if (!empty($users)) {
             foreach ($users as $user) {
                 $usersTable[] = [
                     $user->getId(),

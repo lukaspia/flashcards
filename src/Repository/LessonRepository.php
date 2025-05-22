@@ -16,13 +16,6 @@ class LessonRepository extends ServiceEntityRepository
         parent::__construct($registry, Lesson::class);
     }
 
-    /**
-     * @param array $criteria
-     * @param array|null $order
-     * @param int $limit
-     * @param int $page
-     * @return array
-     */
     public function findPaginatedLessons(
         array $criteria = [],
         ?array $order = null,
@@ -34,10 +27,6 @@ class LessonRepository extends ServiceEntityRepository
         return $this->findBy($criteria, $order, $limit, $offset);
     }
 
-    /**
-     * @param array $criteria
-     * @return int
-     */
     public function countLessonsByCriteria(array $criteria = []): int
     {
         return $this->count($criteria);

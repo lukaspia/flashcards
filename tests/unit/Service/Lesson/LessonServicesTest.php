@@ -6,36 +6,32 @@ namespace App\Tests\Service\Lesson;
 
 use App\Entity\Lesson;
 use App\Event\AddLessonEvent;
-use App\Service\Lesson\LessonService;
+use App\Service\Lesson\LessonServices;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\Exception\InvalidArgumentException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
-use App\Service\Lesson\WordImageServiceInterface;
 
 class LessonServicesTest extends TestCase
 {
     private EntityManagerInterface $entityManager;
     private ValidatorInterface $validator;
     private EventDispatcherInterface $eventDispatcher;
-    private LessonService $lessonServices;
+    private LessonServices $lessonServices;
     private Lesson $lesson;
-    private WordImageServiceInterface $wordImageServices;
 
     protected function setUp(): void
     {
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->validator = $this->createMock(ValidatorInterface::class);
         $this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
-        $this->wordImageServices = $this->createMock(WordImageServiceInterface::class);
 
-        $this->lessonServices = new LessonService(
+        $this->lessonServices = new LessonServices(
             $this->entityManager,
             $this->validator,
-            $this->eventDispatcher,
-            $this->wordImageServices
+            $this->eventDispatcher
         );
 
         $this->lesson = new Lesson();
