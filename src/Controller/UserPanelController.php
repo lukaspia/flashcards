@@ -16,6 +16,7 @@ class UserPanelController extends AbstractController
      * @return \Symfony\Component\HttpFoundation\Response
      */
     #[Route('/panel', name: 'app_panel')]
+    #[Route('/lesson/{id}', name: 'app_lesson')]
     public function navigation(): Response
     {
         return $this->render('pages/panel.html.twig');

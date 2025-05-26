@@ -4,6 +4,9 @@ import EditIcon from '@mui/icons-material/Edit';
 import QuizIcon from '@mui/icons-material/Quiz';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import {Lesson} from "./Lesson";
+import {useNavigate} from "react-router";
+import {ROUTES} from "../../constants/routes";
+import {generatePath} from "../../utils/pathUtils";
 
 interface LessonRowProps {
     lesson: {id: number, name: string};
@@ -11,9 +14,15 @@ interface LessonRowProps {
 }
 
 export default function LessonRow({lesson, handleRemoveClickOpen}: LessonRowProps): React.ReactElement {
+    const navigate = useNavigate();
 
-    const removeLesson = () => {
+    const handleRemoveLesson = () => {
         handleRemoveClickOpen(lesson)
+    }
+
+    const handleEditLesson = () => {
+        const path = generatePath(ROUTES.LESSON_EDIT, {id: lesson.id});
+        navigate(path);
     }
 
     return (
@@ -22,9 +31,15 @@ export default function LessonRow({lesson, handleRemoveClickOpen}: LessonRowProp
                 {lesson.name}
             </td>
             <td>
-                <IconButton ><EditIcon className="basic-icon" /></IconButton>
-                <IconButton ><DeleteForeverIcon className="basic-icon" onClick={removeLesson} /></IconButton>
-                <IconButton ><QuizIcon className="basic-icon" /></IconButton>
+                <IconButton >
+                    <EditIcon className="basic-icon" onClick={handleEditLesson} />
+                </IconButton>
+                <IconButton >
+                    <DeleteForeverIcon className="basic-icon" onClick={handleRemoveLesson} />
+                </IconButton>
+                <IconButton >
+                    <QuizIcon className="basic-icon" />
+                </IconButton>
             </td>
         </>
     );
