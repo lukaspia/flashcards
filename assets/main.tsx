@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import {BrowserRouter as Router, Routes, Route} from "react-router";
 import LessonsList from "./pages/LessonsList";
 import LessonEdit from "./pages/LessonEdit";
-import {ROUTES} from "./constants/routes";
+import {ROUTES} from "./constants/Routes";
 
 const NotFound = () => <h1>Page Not Found</h1>;
 
