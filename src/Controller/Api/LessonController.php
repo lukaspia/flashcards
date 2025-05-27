@@ -65,6 +65,20 @@ class LessonController extends AbstractApiController
         }
     }
 
+    #[Route('/lesson/{id}', name: 'get_lesson', methods: ['GET'])]
+    public function getLesson(Lesson $lesson): JsonResponse
+    {
+        if (!($this->getUser())) {
+            return $this->createResponse(null, ['Authentication required.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        return $this->createResponse(
+            ['lesson' => $lesson], [],
+            Response::HTTP_OK,
+            ['groups' => self::LESSON_READ_GROUP]
+        );
+    }
+
     #[Route('/lesson', name: 'add_lesson', methods: ['POST'])]
     public function addLesson(Request $request): JsonResponse
     {

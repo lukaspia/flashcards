@@ -1,21 +1,20 @@
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useState, useEffect} from 'react';
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import SaveIcon from '@mui/icons-material/Save';
 import useLesson from "../hooks/useLesson";
 import {useParams} from "react-router";
 
-//interface LessonEditProps {
-///    id: string;
-//} ///TODO
-
 export default function LessonEdit(): React.ReactElement {
     const {id} = useParams();
     const [lessonName, setLessonName] = useState<string>('');
-    if(id !== undefined) {
-        const [lesson, isLoading, isError] = useLesson(parseInt(id));
-        console.log(lesson); //TODO
-    }
+    const [lesson, isLoading, isError] = useLesson(id ? parseInt(id): 0);
+
+    useEffect(() => {
+        if (lesson?.name) {
+            setLessonName(lesson.name);
+        }
+    }, [lesson]);
 
     return (
         <div className="lesson-edit">
