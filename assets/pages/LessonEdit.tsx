@@ -4,8 +4,8 @@ import Button from "@mui/material/Button";
 import SaveIcon from '@mui/icons-material/Save';
 import useLesson from "../hooks/useLesson";
 import {useParams} from "react-router";
-import CircularProgress from "@mui/material/CircularProgress";
 import LoadingPreloader from "../components/ui/LoadingPreloader";
+import Words from "../components/word/Words";
 
 export default function LessonEdit(): React.ReactElement {
     const {id} = useParams();
@@ -33,8 +33,8 @@ export default function LessonEdit(): React.ReactElement {
                     onChange={(e) => setLessonName(e.target.value)}
                 />
             </div>
-            <div className="lesson-words">
-
+            <div className="lesson-words-wrapper">
+                <Words />
             </div>
             <div className="lesson-footer">
                 <Button
