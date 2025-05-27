@@ -15,6 +15,10 @@ export async function addLesson(formData: FormData) {
     return await axios.post(`${BASE_URL}/lesson`, formData).then(res => res.data);
 }
 
+export async function updateLesson(formData: FormData) {
+    return await axios.put(`${BASE_URL}/lesson`, formData).then(res => res.data);
+}
+
 export async function removeLessons(lesson: Lesson) {
     return await  axios.delete(`${BASE_URL}/lesson/` + lesson.id).then(res => res.data);
 }

@@ -6,15 +6,23 @@ import Grid from '@mui/material/Grid';
 import {TextField} from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 
-export default function Words(): React.ReactElement {
+interface WordsProps {
+    updateWords: (words: {id: number}[]) => void;
+}
+
+export default function Words({updateWords}: WordsProps): React.ReactElement {
     const [words, setWords] = useState([{id: Date.now()}]);
 
     const handleAddWord = () => {
-        setWords([...words, {id: Date.now()}]);
+        const newWords = [...words, {id: Date.now()}];
+        setWords(newWords);
+        updateWords(newWords);
     }
 
     const handleRemoveWord = (idToRemove: number) => {
-        setWords(words.filter(word => word.id !== idToRemove));
+        const newWords = words.filter(word => word.id !== idToRemove);
+        setWords(newWords);
+        updateWords(newWords);
     }
 
     return (
