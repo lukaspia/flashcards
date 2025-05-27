@@ -8,7 +8,7 @@ import LessonRemoveDialog from "../components/lesson/LessonRemoveDialog";
 import {Lesson} from '../components/lesson/Lesson';
 import useLessons from "../hooks/useLessons";
 import CollapseSuccessAlert from "../components/ui/CollapseSuccessAlert";
-import CircularProgress from '@mui/material/CircularProgress';
+import LoadingPreloader from "../components/ui/LoadingPreloader";
 
 export default function LessonsList(): React.ReactElement {
     const [openAddDialog, setOpenAddDialog] = useState(false);
@@ -57,6 +57,9 @@ export default function LessonsList(): React.ReactElement {
         <div className="lesson-list">
             <div className="lesson-list-header">
                 <h1>Lista lekcji</h1>
+
+                <LoadingPreloader isLoading={isLoading} />
+
                 <Button
                     className="btn btn-primary"
                     variant="contained"
@@ -71,8 +74,6 @@ export default function LessonsList(): React.ReactElement {
                 successMessage={successAlertMessage}
                 handleCloseSuccessAlert={handleCloseSuccessAlert}
             />
-
-            {isLoading ? (<div className='progress-container'><CircularProgress size="30px" /></div>) : (<div></div>)}
 
             <LessonsListRows
                 lessons={lessons}

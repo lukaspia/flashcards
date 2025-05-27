@@ -4,6 +4,8 @@ import Button from "@mui/material/Button";
 import SaveIcon from '@mui/icons-material/Save';
 import useLesson from "../hooks/useLesson";
 import {useParams} from "react-router";
+import CircularProgress from "@mui/material/CircularProgress";
+import LoadingPreloader from "../components/ui/LoadingPreloader";
 
 export default function LessonEdit(): React.ReactElement {
     const {id} = useParams();
@@ -20,6 +22,9 @@ export default function LessonEdit(): React.ReactElement {
         <div className="lesson-edit">
             <div className="lesson-header">
                 <h1>Edycja lekcji</h1>
+
+                <LoadingPreloader isLoading={isLoading} />
+
                 <TextField
                     required
                     id="outlined-required"
