@@ -7,17 +7,15 @@ import {TextField} from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 
 export default function Words(): React.ReactElement {
-    const [words, setWords] = useState([{}]);
+    const [words, setWords] = useState([{id: Date.now()}]);
 
     const handleAddWord = () => {
-        setWords([...words, {}]);
+        setWords([...words, {id: Date.now()}]);
     }
 
-    const handleRemoveWord = (index: number) => {
-        setWords(words.filter((_, i) => i !== index));
+    const handleRemoveWord = (idToRemove: number) => {
+        setWords(words.filter(word => word.id !== idToRemove));
     }
-
-    console.log(words);
 
     return (
         <div className="lesson-words">
@@ -50,7 +48,7 @@ export default function Words(): React.ReactElement {
             </Grid>
 
             {words.map((word, key) => (
-                <div key={key}>
+                <div key={word.id} className={`word-${word.id}`}>
                     <Grid container spacing={2}>
                         <Grid size={1}>
                             <div></div>
@@ -97,7 +95,7 @@ export default function Words(): React.ReactElement {
                             <div>
                                 {key > 0 && (
                                     <IconButton >
-                                        <PlaylistRemoveIcon className="basic-icon" onClick={() => handleRemoveWord(key)} />
+                                        <PlaylistRemoveIcon className="basic-icon" onClick={() => handleRemoveWord(word.id)} />
                                     </IconButton>
                                 )}
                             </div>
