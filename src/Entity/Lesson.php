@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\LessonRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\ORM\Mapping as ORM;
@@ -17,7 +19,7 @@ class Lesson
     #[Groups('lesson:read')]
     private ?int $id = null;
 
-    #[ORM\Column(type: "text")]
+    #[ORM\Column(type: "string", length: 255)]
     #[Assert\NotBlank(message: "Lesson name is required")]
     #[Groups('lesson:read')]
     private string $name;
@@ -30,6 +32,15 @@ class Lesson
     #[ORM\Column(type: 'datetime')]
     #[Groups('lesson:read')]
     private ?\DateTime $addDate = null;
+
+    #[ORM\OneToMany(targetEntity: Word::class, mappedBy: 'lesson', orphanRemoval: true)]
+    #[Groups('lesson:read')]
+    private ?Collection $words;
+
+    public function __construct()
+    {
+        $this->words = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
