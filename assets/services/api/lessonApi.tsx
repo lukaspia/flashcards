@@ -16,7 +16,11 @@ export async function addLesson(formData: FormData) {
 }
 
 export async function updateLesson(formData: FormData) {
-    return await axios.put(`${BASE_URL}/lesson`, formData).then(res => res.data);
+    return await axios.put(`${BASE_URL}/lesson`, formData, {
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    }).then(res => res.data);
 }
 
 export async function removeLessons(lesson: Lesson) {

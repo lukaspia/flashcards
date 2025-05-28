@@ -30,8 +30,8 @@ export default function LessonEdit(): React.ReactElement {
 
         setIsSaving(true);
         updateLesson(lessonData)
-            .then(() => {
-                console.log('Lesson saved');
+            .then((response) => {
+                console.log(response);
                 //handleShowSuccessAlert();
             })
             .catch((error) => {

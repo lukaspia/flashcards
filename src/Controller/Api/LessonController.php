@@ -118,6 +118,21 @@ class LessonController extends AbstractApiController
         }
     }
 
+    #[Route('/lesson', name: 'update_lesson', methods: ['PUT'])]
+    public function updateLesson(Request $request): JsonResponse
+    {
+        //$data = $request->request->all();
+        $data = $request->toArray();
+        //$data = $request->getContent();
+
+        //TODO kontynuwać.
+
+        return $this->createResponse(
+            $data, ['test'],
+            Response::HTTP_OK
+        );
+    }
+
     #[Route('/lesson/{id}', name: 'remove_lesson', methods: ['DELETE'])]
     public function removeLesson(Lesson $lesson): JsonResponse
     {
