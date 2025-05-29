@@ -73,4 +73,14 @@ class Word
     {
         $this->image = $image;
     }
+
+    public function getLesson(): Lesson
+    {
+        return $this->lesson;
+    }
+
+    public function setLesson(Lesson $lesson): void
+    {
+        $this->lesson = $lesson;
+    }
 }

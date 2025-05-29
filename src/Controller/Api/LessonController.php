@@ -7,6 +7,7 @@ namespace App\Controller\Api;
 
 
 use App\Entity\Lesson;
+use App\Entity\User;
 use App\Entity\Word;
 use App\Service\Lesson\LessonServices;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -17,6 +18,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Validator\Exception\InvalidArgumentException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -125,17 +127,37 @@ class LessonController extends AbstractApiController
     {
         $data = $request->toArray();
 
+        $existingLesson = null;
+        if(isset($data['id'])) {
+            $existingLesson = $this->entityManager->getRepository(Lesson::class)->find($data['id']);
+        }
+
+        if(!$existingLesson) {
+            return $this->createResponse(null, ['Lesson not found'], Response::HTTP_NOT_FOUND);
+        }
+
         $words = new ArrayCollection();
         foreach($data['words'] as $word) {
             $wordEntity = $this->denormalizer->denormalize($word, Word::class);
+            $wordEntity->setLesson($existingLesson);
             $words->add($wordEntity);
         }
 
-        unset($data['words']);
+        unset($data['words'], $data['user']); //TODO można stworzyć grupę do zapisu (aktualizacji), żeby ignorował te pola przy denormalizajci AbstractNormalizer::GROUPS => ['lesson:write']
 
-        $lesson = $this->denormalizer->denormalize($data, Lesson::class);
+        $lesson = $this->denormalizer->denormalize($data, Lesson::class, null, [
+            AbstractNormalizer::OBJECT_TO_POPULATE => $existingLesson
+        ]);
         $lesson->setWords($words);
-        //TODO kontynuacja
+
+
+        //$lesson->getUser()->getId();
+        //$user = $this->entityManager->getRepository(User::class)->find($lesson->getUser()->getId());
+        //$lesson->setUser($user);
+
+
+
+       //TODO kontynuacja
 
         //TODO -> lessonApi -> zmodyfikować formData na Lesson
         //TODO -> lessonApi -> czy updateLesson(lesson: Lesson) potrzebuje headers?

@@ -33,7 +33,7 @@ class Lesson
     #[Groups('lesson:read')]
     private ?\DateTime $addDate = null;
 
-    #[ORM\OneToMany(targetEntity: Word::class, mappedBy: 'lesson', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: Word::class, mappedBy: 'lesson', cascade: ['persist'], orphanRemoval: true)]
     #[Groups('lesson:read')]
     private ?Collection $words;
 
