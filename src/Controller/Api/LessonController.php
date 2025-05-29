@@ -146,23 +146,26 @@ class LessonController extends AbstractApiController
                 if(isset($word['id'], $lessonWords[$word['id']])) {
                     $context = [AbstractNormalizer::OBJECT_TO_POPULATE => $lessonWords[$word['id']]];
                 }
-                $wordEntity = $this->denormalizer->denormalize($word, Word::class, null, $context);
+
+                try {
+                    $wordEntity = $this->denormalizer->denormalize($word, Word::class, null, $context);
+                } catch (ExceptionInterface $e) {
+                    return $this->createResponse(null, ['Invalid data: ' . $e->getMessage()], Response::HTTP_BAD_REQUEST);
+                }
+
                 $wordEntity->setLesson($existingLesson);
                 $words->add($wordEntity);
             }
         }
 
-        unset($data['words'], $data['user']); //TODO można stworzyć grupę do zapisu (aktualizacji), żeby ignorował te pola przy denormalizajci AbstractNormalizer::GROUPS => ['lesson:write']
-
-        $lesson = $this->denormalizer->denormalize($data, Lesson::class, null, [
-            AbstractNormalizer::OBJECT_TO_POPULATE => $existingLesson
-        ]);
-
-
-       //TODO kontynuacja
-
-        //TODO -> lessonApi -> zmodyfikować formData na Lesson
-        //TODO -> lessonApi -> czy updateLesson(lesson: Lesson) potrzebuje headers?
+        try {
+            $lesson = $this->denormalizer->denormalize($data, Lesson::class, null, [
+                AbstractNormalizer::OBJECT_TO_POPULATE => $existingLesson,
+                AbstractNormalizer::GROUPS => ['lesson:write'],
+            ]);
+        } catch (ExceptionInterface $e) {
+            return $this->createResponse(null, ['Invalid data: ' . $e->getMessage()], Response::HTTP_BAD_REQUEST);
+        }
 
         $this->lessonServices->updateLesson($lesson);
 

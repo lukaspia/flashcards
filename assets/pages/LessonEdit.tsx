@@ -7,13 +7,14 @@ import {useParams} from "react-router";
 import LoadingPreloader from "../components/ui/LoadingPreloader";
 import Words from "../components/word/Words";
 import {updateLesson} from "../services/api/lessonApi";
+import CollapseSuccessAlert from "../components/ui/CollapseSuccessAlert";
 
 export default function LessonEdit(): React.ReactElement {
     const {id} = useParams();
     const [lesson, isLoading, isError, setLesson] = useLesson(id ? parseInt(id): 0);
     const [isSaving, setIsSaving] = useState(false);
-
-    console.log(lesson);
+    const [openSuccessAlert, setOpenSuccessAlert] = useState(false);
+    const [successAlertMessage, setSuccessAlertMessage] = useState('');
 
     const handleSetLessonName = (name: string) => {
         if(lesson != undefined) {
@@ -22,15 +23,12 @@ export default function LessonEdit(): React.ReactElement {
     }
 
     const handleSaveLesson = () => {
-        console.log(lesson);
-
         setIsSaving(true);
         if(lesson != undefined) {
             updateLesson(lesson)
                 .then((result) => {
-                    console.log(result);
                     setLesson(result.data.lesson);
-                    //handleShowSuccessAlert();
+                    showSuccessAlert('Lekcja została zaktualizowana.');
                 })
                 .catch((error) => {
                     console.error(error);
@@ -45,6 +43,16 @@ export default function LessonEdit(): React.ReactElement {
             setLesson({...lesson, words: words});
         }
     }, [lesson, setLesson]);
+
+    const showSuccessAlert = useCallback((message: string) => {
+        setSuccessAlertMessage(message);
+        setOpenSuccessAlert(true);
+    }, []);
+
+    const handleCloseSuccessAlert = useCallback(() => {
+        setSuccessAlertMessage('');
+        setOpenSuccessAlert(false);
+    }, []);
 
     return (
         <div className="lesson-edit">
@@ -61,9 +69,17 @@ export default function LessonEdit(): React.ReactElement {
                     onChange={(e) => handleSetLessonName(e.target.value)}
                 />
             </div>
+
+            <CollapseSuccessAlert
+                openSuccess={openSuccessAlert}
+                successMessage={successAlertMessage}
+                handleCloseSuccessAlert={handleCloseSuccessAlert}
+            />
+
             <div className="lesson-words-wrapper">
                 <Words updateWords={updateWords} words={lesson?.words || []} />
             </div>
+
             <div className="lesson-footer">
                 <Button
                     className="btn btn-primary"

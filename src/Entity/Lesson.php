@@ -11,30 +11,27 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: LessonRepository::class)]
 #[ORM\HasLifecycleCallbacks]
+#[Groups('lesson:read')]
 class Lesson
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups('lesson:read')]
     private ?int $id = null;
 
     #[ORM\Column(type: "string", length: 255)]
     #[Assert\NotBlank(message: "Lesson name is required")]
-    #[Groups('lesson:read')]
+    #[Groups('lesson:write')]
     private string $name;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(name: "user", referencedColumnName: "id", onDelete: "CASCADE")]
-    #[Groups('lesson:read')]
     private User $user;
 
     #[ORM\Column(type: 'datetime')]
-    #[Groups('lesson:read')]
     private ?\DateTime $addDate = null;
 
     #[ORM\OneToMany(targetEntity: Word::class, mappedBy: 'lesson', cascade: ['persist'], orphanRemoval: true)]
-    #[Groups('lesson:read')]
     private ?Collection $words;
 
     public function __construct()
