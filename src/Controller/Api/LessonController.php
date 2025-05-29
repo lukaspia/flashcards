@@ -7,6 +7,7 @@ namespace App\Controller\Api;
 
 
 use App\Entity\Lesson;
+use App\Entity\Word;
 use App\Service\Lesson\LessonServices;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -123,10 +124,23 @@ class LessonController extends AbstractApiController
     {
         $data = $request->toArray();
 
+        /*$words = json_decode($data['words'], true);
 
+        $lastWord = '';
+        foreach($words as $word) {
+            $wordEntity = $this->denormalizer->denormalize($word, Word::class);
+            $wordEntity->setBasicWord('costam');
+            $lastWord = $wordEntity;
+        }*/
+
+        unset($data['words']);
+
+        $lesson = $this->denormalizer->denormalize($data, Lesson::class);
+
+        //TODO kontynuacja
 
         return $this->createResponse(
-            json_decode($data['words']), ['test'],
+            $lesson, ['test'],
             Response::HTTP_OK
         );
     }

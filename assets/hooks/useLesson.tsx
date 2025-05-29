@@ -5,7 +5,8 @@ import {getLesson} from "../services/api/lessonApi";
 type LessonApiResponse = [
     Lesson | undefined,
     boolean,
-    boolean
+    boolean,
+    (lesson: Lesson) => void,
 ];
 
 export default function useLesson(id: number): LessonApiResponse {
@@ -46,6 +47,7 @@ export default function useLesson(id: number): LessonApiResponse {
     return [
         lesson,
         isLoading,
-        isError
+        isError,
+        setLesson
     ];
 }

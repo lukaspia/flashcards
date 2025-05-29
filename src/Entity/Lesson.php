@@ -47,6 +47,11 @@ class Lesson
         return $this->id;
     }
 
+    public function setId(?int $id): void
+    {
+        $this->id = $id;
+    }
+
     public function getAddDate(): ?\DateTime
     {
         return $this->addDate;
@@ -83,5 +88,15 @@ class Lesson
         if ($this->addDate === null) {
             $this->setAddDate(new \DateTime());
         }
+    }
+
+    public function getWords(): ?Collection
+    {
+        return $this->words;
+    }
+
+    public function setWords(?Collection $words): void
+    {
+        $this->words = $words;
     }
 }

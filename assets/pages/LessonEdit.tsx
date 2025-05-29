@@ -1,4 +1,4 @@
-import React, {useCallback, useState, useEffect} from 'react';
+import React, {useCallback, useState} from 'react';
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import SaveIcon from '@mui/icons-material/Save';
@@ -10,35 +10,32 @@ import {updateLesson} from "../services/api/lessonApi";
 
 export default function LessonEdit(): React.ReactElement {
     const {id} = useParams();
-    const [lessonName, setLessonName] = useState<string>('');
-    const [lesson, isLoading, isError] = useLesson(id ? parseInt(id): 0);
+    const [lesson, isLoading, isError, setLesson] = useLesson(id ? parseInt(id): 0);
     const [isSaving, setIsSaving] = useState(false);
     const [words, setWords] = useState([]);
 
-    useEffect(() => {
-        if (lesson?.name) {
-            setLessonName(lesson.name);
+    const handleSetLessonName = (name: string) => {
+        if(lesson != undefined) {
+            setLesson({...lesson, name: name});
         }
-    }, [lesson]);
+    }
 
     const handleSaveLesson = () => {
-        const lessonData = new FormData();
-        lessonData.append('name', lessonName);
-        lessonData.append('words', JSON.stringify(words));
-
-        console.log(words);
+        console.log(lesson);
 
         setIsSaving(true);
-        updateLesson(lessonData)
-            .then((response) => {
-                console.log(response);
-                //handleShowSuccessAlert();
-            })
-            .catch((error) => {
-                console.error(error);
-            }).finally(() => {
+        if(lesson != undefined) {
+            updateLesson(lesson)
+                .then((response) => {
+                    console.log(response);
+                    //handleShowSuccessAlert();
+                })
+                .catch((error) => {
+                    console.error(error);
+                }).finally(() => {
                 setIsSaving(false);
             });
+        }
     }
 
     const updateWords = useCallback((words: any) => {
@@ -56,8 +53,8 @@ export default function LessonEdit(): React.ReactElement {
                     required
                     id="outlined-required"
                     label="Nazwa lekcji"
-                    value={lessonName}
-                    onChange={(e) => setLessonName(e.target.value)}
+                    value={lesson?.name || ''}
+                    onChange={(e) => handleSetLessonName(e.target.value)}
                 />
             </div>
             <div className="lesson-words-wrapper">
