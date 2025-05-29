@@ -133,14 +133,14 @@ class LessonController extends AbstractApiController
             $lastWord = $wordEntity;
         }*/
 
-        unset($data['words']);
+        //unset($data['words']);
 
-        $lesson = $this->denormalizer->denormalize($data, Lesson::class);
+        //$lesson = $this->denormalizer->denormalize($data, Lesson::class);
 
         //TODO kontynuacja
 
         return $this->createResponse(
-            $lesson, ['test'],
+            $data, ['test'],
             Response::HTTP_OK
         );
     }

@@ -12,7 +12,6 @@ export default function LessonEdit(): React.ReactElement {
     const {id} = useParams();
     const [lesson, isLoading, isError, setLesson] = useLesson(id ? parseInt(id): 0);
     const [isSaving, setIsSaving] = useState(false);
-    const [words, setWords] = useState([]);
 
     const handleSetLessonName = (name: string) => {
         if(lesson != undefined) {
@@ -39,8 +38,10 @@ export default function LessonEdit(): React.ReactElement {
     }
 
     const updateWords = useCallback((words: any) => {
-        setWords(words);
-    }, []);
+        if(lesson != undefined) {
+            setLesson({...lesson, words: words});
+        }
+    }, [lesson, setLesson]);
 
     return (
         <div className="lesson-edit">
