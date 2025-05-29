@@ -9,7 +9,7 @@ import {ROUTES} from "../../constants/Routes";
 import {generatePath} from "../../utils/PathUtils";
 
 interface LessonRowProps {
-    lesson: {id: number, name: string};
+    lesson: Lesson;
     handleRemoveClickOpen: (lesson: Lesson) => void;
 }
 

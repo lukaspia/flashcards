@@ -9,6 +9,7 @@ namespace App\Controller\Api;
 use App\Entity\Lesson;
 use App\Entity\Word;
 use App\Service\Lesson\LessonServices;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -124,23 +125,25 @@ class LessonController extends AbstractApiController
     {
         $data = $request->toArray();
 
-        /*$words = json_decode($data['words'], true);
-
-        $lastWord = '';
-        foreach($words as $word) {
+        $words = new ArrayCollection();
+        foreach($data['words'] as $word) {
             $wordEntity = $this->denormalizer->denormalize($word, Word::class);
-            $wordEntity->setBasicWord('costam');
-            $lastWord = $wordEntity;
-        }*/
+            $words->add($wordEntity);
+        }
 
-        //unset($data['words']);
+        unset($data['words']);
 
-        //$lesson = $this->denormalizer->denormalize($data, Lesson::class);
-
+        $lesson = $this->denormalizer->denormalize($data, Lesson::class);
+        $lesson->setWords($words);
         //TODO kontynuacja
 
+        //TODO -> lessonApi -> zmodyfikować formData na Lesson
+        //TODO -> lessonApi -> czy updateLesson(lesson: Lesson) potrzebuje headers?
+
+        $this->lessonServices->addLesson($lesson);
+
         return $this->createResponse(
-            $data, ['test'],
+            $lesson, ['test'],
             Response::HTTP_OK
         );
     }

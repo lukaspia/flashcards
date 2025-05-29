@@ -5,16 +5,37 @@ import Button from "@mui/material/Button";
 import Grid from '@mui/material/Grid';
 import {TextField} from "@mui/material";
 import IconButton from "@mui/material/IconButton";
+import {Word} from "./Word";
 
 interface WordsProps {
-    updateWords: (words: {id: number}[]) => void;
+    updateWords: (words: Word[]) => void;
 }
 
 export default function Words({updateWords}: WordsProps): React.ReactElement {
-    const [words, setWords] = useState([{id: Date.now()}]);
+
+    const emptyWord: Word = {
+        id: Date.now(),
+        basicWord: '',
+        translation: '',
+        example: '',
+        image: ''
+    };
+
+    const [words, setWords] = useState([emptyWord]);
 
     const handleAddWord = () => {
-        const newWords = [...words, {id: Date.now()}];
+        const newWords = [...words, emptyWord];
+        setWords(newWords);
+        updateWords(newWords);
+    }
+
+    const handleUpdateWord = (key: number, field: keyof Word, value: string) => {
+        const newWords = [...words];
+
+        if(field !== 'id') {
+            (newWords[key] as any)[field] = value as string;
+        }
+
         setWords(newWords);
         updateWords(newWords);
     }
@@ -63,12 +84,12 @@ export default function Words({updateWords}: WordsProps): React.ReactElement {
                         </Grid>
                         <Grid size={5}>
                             <div>
-                                <TextField id="standard-basic" label="Nazwa pl" variant="standard" />
+                                <TextField id="standard-basic" label="Nazwa pl" variant="standard" onChange={(e) => {handleUpdateWord(key, 'basicWord', e.target.value)}} />
                             </div>
                         </Grid>
                         <Grid size={5}>
                             <div>
-                                <TextField id="standard-basic" label="Nazwa en" variant="standard" />
+                                <TextField id="standard-basic" label="Nazwa en" variant="standard"  onChange={(e) => {handleUpdateWord(key, 'translation', e.target.value)}} />
                             </div>
                         </Grid>
                         <Grid size={1}>
@@ -81,12 +102,7 @@ export default function Words({updateWords}: WordsProps): React.ReactElement {
                         </Grid>
                         <Grid size={5}>
                             <div>
-                                <TextField
-                                    label="Przykład użycia"
-                                    multiline
-                                    rows={2}
-                                    variant="standard"
-                                />
+
                             </div>
                         </Grid>
                         <Grid size={5}>
@@ -96,6 +112,7 @@ export default function Words({updateWords}: WordsProps): React.ReactElement {
                                     multiline
                                     rows={2}
                                     variant="standard"
+                                    onChange={(e) => {handleUpdateWord(key, 'example', e.target.value)}}
                                 />
                             </div>
                         </Grid>

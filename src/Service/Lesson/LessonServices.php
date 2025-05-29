@@ -53,7 +53,7 @@ class LessonServices
         $this->entityManager->persist($lesson);
         $this->entityManager->flush();
 
-        $this->eventDispatcher->dispatch(new AddLessonEvent($lesson), AddLessonEvent::NAME);
+        //$this->eventDispatcher->dispatch(new AddLessonEvent($lesson), AddLessonEvent::NAME);
 
         return $lesson;
     }
