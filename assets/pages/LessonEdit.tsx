@@ -13,6 +13,8 @@ export default function LessonEdit(): React.ReactElement {
     const [lesson, isLoading, isError, setLesson] = useLesson(id ? parseInt(id): 0);
     const [isSaving, setIsSaving] = useState(false);
 
+    console.log(lesson);
+
     const handleSetLessonName = (name: string) => {
         if(lesson != undefined) {
             setLesson({...lesson, name: name});
@@ -25,8 +27,9 @@ export default function LessonEdit(): React.ReactElement {
         setIsSaving(true);
         if(lesson != undefined) {
             updateLesson(lesson)
-                .then((response) => {
-                    console.log(response);
+                .then((result) => {
+                    console.log(result);
+                    setLesson(result.data.lesson);
                     //handleShowSuccessAlert();
                 })
                 .catch((error) => {
@@ -59,7 +62,7 @@ export default function LessonEdit(): React.ReactElement {
                 />
             </div>
             <div className="lesson-words-wrapper">
-                <Words updateWords={updateWords} />
+                <Words updateWords={updateWords} words={lesson?.words || []} />
             </div>
             <div className="lesson-footer">
                 <Button

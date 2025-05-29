@@ -136,11 +136,20 @@ class LessonController extends AbstractApiController
             return $this->createResponse(null, ['Lesson not found'], Response::HTTP_NOT_FOUND);
         }
 
-        $words = new ArrayCollection();
-        foreach($data['words'] as $word) {
-            $wordEntity = $this->denormalizer->denormalize($word, Word::class);
-            $wordEntity->setLesson($existingLesson);
-            $words->add($wordEntity);
+        $words = $existingLesson->getWords();
+        $words->clear();
+
+        if(isset($data['words'])) {
+            $lessonWords = $this->entityManager->getRepository(Word::class)->findByLessonId($data['id']);
+            foreach($data['words'] as $word) {
+                $context = [];
+                if(isset($word['id'], $lessonWords[$word['id']])) {
+                    $context = [AbstractNormalizer::OBJECT_TO_POPULATE => $lessonWords[$word['id']]];
+                }
+                $wordEntity = $this->denormalizer->denormalize($word, Word::class, null, $context);
+                $wordEntity->setLesson($existingLesson);
+                $words->add($wordEntity);
+            }
         }
 
         unset($data['words'], $data['user']); //TODO można stworzyć grupę do zapisu (aktualizacji), żeby ignorował te pola przy denormalizajci AbstractNormalizer::GROUPS => ['lesson:write']
@@ -148,13 +157,6 @@ class LessonController extends AbstractApiController
         $lesson = $this->denormalizer->denormalize($data, Lesson::class, null, [
             AbstractNormalizer::OBJECT_TO_POPULATE => $existingLesson
         ]);
-        $lesson->setWords($words);
-
-
-        //$lesson->getUser()->getId();
-        //$user = $this->entityManager->getRepository(User::class)->find($lesson->getUser()->getId());
-        //$lesson->setUser($user);
-
 
 
        //TODO kontynuacja
@@ -162,11 +164,12 @@ class LessonController extends AbstractApiController
         //TODO -> lessonApi -> zmodyfikować formData na Lesson
         //TODO -> lessonApi -> czy updateLesson(lesson: Lesson) potrzebuje headers?
 
-        $this->lessonServices->addLesson($lesson);
+        $this->lessonServices->updateLesson($lesson);
 
         return $this->createResponse(
-            $lesson, ['test'],
-            Response::HTTP_OK
+            ['lesson' => $lesson], ['Lesson updated successfully'],
+            Response::HTTP_OK,
+            ['groups' => self::LESSON_READ_GROUP]
         );
     }
 

@@ -44,18 +44,16 @@ class LessonServices
      */
     public function addLesson(Lesson $lesson): Lesson
     {
-        $errors = $this->validator->validate($lesson);
+        $lesson = $this->saveLesson($lesson);
 
-        if (count($errors) > 0) {
-            throw new InvalidArgumentException((string)$errors);
-        }
-
-        $this->entityManager->persist($lesson);
-        $this->entityManager->flush();
-
-        //$this->eventDispatcher->dispatch(new AddLessonEvent($lesson), AddLessonEvent::NAME);
+        $this->eventDispatcher->dispatch(new AddLessonEvent($lesson), AddLessonEvent::NAME);
 
         return $lesson;
+    }
+
+    public function updateLesson(Lesson $lesson): Lesson
+    {
+        return $this->saveLesson($lesson);
     }
 
     /**
@@ -68,6 +66,22 @@ class LessonServices
         $this->entityManager->flush();
 
         $this->eventDispatcher->dispatch(new AddLessonEvent($lesson), AddLessonEvent::NAME);
+
+        return $lesson;
+    }
+
+    private function saveLesson(Lesson $lesson): Lesson
+    {
+        $errors = $this->validator->validate($lesson);
+
+        if (count($errors) > 0) {
+            throw new InvalidArgumentException((string)$errors);
+        }
+
+        $this->entityManager->persist($lesson);
+        $this->entityManager->flush();
+
+        //$this->eventDispatcher->dispatch(new AddLessonEvent($lesson), AddLessonEvent::NAME);
 
         return $lesson;
     }
