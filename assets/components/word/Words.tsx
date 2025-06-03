@@ -34,7 +34,8 @@ export default function Words({updateWords, words}: WordsProps): React.ReactElem
         basicWord: '',
         translation: '',
         example: '',
-        image: null
+        image: '',
+        imageUrl: '',
     };
 
     if(words.length == 0) {
@@ -61,7 +62,7 @@ export default function Words({updateWords, words}: WordsProps): React.ReactElem
         updateWords(newWords);
     }
 
-    const handleUploadImage = (files: FileList | null) => {
+    const handleUploadImage = (key: number, files: FileList | null) => {
         if(files && files.length > 0) {
             const file = files[0];
 
@@ -69,11 +70,8 @@ export default function Words({updateWords, words}: WordsProps): React.ReactElem
             formData.append('image', file);
 
             uploadImage(formData).then(res => {
-                console.log(res);
-
-                //const newWords = [...words];
-                //(newWords[0] as any).image = res;
-                //updateWords(newWords);
+                handleUpdateWord(key, 'image', res.data.image);
+                handleUpdateWord(key, 'imageUrl', res.data.url);
             });
         }
     }
@@ -126,17 +124,16 @@ export default function Words({updateWords, words}: WordsProps): React.ReactElem
                         </Grid>
                         <Grid size={1}>
                             <div>
-                                <div>img</div>
+                                <div>{word.imageUrl && <img src={word.imageUrl} alt="Word illustration" className="small-image" />}</div>
                                 <div>
                                     <IconButton component="label">
                                         <CloudUploadIcon className="basic-icon" />
                                         <VisuallyHiddenInput
                                             type="file"
-                                            onChange={(e) => {handleUploadImage(e.target.files); console.log(e.target.files)}}
+                                            onChange={(e) => {handleUploadImage(key, e.target.files);}}
                                             multiple
                                         />
                                     </IconButton>
-                                    {word.image?.name}
                                 </div>
                             </div>
                         </Grid>
