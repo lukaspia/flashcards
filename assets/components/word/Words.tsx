@@ -8,6 +8,7 @@ import IconButton from "@mui/material/IconButton";
 import {Word} from "./Word";
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { styled } from '@mui/material/styles';
+import {uploadImage} from "@/services/api/api";
 
 interface WordsProps {
     updateWords: (words: Word[]) => void;
@@ -40,37 +41,41 @@ export default function Words({updateWords, words}: WordsProps): React.ReactElem
         words.push(emptyWord);
     }
 
-    //const [words, setWords] = useState([emptyWord]);
-
     const handleAddWord = () => {
         const newWords = [...words, emptyWord];
-        //setWords(newWords);
         updateWords(newWords);
     }
 
-    const handleUpdateWord = (key: number, field: keyof Word, value: any) => {
+    const handleUpdateWord = (key: number, field: keyof Word, value: string) => {
         const newWords = [...words];
 
         if(field !== 'id') {
-            if(value instanceof FileList) {
-                if(value.length > 0) {
-                    value = value[0];
-                } else {
-                    value = null;
-                }
-            }
-
             (newWords[key] as any)[field] = value;
         }
 
-        //setWords(newWords);
         updateWords(newWords);
     }
 
     const handleRemoveWord = (idToRemove: number) => {
         const newWords = words.filter(word => word.id !== idToRemove);
-        //setWords(newWords);
         updateWords(newWords);
+    }
+
+    const handleUploadImage = (files: FileList | null) => {
+        if(files && files.length > 0) {
+            const file = files[0];
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            uploadImage(formData).then(res => {
+                console.log(res);
+
+                //const newWords = [...words];
+                //(newWords[0] as any).image = res;
+                //updateWords(newWords);
+            });
+        }
     }
 
     return (
@@ -127,7 +132,7 @@ export default function Words({updateWords, words}: WordsProps): React.ReactElem
                                         <CloudUploadIcon className="basic-icon" />
                                         <VisuallyHiddenInput
                                             type="file"
-                                            onChange={(e) => {handleUpdateWord(key, 'image', e.target.files); console.log(e.target.files)}}
+                                            onChange={(e) => {handleUploadImage(e.target.files); console.log(e.target.files)}}
                                             multiple
                                         />
                                     </IconButton>
