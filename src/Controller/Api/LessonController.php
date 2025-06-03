@@ -65,7 +65,11 @@ class LessonController extends AbstractApiController
             );
         } catch (\Exception $e) {
             $this->logger->error('Error fetching lessons: ' . $e->getMessage(), ['exception' => $e]);
-            return $this->createResponse(null, ['An error occurred while fetching lessons.'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->createResponse(
+                null,
+                ['An error occurred while fetching lessons.'],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
         }
     }
 
@@ -128,29 +132,33 @@ class LessonController extends AbstractApiController
         $data = $request->toArray();
 
         $existingLesson = null;
-        if(isset($data['id'])) {
+        if (isset($data['id'])) {
             $existingLesson = $this->entityManager->getRepository(Lesson::class)->find($data['id']);
         }
 
-        if(!$existingLesson) {
+        if (!$existingLesson) {
             return $this->createResponse(null, ['Lesson not found'], Response::HTTP_NOT_FOUND);
         }
 
         $words = $existingLesson->getWords();
         $words->clear();
 
-        if(isset($data['words'])) {
+        if (isset($data['words'])) {
             $lessonWords = $this->entityManager->getRepository(Word::class)->findByLessonId($data['id']);
-            foreach($data['words'] as $word) {
+            foreach ($data['words'] as $word) {
                 $context = [];
-                if(isset($word['id'], $lessonWords[$word['id']])) {
+                if (isset($word['id'], $lessonWords[$word['id']])) {
                     $context = [AbstractNormalizer::OBJECT_TO_POPULATE => $lessonWords[$word['id']]];
                 }
 
                 try {
                     $wordEntity = $this->denormalizer->denormalize($word, Word::class, null, $context);
                 } catch (ExceptionInterface $e) {
-                    return $this->createResponse(null, ['Invalid data: ' . $e->getMessage()], Response::HTTP_BAD_REQUEST);
+                    return $this->createResponse(
+                        null,
+                        ['Invalid data: ' . $e->getMessage()],
+                        Response::HTTP_BAD_REQUEST
+                    );
                 }
 
                 $wordEntity->setLesson($existingLesson);

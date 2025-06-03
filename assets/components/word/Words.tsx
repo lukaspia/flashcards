@@ -6,11 +6,25 @@ import Grid from '@mui/material/Grid';
 import {TextField} from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import {Word} from "./Word";
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import { styled } from '@mui/material/styles';
 
 interface WordsProps {
     updateWords: (words: Word[]) => void;
     words: Word[];
 }
+
+const VisuallyHiddenInput = styled('input')({
+    clip: 'rect(0 0 0 0)',
+    clipPath: 'inset(50%)',
+    height: 1,
+    overflow: 'hidden',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    whiteSpace: 'nowrap',
+    width: 1,
+});
 
 export default function Words({updateWords, words}: WordsProps): React.ReactElement {
 
@@ -19,7 +33,7 @@ export default function Words({updateWords, words}: WordsProps): React.ReactElem
         basicWord: '',
         translation: '',
         example: '',
-        image: ''
+        image: null
     };
 
     if(words.length == 0) {
@@ -34,11 +48,19 @@ export default function Words({updateWords, words}: WordsProps): React.ReactElem
         updateWords(newWords);
     }
 
-    const handleUpdateWord = (key: number, field: keyof Word, value: string) => {
+    const handleUpdateWord = (key: number, field: keyof Word, value: any) => {
         const newWords = [...words];
 
         if(field !== 'id') {
-            (newWords[key] as any)[field] = value as string;
+            if(value instanceof FileList) {
+                if(value.length > 0) {
+                    value = value[0];
+                } else {
+                    value = null;
+                }
+            }
+
+            (newWords[key] as any)[field] = value;
         }
 
         //setWords(newWords);
@@ -98,7 +120,20 @@ export default function Words({updateWords, words}: WordsProps): React.ReactElem
                             </div>
                         </Grid>
                         <Grid size={1}>
-                            <div>img</div>
+                            <div>
+                                <div>img</div>
+                                <div>
+                                    <IconButton component="label">
+                                        <CloudUploadIcon className="basic-icon" />
+                                        <VisuallyHiddenInput
+                                            type="file"
+                                            onChange={(e) => {handleUpdateWord(key, 'image', e.target.files); console.log(e.target.files)}}
+                                            multiple
+                                        />
+                                    </IconButton>
+                                    {word.image?.name}
+                                </div>
+                            </div>
                         </Grid>
                     </Grid>
                     <Grid container spacing={2}>

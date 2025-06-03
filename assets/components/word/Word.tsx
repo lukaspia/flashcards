@@ -3,5 +3,5 @@ export interface Word {
     basicWord: string;
     translation: string;
     example: string;
-    image: string;
+    image: File | null;
 }
