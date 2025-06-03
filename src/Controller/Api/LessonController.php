@@ -7,10 +7,8 @@ namespace App\Controller\Api;
 
 
 use App\Entity\Lesson;
-use App\Entity\User;
 use App\Entity\Word;
 use App\Service\Lesson\LessonServices;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -26,6 +24,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class LessonController extends AbstractApiController
 {
     private const LESSON_READ_GROUP = 'lesson:read';
+    private const LESSON_WRITE_GROUP = 'lesson:write';
     private const DEFAULT_PAGINATION_LIMIT_PARAM = 'pagination_default_limit';
 
     public function __construct(
@@ -169,7 +168,7 @@ class LessonController extends AbstractApiController
         try {
             $lesson = $this->denormalizer->denormalize($data, Lesson::class, null, [
                 AbstractNormalizer::OBJECT_TO_POPULATE => $existingLesson,
-                AbstractNormalizer::GROUPS => ['lesson:write'],
+                AbstractNormalizer::GROUPS => [self::LESSON_WRITE_GROUP],
             ]);
         } catch (ExceptionInterface $e) {
             return $this->createResponse(null, ['Invalid data: ' . $e->getMessage()], Response::HTTP_BAD_REQUEST);

@@ -8,7 +8,7 @@ import IconButton from "@mui/material/IconButton";
 import {Word} from "./Word";
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { styled } from '@mui/material/styles';
-import {uploadImage} from "@/services/api/api";
+import {uploadImage} from "../../services/api/api";
 
 interface WordsProps {
     updateWords: (words: Word[]) => void;
