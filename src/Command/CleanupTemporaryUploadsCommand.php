@@ -72,7 +72,7 @@ class CleanupTemporaryUploadsCommand extends Command
         return Command::SUCCESS;
     }
 
-    function isFileCreatedBeforeDate(string $filePath, string $targetDateString): bool
+    private function isFileCreatedBeforeDate(string $filePath, string $targetDateString): bool
     {
         if (!file_exists($filePath)) {
             return false;

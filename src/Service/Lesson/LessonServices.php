@@ -8,7 +8,10 @@ namespace App\Service\Lesson;
 
 use App\Entity\Lesson;
 use App\Event\AddLessonEvent;
+use App\Utils\FileManager;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Validator\Exception\InvalidArgumentException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
@@ -27,15 +30,33 @@ class LessonServices
      * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
      */
     private EventDispatcherInterface $eventDispatcher;
+    /**
+     * @var \Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface
+     */
+    private ParameterBagInterface $parameterBag;
+    /**
+     * @var \Symfony\Component\Filesystem\Filesystem
+     */
+    private Filesystem $filesystem;
+    /**
+     * @var \App\Utils\FileManager
+     */
+    private FileManager $fileManager;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         ValidatorInterface $validator,
-        EventDispatcherInterface $eventDispatcher
+        EventDispatcherInterface $eventDispatcher,
+        ParameterBagInterface $parameterBag,
+        Filesystem $filesystem,
+        FileManager $fileManager
     ) {
         $this->entityManager = $entityManager;
         $this->validator = $validator;
         $this->eventDispatcher = $eventDispatcher;
+        $this->parameterBag = $parameterBag;
+        $this->filesystem = $filesystem;
+        $this->fileManager = $fileManager;
     }
 
     /**
@@ -81,6 +102,29 @@ class LessonServices
         $this->entityManager->persist($lesson);
         $this->entityManager->flush();
 
+        $this->moveWordsImages($lesson);
+
         return $lesson;
+    }
+
+    private function moveWordsImages(Lesson $lesson): void
+    {
+        if($words = $lesson->getWords()) {
+            $tempFiles = $this->parameterBag->get('word_image_upload_dir_temp');
+            $wordFiles = $this->parameterBag->get('word_image_upload_dir');
+
+            /**@var \App\Entity\Word $word**/
+            foreach ($words as $word) {
+                if($image = $word->getImage()) {
+
+                    $extension = pathinfo($tempFiles . $image, PATHINFO_EXTENSION);
+                    $newFileName = $word->getId() . '.' . $extension;
+                    $wordDirectory = $wordFiles . $lesson->getUser()->getId() . '/' . $lesson->getId() . '/';
+                    $wordFilePath = $wordDirectory . $newFileName;
+
+                    $this->fileManager->moveFile($tempFiles . $image, $wordFilePath);
+                }
+            }
+        }
     }
 }
