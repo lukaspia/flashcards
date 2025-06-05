@@ -85,4 +85,19 @@ class Word
     {
         $this->lesson = $lesson;
     }
+
+    public function getImageRelativePath(bool $includeFile = true): ?string
+    {
+        $path = $this->getLesson()->getUser()->getId() . '/' . $this->getLesson()->getId() . '/';
+
+        if(!$includeFile) {
+            return $path;
+        }
+
+        if(!$this->getImage()) {
+            return null;
+        }
+
+        return $path . $this->getImage();
+    }
 }

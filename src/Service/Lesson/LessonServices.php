@@ -116,11 +116,7 @@ class LessonServices
             /**@var \App\Entity\Word $word**/
             foreach ($words as $word) {
                 if($image = $word->getImage()) {
-
-                    $extension = pathinfo($tempFiles . $image, PATHINFO_EXTENSION);
-                    $newFileName = $word->getId() . '.' . $extension;
-                    $wordDirectory = $wordFiles . $lesson->getUser()->getId() . '/' . $lesson->getId() . '/';
-                    $wordFilePath = $wordDirectory . $newFileName;
+                    $wordFilePath = $wordFiles . $word->getImageRelativePath();
 
                     $this->fileManager->moveFile($tempFiles . $image, $wordFilePath);
                 }

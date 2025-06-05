@@ -6,8 +6,8 @@
 parameters:
     pagination_default_limit: 10
     word_image_upload_dir_relative: 'uploads/images/words/'
-    word_image_upload_dir: '%kernel.project_dir%/public/%word_image_upload_dir_relative%'
-    word_image_upload_dir_temp: '%kernel.project_dir%/public/%word_image_upload_dir_relative%temp/'
+    word_image_upload_dir:      '%kernel.project_dir%/public/%word_image_upload_dir_relative%'
+    word_image_upload_dir_temp: '%word_image_upload_dir%temp/'
 
 services:
     # default configuration for services in *this* file

@@ -62,12 +62,13 @@ export default function Words({updateWords, words}: WordsProps): React.ReactElem
         updateWords(newWords);
     }
 
-    const handleUploadImage = (key: number, files: FileList | null) => {
+    const handleUploadImage = (key: number, files: FileList | null, wordId: number) => {
         if(files && files.length > 0) {
             const file = files[0];
 
             const formData = new FormData();
             formData.append('image', file);
+            formData.append('word', wordId as any as string);
 
             uploadImage(formData).then(res => {
                 handleUpdateWord(key, 'image', res.data.image);
@@ -130,7 +131,7 @@ export default function Words({updateWords, words}: WordsProps): React.ReactElem
                                         <CloudUploadIcon className="basic-icon" />
                                         <VisuallyHiddenInput
                                             type="file"
-                                            onChange={(e) => {handleUploadImage(key, e.target.files);}}
+                                            onChange={(e) => {handleUploadImage(key, e.target.files, word.id);}}
                                             multiple
                                         />
                                     </IconButton>
