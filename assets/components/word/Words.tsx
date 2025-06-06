@@ -8,7 +8,8 @@ import IconButton from "@mui/material/IconButton";
 import {Word} from "./Word";
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { styled } from '@mui/material/styles';
-import {uploadImage} from "../../services/api/api";
+import {uploadImage, removeWordImage} from "../../services/api/api";
+import ClearIcon from '@mui/icons-material/Clear';
 
 interface WordsProps {
     updateWords: (words: Word[]) => void;
@@ -46,7 +47,7 @@ export default function Words({updateWords, words}: WordsProps): React.ReactElem
         updateWords(newWords);
     }
 
-    const handleUpdateWord = (key: number, field: keyof Word, value: string) => {
+    const handleUpdateWord = (key: number, field: keyof Word, value: any) => {
         const newWords = [...words];
 
         if(field !== 'id') {
@@ -75,7 +76,11 @@ export default function Words({updateWords, words}: WordsProps): React.ReactElem
         }
     }
 
-    console.log(words);
+    const handleRemoveWordImage = (key: number, wordId: number) => {
+        removeWordImage(wordId).then(res => {
+            handleUpdateWord(key, 'image', null);
+        });
+    }
 
     return (
         <div className="lesson-words">
@@ -125,7 +130,15 @@ export default function Words({updateWords, words}: WordsProps): React.ReactElem
                         </Grid>
                         <Grid size={1}>
                             <div>
-                                <div>{word.image && <img src={word.image} alt="Word illustration" className="small-image" />}</div>
+                                <div>{word.image &&
+                                    <div className="image-container">
+                                        <img src={word.image} alt="Word illustration" className="small-image" />
+                                        <IconButton >
+                                                <ClearIcon className="basic-icon" onClick={() => handleRemoveWordImage(key, word.id)} />
+                                        </IconButton>
+                                    </div>
+                                }
+                                </div>
                                 <div>
                                     <IconButton component="label">
                                         <CloudUploadIcon className="basic-icon" />
