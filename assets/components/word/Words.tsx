@@ -34,8 +34,7 @@ export default function Words({updateWords, words}: WordsProps): React.ReactElem
         basicWord: '',
         translation: '',
         example: '',
-        image: '',
-        imageUrl: '',
+        image: ''
     };
 
     if(words.length == 0) {
@@ -72,10 +71,11 @@ export default function Words({updateWords, words}: WordsProps): React.ReactElem
 
             uploadImage(formData).then(res => {
                 handleUpdateWord(key, 'image', res.data.image);
-                handleUpdateWord(key, 'imageUrl', res.data.url);
             });
         }
     }
+
+    console.log(words);
 
     return (
         <div className="lesson-words">
@@ -125,7 +125,7 @@ export default function Words({updateWords, words}: WordsProps): React.ReactElem
                         </Grid>
                         <Grid size={1}>
                             <div>
-                                <div>{word.imageUrl && <img src={word.imageUrl} alt="Word illustration" className="small-image" />}</div>
+                                <div>{word.image && <img src={word.image} alt="Word illustration" className="small-image" />}</div>
                                 <div>
                                     <IconButton component="label">
                                         <CloudUploadIcon className="basic-icon" />

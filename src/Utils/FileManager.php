@@ -32,8 +32,7 @@ class FileManager
             $this->filesystem->rename($sourcePath, $destinationPath, true);
             return true;
         } catch (IOExceptionInterface $exception) {
-            echo "Error moving file: " . $exception->getMessage();
-            return false;
+            throw new \RuntimeException("Error moving file: " . $exception->getMessage());
         }
     }
 }

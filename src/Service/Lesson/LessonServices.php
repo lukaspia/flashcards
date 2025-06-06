@@ -110,17 +110,26 @@ class LessonServices
     private function moveWordsImages(Lesson $lesson): void
     {
         if($words = $lesson->getWords()) {
-            $tempFiles = $this->parameterBag->get('word_image_upload_dir_temp');
-            $wordFiles = $this->parameterBag->get('word_image_upload_dir');
+            $uploadDirTemp = $this->parameterBag->get('word_image_upload_dir_temp');
+            $uploadDir = $this->parameterBag->get('word_image_upload_dir');
+            $uploadDirRelative = $this->parameterBag->get('word_image_upload_dir_relative');
 
             /**@var \App\Entity\Word $word**/
             foreach ($words as $word) {
                 if($image = $word->getImage()) {
-                    $wordFilePath = $wordFiles . $word->getImageRelativePath();
+                    $fileName = basename($image);
+                    $fileRelativePath = $word->getImageRelativePath() . $fileName;
+                    $wordFile = $uploadDir . $fileRelativePath;
+                    $urlFile = $uploadDirRelative . $fileRelativePath;
 
-                    $this->fileManager->moveFile($tempFiles . $image, $wordFilePath);
+                    if($this->fileManager->moveFile($uploadDirTemp . $fileName, $wordFile)) {
+                        $word->setImage('/' . $urlFile);
+                        $this->entityManager->persist($word);
+                    }
                 }
             }
+
+            $this->entityManager->flush();
         }
     }
 }

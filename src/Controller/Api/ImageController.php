@@ -33,11 +33,6 @@ class ImageController extends AbstractApiController
             $wordId = $form->get('word')->getData();
 
             if ($imageFile) {
-                //$originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
-
-                //$safeFilename = $slugger->slug($originalFilename);
-                //$newFilename = $safeFilename . '-' . uniqid('', true) . '.' . $imageFile->guessExtension();
-
                 $newFilename = md5($wordId). '.' . $imageFile->guessExtension();
 
                 try {
@@ -45,40 +40,36 @@ class ImageController extends AbstractApiController
                     $word = $this->entityManager->getRepository(Word::class)->find($wordId);
 
                     if($word) {
-                        if($word->getImage()) {
-                            $wordFiles = $this->getParameter('word_image_upload_dir');
-                            $wordFilePath = $wordFiles . $word->getImageRelativePath();
+                        if($image = $word->getImage()) {
+                            $publicDir = $this->getParameter('public_dir');
+                            $wordFilePath = ltrim($publicDir, '/') . $image;
 
                             if(is_file($wordFilePath)) {
                                 unlink($wordFilePath);
                             }
                         }
 
-                        $word->setImage($newFilename);
-
                         $imageFile->move(
-                            $this->getParameter('word_image_upload_dir') . $word->getImageRelativePath(false),
+                            $this->getParameter('word_image_upload_dir') . $word->getImageRelativePath(),
                             $newFilename
                         );
+
+                        $word->setImage('/' . $this->getParameter('word_image_upload_dir_relative') . $word->getImageRelativePath() . $newFilename);
 
                         $this->entityManager->persist($word);
                         $this->entityManager->flush();
 
-                        //TODO usunąć to i zwrócić prawidłowy url pod spodem
-                        //TODO przetestować dla nowego słowa
-                        //return $this->createResponse(['word' => $word->getId()], ['Image uploaded successfully'], Response::HTTP_OK);
-
-                        $imageUrl = $packages->getUrl($this->getParameter('word_image_upload_dir_relative')) . $word->getImageRelativePath();
+                        $image = $word->getImage();
                     } else {
                         $imageFile->move(
                             $this->getParameter('word_image_upload_dir_temp'),
                             $newFilename
                         );
 
-                        $imageUrl = $packages->getUrl($this->getParameter('word_image_upload_dir_relative')) . 'temp/' . $newFilename;
+                        $image = '/' . $this->getParameter('word_image_upload_dir_relative') . 'temp/' . $newFilename;
                     }
 
-                    return $this->createResponse(['image' => $newFilename, 'url' => $imageUrl], ['Image uploaded successfully'], Response::HTTP_OK);
+                    return $this->createResponse(['image' => $image, 'url' => ''], ['Image uploaded successfully'], Response::HTTP_OK);
                 } catch (FileException $e) {
                     return $this->createResponse(null, ['Upload image error: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
                 }
