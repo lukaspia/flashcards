@@ -1,0 +1,4 @@
+### GET request to example server
+DELETE http://flashcards.local/api/v1/image/45
+
+###
