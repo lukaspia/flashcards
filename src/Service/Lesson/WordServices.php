@@ -82,4 +82,35 @@ class WordServices
 
         return false;
     }
+
+    /**
+     * @param array $words
+     * @return void
+     */
+    public function moveWordsImagesFromTemporary(array $words): void
+    {
+        $uploadDirTemp = $this->parameterBag->get('word_image_upload_dir_temp');
+        $uploadDir = $this->parameterBag->get('word_image_upload_dir');
+        $uploadDirRelative = $this->parameterBag->get('word_image_upload_dir_relative');
+
+        foreach ($words as $word) {
+            if(!($word instanceof Word)) {
+                continue;
+            }
+
+            if($image = $word->getImage()) {
+                $fileName = basename($image);
+                $fileRelativePath = $word->getImageRelativePath() . $fileName;
+                $wordFile = $uploadDir . $fileRelativePath;
+                $urlFile = $uploadDirRelative . $fileRelativePath;
+
+                if($this->fileManager->moveFile($uploadDirTemp . $fileName, $wordFile)) {
+                    $word->setImage('/' . $urlFile);
+                    $this->entityManager->persist($word);
+                }
+            }
+        }
+
+        $this->entityManager->flush();
+    }
 }
