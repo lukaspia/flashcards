@@ -8,6 +8,7 @@ import LoadingPreloader from "../components/ui/LoadingPreloader";
 import Words from "../components/word/Words";
 import {updateLesson} from "../services/api/lessonApi";
 import CollapseSuccessAlert from "../components/ui/CollapseSuccessAlert";
+import WordsContext from "../services/context/WordsContext";
 
 export default function LessonEdit(): React.ReactElement {
     const {id} = useParams();
@@ -54,6 +55,11 @@ export default function LessonEdit(): React.ReactElement {
         setOpenSuccessAlert(false);
     }, []);
 
+    const wordsContextValue = {
+        words: lesson?.words || [],
+        updateWords: updateWords,
+    };
+
     return (
         <div className="lesson-edit">
             <div className="lesson-header">
@@ -77,7 +83,9 @@ export default function LessonEdit(): React.ReactElement {
             />
 
             <div className="lesson-words-wrapper">
-                <Words updateWords={updateWords} words={lesson?.words || []} />
+                <WordsContext value={wordsContextValue} >
+                    <Words updateWords={updateWords} words={lesson?.words || []} />
+                </WordsContext>
             </div>
 
             <div className="lesson-footer">

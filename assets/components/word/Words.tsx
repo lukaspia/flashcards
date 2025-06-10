@@ -1,15 +1,25 @@
 import React, {useState} from "react";
 import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
-import PlaylistRemoveIcon from '@mui/icons-material/PlaylistRemove';
 import Button from "@mui/material/Button";
 import Grid from '@mui/material/Grid';
-import {TextField} from "@mui/material";
-import IconButton from "@mui/material/IconButton";
 import {Word} from "./Word";
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { styled } from '@mui/material/styles';
-import {uploadImage, removeWordImage} from "../../services/api/api";
-import ClearIcon from '@mui/icons-material/Clear';
+import WordRow from "./WordRow";
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    useSortable,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 
 interface WordsProps {
     updateWords: (words: Word[]) => void;
@@ -47,40 +57,37 @@ export default function Words({updateWords, words}: WordsProps): React.ReactElem
         updateWords(newWords);
     }
 
-    const handleUpdateWord = (key: number, field: keyof Word, value: any) => {
-        const newWords = [...words];
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
 
-        if(field !== 'id') {
-            (newWords[key] as any)[field] = value;
+    function handleDragEnd(event: any) {
+        const {active, over} = event;
+
+        if (active.id !== over.id) {
+
+            const oldIndex = words.indexOf(active.id);
+            const newIndex = words.indexOf(over.id);
+
+            console.log(active.id, over.id);
+            console.log(oldIndex, newIndex);
+
+            const ar = arrayMove(words, over.id, active.id);
+
+            updateWords(ar);
+
+            /*updateWords((prevWords: Word[]) => {
+                const oldIndex = prevWords.indexOf(active.id);
+                const newIndex = prevWords.indexOf(over.id);
+
+                return arrayMove(prevWords, oldIndex, newIndex);
+            });*/
         }
-
-        updateWords(newWords);
     }
 
-    const handleRemoveWord = (idToRemove: number) => {
-        const newWords = words.filter(word => word.id !== idToRemove);
-        updateWords(newWords);
-    }
-
-    const handleUploadImage = (key: number, files: FileList | null, wordId: number) => {
-        if(files && files.length > 0) {
-            const file = files[0];
-
-            const formData = new FormData();
-            formData.append('image', file);
-            formData.append('word', wordId as any as string);
-
-            uploadImage(formData).then(res => {
-                handleUpdateWord(key, 'image', res.data.image);
-            });
-        }
-    }
-
-    const handleRemoveWordImage = (key: number, wordId: number) => {
-        removeWordImage(wordId).then(res => {
-            handleUpdateWord(key, 'image', null);
-        });
-    }
 
     return (
         <div className="lesson-words">
@@ -112,79 +119,21 @@ export default function Words({updateWords, words}: WordsProps): React.ReactElem
                 </Grid>
             </Grid>
 
-            {words.map((word, key) => (
-                <div key={word.id} className={`word-${word.id}`}>
-                    <Grid container spacing={2}>
-                        <Grid size={1}>
-                            <div></div>
-                        </Grid>
-                        <Grid size={5}>
-                            <div>
-                                <TextField id="standard-basic" label="Nazwa pl" variant="standard" value={word.basicWord} onChange={(e) => {handleUpdateWord(key, 'basicWord', e.target.value)}} />
-                            </div>
-                        </Grid>
-                        <Grid size={5}>
-                            <div>
-                                <TextField id="standard-basic" label="Nazwa en" variant="standard" value={word.translation} onChange={(e) => {handleUpdateWord(key, 'translation', e.target.value)}} />
-                            </div>
-                        </Grid>
-                        <Grid size={1}>
-                            <div>
-                                <div>{word.image &&
-                                    <div className="image-container">
-                                        <img src={word.image} alt="Word illustration" className="small-image" />
-                                        <IconButton >
-                                                <ClearIcon className="basic-icon" onClick={() => handleRemoveWordImage(key, word.id)} />
-                                        </IconButton>
-                                    </div>
-                                }
-                                </div>
-                                <div>
-                                    <IconButton component="label">
-                                        <CloudUploadIcon className="basic-icon" />
-                                        <VisuallyHiddenInput
-                                            type="file"
-                                            onChange={(e) => {handleUploadImage(key, e.target.files, word.id);}}
-                                            multiple
-                                        />
-                                    </IconButton>
-                                </div>
-                            </div>
-                        </Grid>
-                    </Grid>
-                    <Grid container spacing={2}>
-                        <Grid size={1}>
-                            <div>{key + 1}</div>
-                        </Grid>
-                        <Grid size={5}>
-                            <div>
 
-                            </div>
-                        </Grid>
-                        <Grid size={5}>
-                            <div>
-                                <TextField
-                                    label="Przykład użycia"
-                                    multiline
-                                    rows={2}
-                                    variant="standard"
-                                    value={word.example}
-                                    onChange={(e) => {handleUpdateWord(key, 'example', e.target.value)}}
-                                />
-                            </div>
-                        </Grid>
-                        <Grid size={1}>
-                            <div>
-                                {key > 0 && (
-                                    <IconButton >
-                                        <PlaylistRemoveIcon className="basic-icon" onClick={() => handleRemoveWord(word.id)} />
-                                    </IconButton>
-                                )}
-                            </div>
-                        </Grid>
-                    </Grid>
-                </div>
-            ))}
+            <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+            >
+                <SortableContext
+                    items={words}
+                    strategy={verticalListSortingStrategy}
+                >
+                    {words.map((word, key) => (
+                        <WordRow key={key} keyId={key} word={word} />
+                    ))}
+                </SortableContext>
+            </DndContext>
 
             <Button
                 className="btn btn-primary"
