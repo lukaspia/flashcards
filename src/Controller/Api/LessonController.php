@@ -7,6 +7,7 @@ namespace App\Controller\Api;
 
 
 use App\Entity\Lesson;
+use App\Entity\Word;
 use App\Service\Lesson\LessonServices;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -15,6 +16,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Validator\Exception\InvalidArgumentException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -22,6 +24,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class LessonController extends AbstractApiController
 {
     private const LESSON_READ_GROUP = 'lesson:read';
+    private const LESSON_WRITE_GROUP = 'lesson:write';
     private const DEFAULT_PAGINATION_LIMIT_PARAM = 'pagination_default_limit';
 
     public function __construct(
@@ -61,8 +64,26 @@ class LessonController extends AbstractApiController
             );
         } catch (\Exception $e) {
             $this->logger->error('Error fetching lessons: ' . $e->getMessage(), ['exception' => $e]);
-            return $this->createResponse(null, ['An error occurred while fetching lessons.'], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->createResponse(
+                null,
+                ['An error occurred while fetching lessons.'],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
         }
+    }
+
+    #[Route('/lesson/{id}', name: 'get_lesson', methods: ['GET'])]
+    public function getLesson(Lesson $lesson): JsonResponse
+    {
+        if (!($this->getUser())) {
+            return $this->createResponse(null, ['Authentication required.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        return $this->createResponse(
+            ['lesson' => $lesson], [],
+            Response::HTTP_OK,
+            ['groups' => self::LESSON_READ_GROUP]
+        );
     }
 
     #[Route('/lesson', name: 'add_lesson', methods: ['POST'])]
@@ -102,6 +123,64 @@ class LessonController extends AbstractApiController
             $this->logger->error('Lesson not created: ' . $e->getMessage());
             return $this->createResponse(null, ['Lesson not created', $e], Response::HTTP_BAD_REQUEST);
         }
+    }
+
+    #[Route('/lesson', name: 'update_lesson', methods: ['PUT'])]
+    public function updateLesson(Request $request): JsonResponse
+    {
+        $data = $request->toArray();
+
+        $existingLesson = null;
+        if (isset($data['id'])) {
+            $existingLesson = $this->entityManager->getRepository(Lesson::class)->find($data['id']);
+        }
+
+        if (!$existingLesson) {
+            return $this->createResponse(null, ['Lesson not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $words = $existingLesson->getWords();
+        $words->clear();
+
+        if (isset($data['words'])) {
+            $lessonWords = $this->entityManager->getRepository(Word::class)->findByLessonId($data['id']);
+            foreach ($data['words'] as $word) {
+                $context = [];
+                if (isset($word['id'], $lessonWords[$word['id']])) {
+                    $context = [AbstractNormalizer::OBJECT_TO_POPULATE => $lessonWords[$word['id']]];
+                }
+
+                try {
+                    $wordEntity = $this->denormalizer->denormalize($word, Word::class, null, $context);
+                } catch (ExceptionInterface $e) {
+                    return $this->createResponse(
+                        null,
+                        ['Invalid data: ' . $e->getMessage()],
+                        Response::HTTP_BAD_REQUEST
+                    );
+                }
+
+                $wordEntity->setLesson($existingLesson);
+                $words->add($wordEntity);
+            }
+        }
+
+        try {
+            $lesson = $this->denormalizer->denormalize($data, Lesson::class, null, [
+                AbstractNormalizer::OBJECT_TO_POPULATE => $existingLesson,
+                AbstractNormalizer::GROUPS => [self::LESSON_WRITE_GROUP],
+            ]);
+        } catch (ExceptionInterface $e) {
+            return $this->createResponse(null, ['Invalid data: ' . $e->getMessage()], Response::HTTP_BAD_REQUEST);
+        }
+
+        $this->lessonServices->updateLesson($lesson);
+
+        return $this->createResponse(
+            ['lesson' => $lesson], ['Lesson updated successfully'],
+            Response::HTTP_OK,
+            ['groups' => self::LESSON_READ_GROUP]
+        );
     }
 
     #[Route('/lesson/{id}', name: 'remove_lesson', methods: ['DELETE'])]

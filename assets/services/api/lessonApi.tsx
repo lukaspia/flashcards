@@ -7,8 +7,20 @@ export async function getLessons(page: number = 1) {
     return await axios.get(`${BASE_URL}/lessons?page=` + page).then(res => res.data);
 }
 
+export async function getLesson(id: number) {
+    return await axios.get(`${BASE_URL}/lesson/${id}`).then(res => res.data);
+}
+
 export async function addLesson(formData: FormData) {
     return await axios.post(`${BASE_URL}/lesson`, formData).then(res => res.data);
+}
+
+export async function updateLesson(lesson: Lesson) {
+    return await axios.put(`${BASE_URL}/lesson`, lesson, {
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    }).then(res => res.data);
 }
 
 export async function removeLessons(lesson: Lesson) {
