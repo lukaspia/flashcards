@@ -7,8 +7,10 @@ namespace App\Service\Lesson;
 
 
 use App\Entity\Word;
+use App\Utils\FileManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Doctrine\Common\Collections\Collection;
 
 class WordServices
 {
@@ -20,15 +22,21 @@ class WordServices
      * @var \Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface
      */
     private ParameterBagInterface $parameterBag;
+    /**
+     * @var \App\Utils\FileManager
+     */
+    private FileManager $fileManager;
 
     /**
      * @param \Doctrine\ORM\EntityManagerInterface $entityManager
      * @param \Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface $parameterBag
+     * @param \App\Utils\FileManager $fileManager
      */
-    public function __construct(EntityManagerInterface $entityManager, ParameterBagInterface $parameterBag)
+    public function __construct(EntityManagerInterface $entityManager, ParameterBagInterface $parameterBag, FileManager $fileManager)
     {
         $this->entityManager = $entityManager;
         $this->parameterBag = $parameterBag;
+        $this->fileManager = $fileManager;
     }
 
     /**
@@ -87,7 +95,7 @@ class WordServices
      * @param array $words
      * @return void
      */
-    public function moveWordsImagesFromTemporary(array $words): void
+    public function moveWordsImagesFromTemporary(Collection $words): void
     {
         $uploadDirTemp = $this->parameterBag->get('word_image_upload_dir_temp');
         $uploadDir = $this->parameterBag->get('word_image_upload_dir');

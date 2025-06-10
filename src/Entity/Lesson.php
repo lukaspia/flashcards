@@ -79,14 +79,6 @@ class Lesson
         $this->user = $user;
     }
 
-    #[ORM\PrePersist]
-    public function setPersistAddDate(): void
-    {
-        if ($this->addDate === null) {
-            $this->setAddDate(new \DateTime());
-        }
-    }
-
     public function getWords(): ?Collection
     {
         return $this->words;
@@ -95,5 +87,24 @@ class Lesson
     public function setWords(?Collection $words): void
     {
         $this->words = $words;
+    }
+
+    #[ORM\PrePersist]
+    public function setPersistAddDate(): void
+    {
+        if ($this->addDate === null) {
+            $this->setAddDate(new \DateTime());
+        }
+    }
+
+    #[ORM\PreUpdate]
+    #[ORM\PrePersist]
+    public function updateWordsOrder(): void
+    {
+        $order = 1;
+        foreach ($this->words as $word) {
+            $word->setOrder($order);
+            $order++;
+        }
     }
 }

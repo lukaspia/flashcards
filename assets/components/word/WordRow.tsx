@@ -24,12 +24,12 @@ const VisuallyHiddenInput = styled('input')({
     width: 1,
 });
 
-interface Punkt {
-    keyId: any;
-    word: any;
+interface WordRowProps {
+    keyId: number;
+    word: Word;
 }
 
-export default function WordRow({ keyId, word}: Punkt) {
+export default function WordRow({ keyId, word}: WordRowProps) {
     const {
         attributes,
         listeners,

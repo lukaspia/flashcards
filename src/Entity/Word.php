@@ -31,6 +31,9 @@ class Word
     #[ORM\JoinColumn(name: "lesson", referencedColumnName: "id")]
     private Lesson $lesson;
 
+    #[ORM\Column(type: "integer")]
+    private int $order;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -84,6 +87,16 @@ class Word
     public function setLesson(Lesson $lesson): void
     {
         $this->lesson = $lesson;
+    }
+
+    public function getOrder(): int
+    {
+        return $this->order;
+    }
+
+    public function setOrder(int $order): void
+    {
+        $this->order = $order;
     }
 
     public function getImageRelativePath(): ?string
