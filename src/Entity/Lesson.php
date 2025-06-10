@@ -32,6 +32,7 @@ class Lesson
     private ?\DateTime $addDate = null;
 
     #[ORM\OneToMany(targetEntity: Word::class, mappedBy: 'lesson', cascade: ['persist'], orphanRemoval: true)]
+    #[ORM\OrderBy(['sequence' => 'ASC'])]
     private ?Collection $words;
 
     public function __construct()
@@ -97,13 +98,12 @@ class Lesson
         }
     }
 
-    #[ORM\PreUpdate]
-    #[ORM\PrePersist]
+    #[ORM\PreFlush]
     public function updateWordsOrder(): void
     {
         $order = 1;
         foreach ($this->words as $word) {
-            $word->setOrder($order);
+            $word->setSequence($order);
             $order++;
         }
     }

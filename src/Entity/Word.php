@@ -32,7 +32,7 @@ class Word
     private Lesson $lesson;
 
     #[ORM\Column(type: "integer")]
-    private int $order;
+    private int $sequence;
 
     public function getId(): ?int
     {
@@ -89,14 +89,14 @@ class Word
         $this->lesson = $lesson;
     }
 
-    public function getOrder(): int
+    public function getSequence(): int
     {
-        return $this->order;
+        return $this->sequence;
     }
 
-    public function setOrder(int $order): void
+    public function setSequence(int $sequence): void
     {
-        $this->order = $order;
+        $this->sequence = $sequence;
     }
 
     public function getImageRelativePath(): ?string
