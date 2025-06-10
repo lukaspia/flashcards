@@ -82,8 +82,6 @@ export default function WordRow({ keyId, word}: WordRowProps) {
             handleUpdateWord(key, 'image', null);
         });
     }
-    //TODO przenieść te funkcje,które są tutaj potrzebne
-    //TODO zapisać kolejność w bazie danych
 
     return (
         <div key={word.id} className={`word-${word.id}`} ref={setNodeRef} style={style}>

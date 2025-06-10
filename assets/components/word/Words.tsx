@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useContext, useState} from "react";
 import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 import Button from "@mui/material/Button";
 import Grid from '@mui/material/Grid';
@@ -8,6 +8,7 @@ import WordRow from "./WordRow";
 import {
     DndContext,
     closestCenter,
+    DragOverlay,
     KeyboardSensor,
     PointerSensor,
     useSensor,
@@ -20,11 +21,7 @@ import {
     sortableKeyboardCoordinates,
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-
-interface WordsProps {
-    updateWords: (words: Word[]) => void;
-    words: Word[];
-}
+import WordsContext from "../../services/context/WordsContext";
 
 const VisuallyHiddenInput = styled('input')({
     clip: 'rect(0 0 0 0)',
@@ -38,7 +35,9 @@ const VisuallyHiddenInput = styled('input')({
     width: 1,
 });
 
-export default function Words({updateWords, words}: WordsProps): React.ReactElement {
+export default function Words(): React.ReactElement {
+    const [activeId, setActiveId] = useState(null);
+    const {words, updateWords} = useContext(WordsContext);
 
     const emptyWord: Word = {
         id: Date.now(),
@@ -68,26 +67,11 @@ export default function Words({updateWords, words}: WordsProps): React.ReactElem
         const {active, over} = event;
 
         if (active.id !== over.id) {
+            const newWords = arrayMove(words, active.id, over.id);
 
-            const oldIndex = words.indexOf(active.id);
-            const newIndex = words.indexOf(over.id);
-
-            console.log(active.id, over.id);
-            console.log(oldIndex, newIndex);
-
-            const ar = arrayMove(words, over.id, active.id);
-
-            updateWords(ar);
-
-            /*updateWords((prevWords: Word[]) => {
-                const oldIndex = prevWords.indexOf(active.id);
-                const newIndex = prevWords.indexOf(over.id);
-
-                return arrayMove(prevWords, oldIndex, newIndex);
-            });*/
+            updateWords(newWords);
         }
     }
-
 
     return (
         <div className="lesson-words">

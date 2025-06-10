@@ -84,7 +84,7 @@ export default function LessonEdit(): React.ReactElement {
 
             <div className="lesson-words-wrapper">
                 <WordsContext value={wordsContextValue} >
-                    <Words updateWords={updateWords} words={lesson?.words || []} />
+                    <Words />
                 </WordsContext>
             </div>
 
