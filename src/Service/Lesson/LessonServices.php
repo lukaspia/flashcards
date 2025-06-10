@@ -27,15 +27,21 @@ class LessonServices
      * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
      */
     private EventDispatcherInterface $eventDispatcher;
+    /**
+     * @var \App\Service\Lesson\WordServices
+     */
+    private WordServices $wordServices;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         ValidatorInterface $validator,
-        EventDispatcherInterface $eventDispatcher
+        EventDispatcherInterface $eventDispatcher,
+        WordServices $wordServices
     ) {
         $this->entityManager = $entityManager;
         $this->validator = $validator;
         $this->eventDispatcher = $eventDispatcher;
+        $this->wordServices = $wordServices;
     }
 
     /**
@@ -44,18 +50,16 @@ class LessonServices
      */
     public function addLesson(Lesson $lesson): Lesson
     {
-        $errors = $this->validator->validate($lesson);
-
-        if (count($errors) > 0) {
-            throw new InvalidArgumentException((string)$errors);
-        }
-
-        $this->entityManager->persist($lesson);
-        $this->entityManager->flush();
+        $lesson = $this->saveLesson($lesson);
 
         $this->eventDispatcher->dispatch(new AddLessonEvent($lesson), AddLessonEvent::NAME);
 
         return $lesson;
+    }
+
+    public function updateLesson(Lesson $lesson): Lesson
+    {
+        return $this->saveLesson($lesson);
     }
 
     /**
@@ -68,6 +72,22 @@ class LessonServices
         $this->entityManager->flush();
 
         $this->eventDispatcher->dispatch(new AddLessonEvent($lesson), AddLessonEvent::NAME);
+
+        return $lesson;
+    }
+
+    private function saveLesson(Lesson $lesson): Lesson
+    {
+        $errors = $this->validator->validate($lesson);
+
+        if (count($errors) > 0) {
+            throw new InvalidArgumentException((string)$errors);
+        }
+
+        $this->entityManager->persist($lesson);
+        $this->entityManager->flush();
+
+        $this->wordServices->moveWordsImagesFromTemporary($lesson->getWords());
 
         return $lesson;
     }

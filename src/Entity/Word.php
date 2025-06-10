@@ -32,17 +32,7 @@ class Word
     private Lesson $lesson;
 
     #[ORM\Column(type: "integer")]
-    private int $sequence = 1;
-
-    #[ORM\Column(type: "integer")]
-    private int $errors = 0;
-
-    #[Orm\Column(type: "string", length: 7, nullable: true)]
-    private string $color;
-
-    #[ORM\ManyToOne(targetEntity: WordCategory::class)]
-    #[ORM\JoinColumn(name: "word_category", referencedColumnName: "id")]
-    private WordCategory $wordCategory;
+    private int $sequence;
 
     public function getId(): ?int
     {
@@ -112,35 +102,5 @@ class Word
     public function getImageRelativePath(): ?string
     {
         return $this->getLesson()->getUser()->getId() . '/' . $this->getLesson()->getId() . '/';
-    }
-
-    public function getErrors(): int
-    {
-        return $this->errors;
-    }
-
-    public function setErrors(int $errors): void
-    {
-        $this->errors = $errors;
-    }
-
-    public function getColor(): string
-    {
-        return $this->color;
-    }
-
-    public function setColor(string $color): void
-    {
-        $this->color = $color;
-    }
-
-    public function getWordCategory(): WordCategory
-    {
-        return $this->wordCategory;
-    }
-
-    public function setWordCategory(WordCategory $wordCategory): void
-    {
-        $this->wordCategory = $wordCategory;
     }
 }

@@ -1,12 +1,14 @@
-import React, {useContext, useEffect} from "react";
+import React, {useContext, useState} from "react";
 import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 import Button from "@mui/material/Button";
 import Grid from '@mui/material/Grid';
-import {Word} from "../../types/word.types";
+import {Word} from "./Word";
+import { styled } from '@mui/material/styles';
 import WordRow from "./WordRow";
 import {
     DndContext,
     closestCenter,
+    DragOverlay,
     KeyboardSensor,
     PointerSensor,
     useSensor,
@@ -14,34 +16,43 @@ import {
 } from '@dnd-kit/core';
 import {
     arrayMove,
+    useSortable,
     SortableContext,
     sortableKeyboardCoordinates,
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import WordsContext from "../../services/context/WordsContext";
 
-export default function Words(): React.ReactElement {
-    const {words, updateWords, sourceLanguage, targetLanguage} = useContext(WordsContext);
+const VisuallyHiddenInput = styled('input')({
+    clip: 'rect(0 0 0 0)',
+    clipPath: 'inset(50%)',
+    height: 1,
+    overflow: 'hidden',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    whiteSpace: 'nowrap',
+    width: 1,
+});
 
-    const createEmptyWord = (): Word => ({
+export default function Words(): React.ReactElement {
+    const [activeId, setActiveId] = useState(null);
+    const {words, updateWords} = useContext(WordsContext);
+
+    const emptyWord: Word = {
         id: Date.now(),
         basicWord: '',
         translation: '',
         example: '',
-        image: '',
-        wordCategory: '',
-        errors: 0,
-        color: '',
-    });
+        image: ''
+    };
 
-    useEffect(() => {
-        if (words.length === 0) {
-            updateWords([createEmptyWord()]);
-        }
-    }, [words, updateWords]);
+    if(words.length == 0) {
+        words.push(emptyWord);
+    }
 
     const handleAddWord = () => {
-        const newWords = [...words, createEmptyWord()];
+        const newWords = [...words, emptyWord];
         updateWords(newWords);
     }
 
@@ -52,24 +63,14 @@ export default function Words(): React.ReactElement {
         })
     );
 
-
     function handleDragEnd(event: any) {
         const {active, over} = event;
 
-        if (!active || !over || active.id === over.id) {
-            return;
+        if (active.id !== over.id) {
+            const newWords = arrayMove(words, active.id, over.id);
+
+            updateWords(newWords);
         }
-
-        const oldIndex = words.findIndex(word => word.id === active.id);
-        const newIndex = words.findIndex(word => word.id === over.id);
-
-        if (oldIndex === -1 || newIndex === -1) {
-            console.warn("Error: Could not find word in array during drag end.", { activeId: active.id, overId: over.id, words });
-            return;
-        }
-
-        const newWords = arrayMove(words, oldIndex, newIndex);
-        updateWords(newWords);
     }
 
     return (
@@ -78,7 +79,7 @@ export default function Words(): React.ReactElement {
                 <Grid container spacing={2}>
                     <Grid size={2}>
                         <div>
-                            <h5>Lista słów</h5>
+                            <h2>Lista słów</h2>
                         </div>
                     </Grid>
                     <Grid size={10}>
@@ -92,15 +93,16 @@ export default function Words(): React.ReactElement {
             <Grid container spacing={2}>
                 <Grid size={{ xs: 6, md: 6 }}>
                     <div>
-                        <h6>Słowa {sourceLanguage}</h6>
+                        <h3>Słowa PL</h3>
                     </div>
                 </Grid>
                 <Grid size={{ xs: 6, md: 6 }}>
                     <div>
-                        <h6>Słowa {targetLanguage}</h6>
+                        <h3>Słowa EN</h3>
                     </div>
                 </Grid>
             </Grid>
+
 
             <DndContext
                 sensors={sensors}
@@ -108,17 +110,17 @@ export default function Words(): React.ReactElement {
                 onDragEnd={handleDragEnd}
             >
                 <SortableContext
-                    items={words.map(word => word.id)}
+                    items={words}
                     strategy={verticalListSortingStrategy}
                 >
                     {words.map((word, key) => (
-                        <WordRow key={word.id} index={key} keyId={word.id} word={word} />
+                        <WordRow key={key} keyId={key} word={word} />
                     ))}
                 </SortableContext>
             </DndContext>
 
             <Button
-                className="btn button-primary"
+                className="btn btn-primary"
                 variant="contained"
                 disabled={words.length > 29}
                 onClick={handleAddWord}

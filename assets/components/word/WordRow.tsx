@@ -1,24 +1,16 @@
-import React, {useContext} from "react";
 import {useSortable} from "@dnd-kit/sortable";
 import {CSS} from "@dnd-kit/utilities";
-import {
-    Grid,
-    TextField,
-    IconButton,
-    styled,
-    InputLabel,
-    MenuItem,
-    FormControl,
-    Select,
-    Box,
-} from '@mui/material';
+import React, {useContext} from "react";
+import Grid from "@mui/material/Grid";
+import {TextField} from "@mui/material";
+import IconButton from "@mui/material/IconButton";
 import ClearIcon from "@mui/icons-material/Clear";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import PlaylistRemoveIcon from "@mui/icons-material/PlaylistRemove";
-import VolumeUpIcon from '@mui/icons-material/VolumeUp';
-import {Word} from "@/types/word.types";
+import {styled} from "@mui/material/styles";
+import {Word} from "@/components/word/Word";
 import WordsContext from "../../services/context/WordsContext";
-import { useWordManagement } from "../../hooks/word/useWordManagement";
+import {uploadImage, removeWordImage} from "../../services/api/api";
 
 const VisuallyHiddenInput = styled('input')({
     clip: 'rect(0 0 0 0)',
@@ -33,12 +25,11 @@ const VisuallyHiddenInput = styled('input')({
 });
 
 interface WordRowProps {
-    index: number;
     keyId: number;
     word: Word;
 }
 
-export default function WordRow({ index, keyId, word}: WordRowProps) {
+export default function WordRow({ keyId, word}: WordRowProps) {
     const {
         attributes,
         listeners,
@@ -47,17 +38,7 @@ export default function WordRow({ index, keyId, word}: WordRowProps) {
         transition,
     } = useSortable({ id: keyId });
 
-    const {
-        wordState,
-        handleUpdateWord,
-        handleTranslateWord,
-        handleRemoveWord,
-        handleUploadImage,
-        handleRemoveWordImage,
-        handleReadText,
-    } = useWordManagement({ initialWord: word, keyId });
-
-    const {words, updateWords, wordsCategories} = useContext(WordsContext);
+    const {words, updateWords} = useContext(WordsContext);
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -67,39 +48,71 @@ export default function WordRow({ index, keyId, word}: WordRowProps) {
         border: '1px solid lightgray',
     };
 
+    const handleUpdateWord = (key: number, field: keyof Word, value: any) => {
+        const newWords = [...words];
+
+        if(field !== 'id') {
+            (newWords[key] as any)[field] = value;
+        }
+
+        updateWords(newWords);
+    }
+
+    const handleRemoveWord = (idToRemove: number) => {
+        const newWords = words.filter(word => word.id !== idToRemove);
+        updateWords(newWords);
+    }
+
+    const handleUploadImage = (key: number, files: FileList | null, wordId: number) => {
+        if(files && files.length > 0) {
+            const file = files[0];
+
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('word', wordId as any as string);
+
+            uploadImage(formData).then(res => {
+                handleUpdateWord(key, 'image', res.data.image);
+            });
+        }
+    }
+
+    const handleRemoveWordImage = (key: number, wordId: number) => {
+        removeWordImage(wordId).then(res => {
+            handleUpdateWord(key, 'image', null);
+        });
+    }
+
     return (
-        <div key={wordState.id} className={`word-${wordState.id}`} ref={setNodeRef} style={style}>
+        <div key={word.id} className={`word-${word.id}`} ref={setNodeRef} style={style}>
             <Grid container spacing={2}>
                 <Grid size={1}>
                     <div></div>
                 </Grid>
                 <Grid size={5}>
                     <div>
-                        <TextField id="standard-basic" label="Nazwa pl" variant="standard" value={wordState.basicWord}
-                                   onBlur={e => handleTranslateWord('basicWord')}
-                                   onChange={e => handleUpdateWord({ basicWord: e.target.value })}
-                        />
+                        <TextField id="standard-basic" label="Nazwa pl" variant="standard" value={word.basicWord}
+                                   onChange={(e) => {
+                                       handleUpdateWord(keyId, 'basicWord', e.target.value)
+                                   }}/>
                     </div>
                 </Grid>
                 <Grid size={5}>
                     <div>
-                        <TextField id="standard-basic" label="Nazwa en" variant="standard" value={wordState.translation}
-                                   onBlur={e => handleTranslateWord('translation')}
-                                   onChange={e => handleUpdateWord({ translation: e.target.value })}
-                        />
-                        <IconButton>
-                            <VolumeUpIcon className="basic-icon" onClick={() => handleReadText(wordState.translation, 'translation')}/>
-                        </IconButton>
+                        <TextField id="standard-basic" label="Nazwa en" variant="standard" value={word.translation}
+                                   onChange={(e) => {
+                                       handleUpdateWord(keyId, 'translation', e.target.value)
+                                   }}/>
                     </div>
                 </Grid>
                 <Grid size={1}>
                     <div>
-                        <div>{wordState.image &&
+                        <div>{word.image &&
                             <div className="image-container">
-                                <img src={wordState.image} alt="Word illustration" className="small-image"/>
+                                <img src={word.image} alt="Word illustration" className="small-image"/>
                                 <IconButton>
                                     <ClearIcon className="basic-icon"
-                                               onClick={handleRemoveWordImage}/>
+                                               onClick={() => handleRemoveWordImage(keyId, word.id)}/>
                                 </IconButton>
                             </div>
                         }
@@ -110,7 +123,7 @@ export default function WordRow({ index, keyId, word}: WordRowProps) {
                                 <VisuallyHiddenInput
                                     type="file"
                                     onChange={(e) => {
-                                        handleUploadImage(e.target.files);
+                                        handleUploadImage(keyId, e.target.files, word.id);
                                     }}
                                     multiple
                                 />
@@ -125,55 +138,33 @@ export default function WordRow({ index, keyId, word}: WordRowProps) {
                         <button {...attributes} {...listeners} className="drag-handle">
                             ⠿
                         </button>
-                        {index + 1}
+                        {keyId + 1}
                     </div>
                 </Grid>
                 <Grid size={5}>
                     <div>
-                        <input className="word-color" type="color" value={wordState.color && wordState.color.trim() !== '' ? wordState.color : '#000000'} onChange={e => handleUpdateWord({ color: e.target.value })}/>
-                    </div>
-                    <div>
-                        <FormControl variant="standard" sx={{ m: 1, minWidth: 120 }}>
-                            <InputLabel>Kategoria</InputLabel>
-                            <Select
-                                id="word-category"
-                                value={wordState.wordCategory?.id ?? (wordsCategories[0]?.id ?? '')}
-                                onChange={e => handleUpdateWord({ wordCategory: wordsCategories.find(category => category.id === e.target.value) })}
-                                label="Kategoria"
-                            >
-                                {
-                                    wordsCategories.map(
-                                        (category) => (
-                                            <MenuItem key={category.id} value={category.id}>{category.name}</MenuItem>
-                                        )
-                                    )
-                                }
-                            </Select>
-                        </FormControl>
+
                     </div>
                 </Grid>
                 <Grid size={5}>
                     <div>
-                    <TextField
+                        <TextField
                             label="Przykład użycia"
                             multiline
                             rows={2}
                             variant="standard"
-                            value={wordState.example}
+                            value={word.example}
                             onChange={(e) => {
-                                handleUpdateWord({ example: e.target.value })
+                                handleUpdateWord(keyId, 'example', e.target.value)
                             }}
                         />
-                        <IconButton>
-                            <VolumeUpIcon className="basic-icon" onClick={() => handleReadText(wordState.example, 'example')}/>
-                        </IconButton>
                     </div>
                 </Grid>
                 <Grid size={1}>
                     <div>
-                        {words.length > 1 && (
+                        {keyId > 0 && (
                             <IconButton>
-                                <PlaylistRemoveIcon className="basic-icon" onClick={handleRemoveWord}/>
+                                <PlaylistRemoveIcon className="basic-icon" onClick={() => handleRemoveWord(word.id)}/>
                             </IconButton>
                         )}
                     </div>

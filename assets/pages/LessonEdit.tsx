@@ -1,80 +1,77 @@
-import React, {useCallback} from 'react';
+import React, {useCallback, useState} from 'react';
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import SaveIcon from '@mui/icons-material/Save';
-import {useNavigate, useParams} from "react-router";
+import useLesson from "../hooks/useLesson";
+import {useParams} from "react-router";
 import LoadingPreloader from "../components/ui/LoadingPreloader";
 import Words from "../components/word/Words";
+import {updateLesson} from "../services/api/lessonApi";
 import CollapseSuccessAlert from "../components/ui/CollapseSuccessAlert";
 import WordsContext from "../services/context/WordsContext";
-import KeyboardReturnIcon from "@mui/icons-material/KeyboardReturn";
-import IconButton from "@mui/material/IconButton";
-import {generatePath} from "../utils/path-utils";
-import {ROUTES} from "../constants/Routes";
-import {useLessonEditData} from "../hooks/lesson/useLessonEditData";
-import {useWordCategories} from "../hooks/word/useWordCategories";
-import {useSuccessAlert} from "../hooks/useSuccessAlert";;
 
 export default function LessonEdit(): React.ReactElement {
     const {id} = useParams();
-    const lessonId = id ? parseInt(id) : 0;
-
-    const { openSuccessAlert, successAlertMessage, showSuccessAlert, handleCloseSuccessAlert } = useSuccessAlert();
-
-    const {
-        editableLesson,
-        isLoading,
-        isSaving,
-        isError,
-        setEditableLesson,
-        saveLesson
-    } = useLessonEditData({lessonId, onSaveSuccess: () => showSuccessAlert('Lekcja została zaktualizowana.')});
-
-    const categories = useWordCategories();
-    const navigate = useNavigate();
+    const [lesson, isLoading, isError, setLesson] = useLesson(id ? parseInt(id): 0);
+    const [isSaving, setIsSaving] = useState(false);
+    const [openSuccessAlert, setOpenSuccessAlert] = useState(false);
+    const [successAlertMessage, setSuccessAlertMessage] = useState('');
 
     const handleSetLessonName = (name: string) => {
-        if (editableLesson) {
-            setEditableLesson({ ...editableLesson, name: name });
+        if(lesson != undefined) {
+            setLesson({...lesson, name: name});
         }
-    };
+    }
+
+    const handleSaveLesson = () => {
+        setIsSaving(true);
+        if(lesson != undefined) {
+            updateLesson(lesson)
+                .then((result) => {
+                    setLesson(result.data.lesson);
+                    showSuccessAlert('Lekcja została zaktualizowana.');
+                })
+                .catch((error) => {
+                    console.error(error);
+                }).finally(() => {
+                setIsSaving(false);
+            });
+        }
+    }
 
     const updateWords = useCallback((words: any) => {
-        if (editableLesson) {
-            setEditableLesson({ ...editableLesson, words: words });
+        if(lesson != undefined) {
+            setLesson({...lesson, words: words});
         }
-    }, [editableLesson, setEditableLesson]);
+    }, [lesson, setLesson]);
+
+    const showSuccessAlert = useCallback((message: string) => {
+        setSuccessAlertMessage(message);
+        setOpenSuccessAlert(true);
+    }, []);
+
+    const handleCloseSuccessAlert = useCallback(() => {
+        setSuccessAlertMessage('');
+        setOpenSuccessAlert(false);
+    }, []);
 
     const wordsContextValue = {
-        words: editableLesson?.words || [],
+        words: lesson?.words || [],
         updateWords: updateWords,
-        wordsCategories: categories,
-        sourceLanguage: editableLesson?.sourceLanguage || '',
-        targetLanguage: editableLesson?.targetLanguage || ''
     };
-
-    const handleLessonList = () => {
-        const path = generatePath(ROUTES.LESSON_PANEL);
-        navigate(path);
-    }
 
     return (
         <div className="lesson-edit">
             <div className="lesson-header">
-                <IconButton onClick={handleLessonList}>
-                    <KeyboardReturnIcon className="basic-icon"/>
-                </IconButton>
-
-                <h4>Edycja lekcji</h4>
+                <h1>Edycja lekcji</h1>
 
                 <LoadingPreloader isLoading={isLoading} />
 
                 <TextField
-                    className="lesson-name-input"
                     required
                     id="outlined-required"
                     label="Nazwa lekcji"
-                    value={editableLesson?.name || ''}
+                    value={lesson?.name || ''}
                     onChange={(e) => handleSetLessonName(e.target.value)}
                 />
             </div>
@@ -93,13 +90,11 @@ export default function LessonEdit(): React.ReactElement {
 
             <div className="lesson-footer">
                 <Button
-                    className="btn button-primary"
+                    className="btn btn-primary"
                     variant="contained"
-                    onClick={saveLesson}
-                    endIcon={<SaveIcon />}
-                    disabled={isSaving}
-                >
-                    {isSaving ? 'Zapisywanie...' : 'Zapisz'}
+                    onClick={handleSaveLesson}
+                    endIcon={<SaveIcon />}>
+                    Zapisz
                 </Button>
             </div>
         </div>
