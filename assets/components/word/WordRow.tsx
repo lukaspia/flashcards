@@ -11,6 +11,7 @@ import {styled} from "@mui/material/styles";
 import {Word} from "@/components/word/Word";
 import WordsContext from "../../services/context/WordsContext";
 import {uploadImage, removeWordImage} from "../../services/api/api";
+import {translateWord} from "../../services/api/wordApi";
 
 const VisuallyHiddenInput = styled('input')({
     clip: 'rect(0 0 0 0)',
@@ -56,6 +57,21 @@ export default function WordRow({ keyId, word}: WordRowProps) {
         }
 
         updateWords(newWords);
+    }
+
+    const handleTranslateWord = (key: number, value: any) => {
+        const promptData = {
+            'word': value,
+            'sourceLanguage': 'pl_PL',
+            'targetLanguage': 'en_US',
+        }
+
+        translateWord(promptData).then(res => {
+            console.log(res.data.translation);
+
+            handleUpdateWord(key, 'translation', res.data.translation.translation);
+            handleUpdateWord(key, 'example', res.data.translation.example);
+        });
     }
 
     const handleRemoveWord = (idToRemove: number) => {
@@ -129,7 +145,9 @@ export default function WordRow({ keyId, word}: WordRowProps) {
                                    onChange={(e) => {
                                        handleUpdateWord(keyId, 'basicWord', e.target.value);
                                        //przeczytajTekst("Cześć! To jest testowe zdanie po polsku.");
-                                   }}/>
+                                   }}
+                                    onBlur={e => handleTranslateWord(keyId, e.target.value)}
+                                    />
                     </div>
                 </Grid>
                 <Grid size={5}>

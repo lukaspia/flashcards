@@ -49,6 +49,6 @@ class WordController extends AbstractApiController
             return $this->createResponse(['prompt_data' => $data], ['Something went wrong.' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return $this->createResponse(['translation' => $result, 'prompt_data' => $data], ['Translate successfully'], Response::HTTP_OK);
+        return $this->createResponse(['translation' => reset($result), 'prompt_data' => $data], ['Translate successfully'], Response::HTTP_OK);
     }
 }
