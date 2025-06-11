@@ -12,6 +12,7 @@ import {Word} from "@/components/word/Word";
 import WordsContext from "../../services/context/WordsContext";
 import {uploadImage, removeWordImage} from "../../services/api/api";
 import {translateWord} from "../../services/api/wordApi";
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 
 const VisuallyHiddenInput = styled('input')({
     clip: 'rect(0 0 0 0)',
@@ -156,6 +157,10 @@ export default function WordRow({ keyId, word}: WordRowProps) {
                                    onChange={(e) => {
                                        handleUpdateWord(keyId, 'translation', e.target.value)
                                    }}/>
+                        <IconButton>
+                            <VolumeUpIcon className="basic-icon"
+                                       onClick={() => console.log("click")}/>
+                        </IconButton>
                     </div>
                 </Grid>
                 <Grid size={1}>
@@ -211,11 +216,15 @@ export default function WordRow({ keyId, word}: WordRowProps) {
                                 handleUpdateWord(keyId, 'example', e.target.value)
                             }}
                         />
+                        <IconButton>
+                            <VolumeUpIcon className="basic-icon"
+                                          onClick={() => console.log("click")}/>
+                        </IconButton>
                     </div>
                 </Grid>
                 <Grid size={1}>
                     <div>
-                        {keyId > 0 && (
+                        {words.length > 1 && (
                             <IconButton>
                                 <PlaylistRemoveIcon className="basic-icon" onClick={() => handleRemoveWord(word.id)}/>
                             </IconButton>
