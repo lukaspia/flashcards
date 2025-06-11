@@ -39,7 +39,7 @@ class GeminiService implements AIGeneratorInterface
         }
     }
 
-    public function generateStructuredAnswer(string $prompt, array $answerProperties): mixed
+    public function generateStructuredAnswer(string $prompt, array $answerProperties): array
     {
         foreach ($answerProperties as $answerProperty) {
             if(!($answerProperty instanceof Schema)) {
