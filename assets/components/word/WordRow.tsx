@@ -83,6 +83,40 @@ export default function WordRow({ keyId, word}: WordRowProps) {
         });
     }
 
+    //TODO zrobić translatora z geminie a później zająć się głosami
+    function przeczytajTekst(tekstDoPrzeczytania: any, jezyk = 'pl-PL') {
+        // Sprawdź, czy przeglądarka obsługuje SpeechSynthesis
+        if ('speechSynthesis' in window) {
+            // Utwórz nowy obiekt SpeechSynthesisUtterance
+            const utterance = new SpeechSynthesisUtterance(tekstDoPrzeczytania);
+
+            // Ustaw język (np. polski)
+            utterance.lang = jezyk;
+
+            // Opcjonalne: Ustaw głos
+            // Możesz pobrać listę dostępnych głosów:
+            //const glosy = window.speechSynthesis.getVoices();
+            //console.log(glosy);
+            //utterance.voice = glosy.find(voice => voice.lang === jezyk && voice.name.includes('Polska'));
+            // Pamiętaj, że dostępność głosów zależy od systemu operacyjnego użytkownika i przeglądarki.
+
+            // Opcjonalne: Ustaw wysokość tonu (pitch, 0-2, domyślnie 1)
+            // utterance.pitch = 1;
+
+            // Opcjonalne: Ustaw szybkość mowy (rate, 0.1-10, domyślnie 1)
+            // utterance.rate = 1;
+
+            // Odtwórz tekst
+            window.speechSynthesis.speak(utterance);
+
+            console.log(`Przeczytano: "${tekstDoPrzeczytania}" w języku ${jezyk}`);
+
+        } else {
+            console.warn("Twoja przeglądarka nie obsługuje Web Speech API (SpeechSynthesis).");
+            alert("Niestety, Twoja przeglądarka nie potrafi odtworzyć mowy.");
+        }
+    }
+
     return (
         <div key={word.id} className={`word-${word.id}`} ref={setNodeRef} style={style}>
             <Grid container spacing={2}>
@@ -93,7 +127,8 @@ export default function WordRow({ keyId, word}: WordRowProps) {
                     <div>
                         <TextField id="standard-basic" label="Nazwa pl" variant="standard" value={word.basicWord}
                                    onChange={(e) => {
-                                       handleUpdateWord(keyId, 'basicWord', e.target.value)
+                                       handleUpdateWord(keyId, 'basicWord', e.target.value);
+                                       //przeczytajTekst("Cześć! To jest testowe zdanie po polsku.");
                                    }}/>
                     </div>
                 </Grid>
