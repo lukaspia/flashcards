@@ -1,6 +1,6 @@
 import {useSortable} from "@dnd-kit/sortable";
 import {CSS} from "@dnd-kit/utilities";
-import React, {useContext} from "react";
+import React, {useContext, useState} from "react";
 import Grid from "@mui/material/Grid";
 import {TextField} from "@mui/material";
 import IconButton from "@mui/material/IconButton";
@@ -13,6 +13,7 @@ import WordsContext from "../../services/context/WordsContext";
 import {uploadImage, removeWordImage} from "../../services/api/api";
 import {translateWord} from "../../services/api/wordApi";
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import {readText} from "../../utils/TextReader";
 
 const VisuallyHiddenInput = styled('input')({
     clip: 'rect(0 0 0 0)',
@@ -41,6 +42,9 @@ export default function WordRow({ keyId, word}: WordRowProps) {
     } = useSortable({ id: keyId });
 
     const {words, updateWords} = useContext(WordsContext);
+    const [slowRead, setSlowRead] = useState('');
+    const [sourceLanguage, setSourceLanguage] = useState('pl-PL');
+    const [targetLanguage, setTargetLanguage] = useState('en-US');
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -63,8 +67,8 @@ export default function WordRow({ keyId, word}: WordRowProps) {
     const handleTranslateWord = (key: number, value: any) => {
         const promptData = {
             'word': value,
-            'sourceLanguage': 'pl_PL',
-            'targetLanguage': 'en_US',
+            'sourceLanguage': sourceLanguage,
+            'targetLanguage': targetLanguage,
         }
 
         translateWord(promptData).then(res => {
@@ -100,37 +104,13 @@ export default function WordRow({ keyId, word}: WordRowProps) {
         });
     }
 
-    //TODO zrobić translatora z geminie a później zająć się głosami
-    function przeczytajTekst(tekstDoPrzeczytania: any, jezyk = 'pl-PL') {
-        // Sprawdź, czy przeglądarka obsługuje SpeechSynthesis
-        if ('speechSynthesis' in window) {
-            // Utwórz nowy obiekt SpeechSynthesisUtterance
-            const utterance = new SpeechSynthesisUtterance(tekstDoPrzeczytania);
-
-            // Ustaw język (np. polski)
-            utterance.lang = jezyk;
-
-            // Opcjonalne: Ustaw głos
-            // Możesz pobrać listę dostępnych głosów:
-            //const glosy = window.speechSynthesis.getVoices();
-            //console.log(glosy);
-            //utterance.voice = glosy.find(voice => voice.lang === jezyk && voice.name.includes('Polska'));
-            // Pamiętaj, że dostępność głosów zależy od systemu operacyjnego użytkownika i przeglądarki.
-
-            // Opcjonalne: Ustaw wysokość tonu (pitch, 0-2, domyślnie 1)
-            // utterance.pitch = 1;
-
-            // Opcjonalne: Ustaw szybkość mowy (rate, 0.1-10, domyślnie 1)
-            // utterance.rate = 1;
-
-            // Odtwórz tekst
-            window.speechSynthesis.speak(utterance);
-
-            console.log(`Przeczytano: "${tekstDoPrzeczytania}" w języku ${jezyk}`);
-
+    const handleReadText = (text: string, key: number, type: string) => {
+        if(slowRead == key + type) {
+            readText(text, targetLanguage, 0.7);
+            setSlowRead('');
         } else {
-            console.warn("Twoja przeglądarka nie obsługuje Web Speech API (SpeechSynthesis).");
-            alert("Niestety, Twoja przeglądarka nie potrafi odtworzyć mowy.");
+            readText(text, targetLanguage);
+            setSlowRead(key + type);
         }
     }
 
@@ -145,7 +125,6 @@ export default function WordRow({ keyId, word}: WordRowProps) {
                         <TextField id="standard-basic" label="Nazwa pl" variant="standard" value={word.basicWord}
                                    onChange={(e) => {
                                        handleUpdateWord(keyId, 'basicWord', e.target.value);
-                                       //przeczytajTekst("Cześć! To jest testowe zdanie po polsku.");
                                    }}
                                     onBlur={e => handleTranslateWord(keyId, e.target.value)}
                                     />
@@ -158,8 +137,7 @@ export default function WordRow({ keyId, word}: WordRowProps) {
                                        handleUpdateWord(keyId, 'translation', e.target.value)
                                    }}/>
                         <IconButton>
-                            <VolumeUpIcon className="basic-icon"
-                                       onClick={() => console.log("click")}/>
+                            <VolumeUpIcon className="basic-icon" onClick={() => handleReadText(word.translation, keyId, 'translation')}/>
                         </IconButton>
                     </div>
                 </Grid>
@@ -217,8 +195,7 @@ export default function WordRow({ keyId, word}: WordRowProps) {
                             }}
                         />
                         <IconButton>
-                            <VolumeUpIcon className="basic-icon"
-                                          onClick={() => console.log("click")}/>
+                            <VolumeUpIcon className="basic-icon" onClick={() => handleReadText(word.example, keyId, 'example')}/>
                         </IconButton>
                     </div>
                 </Grid>
