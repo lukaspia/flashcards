@@ -54,6 +54,40 @@ export default function WordRow({ keyId, word}: WordRowProps) {
         border: '1px solid lightgray',
     };
 
+    const handleTranslateWord = (key: number, type: keyof Word, word: string) => {
+        let translation: keyof Word;
+        let translateFrom: string;
+        let translateTo: string;
+
+        if(type === 'basicWord') {
+            translation = 'translation';
+            translateFrom = sourceLanguage;
+            translateTo = targetLanguage;
+        } else {
+            translation = 'basicWord';
+            translateFrom = targetLanguage;
+            translateTo = sourceLanguage;
+        }
+
+        if(words[key][translation] !== '') {
+            return;
+        }
+
+        const promptData = {
+            'word': word,
+            'sourceLanguage': translateFrom,
+            'targetLanguage': translateTo,
+        }
+
+        translateWord(promptData).then(res => {
+            handleUpdateWord(key, translation, res.data.translation.translation);
+
+            if(translation === 'translation') {
+                handleUpdateWord(key, 'example', res.data.translation.example);
+            }
+        });
+    }
+
     const handleUpdateWord = (key: number, field: keyof Word, value: any) => {
         const newWords = [...words];
 
@@ -62,21 +96,6 @@ export default function WordRow({ keyId, word}: WordRowProps) {
         }
 
         updateWords(newWords);
-    }
-
-    const handleTranslateWord = (key: number, value: any) => {
-        const promptData = {
-            'word': value,
-            'sourceLanguage': sourceLanguage,
-            'targetLanguage': targetLanguage,
-        }
-
-        translateWord(promptData).then(res => {
-            console.log(res.data.translation);
-
-            handleUpdateWord(key, 'translation', res.data.translation.translation);
-            handleUpdateWord(key, 'example', res.data.translation.example);
-        });
     }
 
     const handleRemoveWord = (idToRemove: number) => {
@@ -123,19 +142,17 @@ export default function WordRow({ keyId, word}: WordRowProps) {
                 <Grid size={5}>
                     <div>
                         <TextField id="standard-basic" label="Nazwa pl" variant="standard" value={word.basicWord}
-                                   onChange={(e) => {
-                                       handleUpdateWord(keyId, 'basicWord', e.target.value);
-                                   }}
-                                    onBlur={e => handleTranslateWord(keyId, e.target.value)}
-                                    />
+                                   onBlur={e => handleTranslateWord(keyId, 'basicWord', e.target.value)}
+                                   onChange={e => handleUpdateWord(keyId, 'basicWord', e.target.value)}
+                        />
                     </div>
                 </Grid>
                 <Grid size={5}>
                     <div>
                         <TextField id="standard-basic" label="Nazwa en" variant="standard" value={word.translation}
-                                   onChange={(e) => {
-                                       handleUpdateWord(keyId, 'translation', e.target.value)
-                                   }}/>
+                                   onBlur={e => handleTranslateWord(keyId, 'translation', e.target.value)}
+                                   onChange={e => handleUpdateWord(keyId, 'translation', e.target.value)}
+                        />
                         <IconButton>
                             <VolumeUpIcon className="basic-icon" onClick={() => handleReadText(word.translation, keyId, 'translation')}/>
                         </IconButton>

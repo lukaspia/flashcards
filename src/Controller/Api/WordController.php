@@ -39,7 +39,7 @@ class WordController extends AbstractApiController
             return $this->createResponse(['prompt_data' => $data], ['Invalid data. "word", "sourceLanguage", "targetLanguage" is required.'], Response::HTTP_BAD_REQUEST);
         }
 
-        $prompt = sprintf('Translate this from %s to %s: "%s" and answer set as "translation", then show example of using this translation in some sentence, and answer set as "example".', $data['sourceLanguage'], $data['targetLanguage'], $data['word']);
+        $prompt = sprintf('Translate this from %s to %s: "%s" (use most popular translation) and answer set as "translation", then show example of using this translation in some sentence, and answer set as "example".', $data['sourceLanguage'], $data['targetLanguage'], $data['word']);
         try {
             $result = $this->geminiService->generateStructuredAnswer(
                 $prompt,
