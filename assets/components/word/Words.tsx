@@ -103,7 +103,6 @@ export default function Words(): React.ReactElement {
                 </Grid>
             </Grid>
 
-
             <DndContext
                 sensors={sensors}
                 collisionDetection={closestCenter}
