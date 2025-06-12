@@ -1,6 +1,6 @@
 import {useSortable} from "@dnd-kit/sortable";
 import {CSS} from "@dnd-kit/utilities";
-import React, {useContext} from "react";
+import React, {useContext, useState} from "react";
 import Grid from "@mui/material/Grid";
 import {TextField} from "@mui/material";
 import IconButton from "@mui/material/IconButton";
@@ -11,6 +11,9 @@ import {styled} from "@mui/material/styles";
 import {Word} from "@/components/word/Word";
 import WordsContext from "../../services/context/WordsContext";
 import {uploadImage, removeWordImage} from "../../services/api/api";
+import {translateWord} from "../../services/api/wordApi";
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import {readText} from "../../utils/TextReader";
 
 const VisuallyHiddenInput = styled('input')({
     clip: 'rect(0 0 0 0)',
@@ -39,6 +42,9 @@ export default function WordRow({ keyId, word}: WordRowProps) {
     } = useSortable({ id: keyId });
 
     const {words, updateWords} = useContext(WordsContext);
+    const [slowRead, setSlowRead] = useState('');
+    const [sourceLanguage, setSourceLanguage] = useState('pl-PL');
+    const [targetLanguage, setTargetLanguage] = useState('en-US');
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -47,6 +53,40 @@ export default function WordRow({ keyId, word}: WordRowProps) {
         margin: '5px 0',
         border: '1px solid lightgray',
     };
+
+    const handleTranslateWord = (key: number, type: keyof Word, word: string) => {
+        let translation: keyof Word;
+        let translateFrom: string;
+        let translateTo: string;
+
+        if(type === 'basicWord') {
+            translation = 'translation';
+            translateFrom = sourceLanguage;
+            translateTo = targetLanguage;
+        } else {
+            translation = 'basicWord';
+            translateFrom = targetLanguage;
+            translateTo = sourceLanguage;
+        }
+
+        if(words[key][translation] !== '') {
+            return;
+        }
+
+        const promptData = {
+            'word': word,
+            'sourceLanguage': translateFrom,
+            'targetLanguage': translateTo,
+        }
+
+        translateWord(promptData).then(res => {
+            handleUpdateWord(key, translation, res.data.translation.translation);
+
+            if(translation === 'translation') {
+                handleUpdateWord(key, 'example', res.data.translation.example);
+            }
+        });
+    }
 
     const handleUpdateWord = (key: number, field: keyof Word, value: any) => {
         const newWords = [...words];
@@ -83,6 +123,16 @@ export default function WordRow({ keyId, word}: WordRowProps) {
         });
     }
 
+    const handleReadText = (text: string, key: number, type: string) => {
+        if(slowRead == key + type) {
+            readText(text, targetLanguage, 0.7);
+            setSlowRead('');
+        } else {
+            readText(text, targetLanguage);
+            setSlowRead(key + type);
+        }
+    }
+
     return (
         <div key={word.id} className={`word-${word.id}`} ref={setNodeRef} style={style}>
             <Grid container spacing={2}>
@@ -92,17 +142,20 @@ export default function WordRow({ keyId, word}: WordRowProps) {
                 <Grid size={5}>
                     <div>
                         <TextField id="standard-basic" label="Nazwa pl" variant="standard" value={word.basicWord}
-                                   onChange={(e) => {
-                                       handleUpdateWord(keyId, 'basicWord', e.target.value)
-                                   }}/>
+                                   onBlur={e => handleTranslateWord(keyId, 'basicWord', e.target.value)}
+                                   onChange={e => handleUpdateWord(keyId, 'basicWord', e.target.value)}
+                        />
                     </div>
                 </Grid>
                 <Grid size={5}>
                     <div>
                         <TextField id="standard-basic" label="Nazwa en" variant="standard" value={word.translation}
-                                   onChange={(e) => {
-                                       handleUpdateWord(keyId, 'translation', e.target.value)
-                                   }}/>
+                                   onBlur={e => handleTranslateWord(keyId, 'translation', e.target.value)}
+                                   onChange={e => handleUpdateWord(keyId, 'translation', e.target.value)}
+                        />
+                        <IconButton>
+                            <VolumeUpIcon className="basic-icon" onClick={() => handleReadText(word.translation, keyId, 'translation')}/>
+                        </IconButton>
                     </div>
                 </Grid>
                 <Grid size={1}>
@@ -158,11 +211,14 @@ export default function WordRow({ keyId, word}: WordRowProps) {
                                 handleUpdateWord(keyId, 'example', e.target.value)
                             }}
                         />
+                        <IconButton>
+                            <VolumeUpIcon className="basic-icon" onClick={() => handleReadText(word.example, keyId, 'example')}/>
+                        </IconButton>
                     </div>
                 </Grid>
                 <Grid size={1}>
                     <div>
-                        {keyId > 0 && (
+                        {words.length > 1 && (
                             <IconButton>
                                 <PlaylistRemoveIcon className="basic-icon" onClick={() => handleRemoveWord(word.id)}/>
                             </IconButton>
