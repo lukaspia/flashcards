@@ -7,11 +7,15 @@ import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import TranslateIcon from '@mui/icons-material/Translate';
 import Button from "@mui/material/Button";
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import KeyboardReturnIcon from '@mui/icons-material/KeyboardReturn';
 
 export default function LessonTest(): React.ReactElement {
     return (<div>
         <div className="lesson-header">
-           1 / 20 + licznik prawidłowych jeśli test
+            <IconButton>
+                <KeyboardReturnIcon className="basic-icon"/>
+            </IconButton>
+            1 / 20 + licznik prawidłowych jeśli test
         </div>
         <div className="lesson-body">
             <div>
