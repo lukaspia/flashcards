@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
 import IconButton from "@mui/material/IconButton";
 import ArrowCircleLeftIcon from '@mui/icons-material/ArrowCircleLeft';
 import ArrowCircleRightIcon from '@mui/icons-material/ArrowCircleRight';
@@ -8,27 +8,108 @@ import TranslateIcon from '@mui/icons-material/Translate';
 import Button from "@mui/material/Button";
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import KeyboardReturnIcon from '@mui/icons-material/KeyboardReturn';
+import {useParams} from "react-router";
+import useLesson from "../hooks/useLesson";
+import {Word} from "@/components/word/Word";
 
 export default function LessonTest(): React.ReactElement {
+    const {id} = useParams();
+    const [lesson, isLoading, isError, setLesson] = useLesson(id ? parseInt(id): 0);
+
+    const [studyMode, setStudyMode] = useState('learning');
+    const [translationFirst, setTranslationFirst] = useState(false);
+
+    const [index, setIndex] = useState(0);
+    const [isTranslation, setIsTranslation] = useState(false);
+    const [word, setWord] = useState<Word|null>(null);
+    const [displayWord, setDisplayWord] = useState(null);
+
+
+    const handleShowWord = (direction: string) => {
+
+        let i = index;
+        console.log(index);
+        console.log(isTranslation);
+
+        if(lesson != undefined) {
+            if(direction == 'prev') {
+                i = index - 1;
+                setIndex(i);
+                if(translationFirst) {
+                    setIsTranslation(true);
+                    // @ts-ignore
+                    setDisplayWord(lesson.words[i].translation);
+                } else {
+                    setIsTranslation(false);
+                    // @ts-ignore
+                    setDisplayWord(lesson.words[i].basicWord);
+                }
+                setWord(lesson.words[i]);
+            } else {
+                if(isTranslation) {
+                    i = index + 1;
+                    setIndex(i);
+                    setIsTranslation(false);
+                    console.log('a' + i);
+                    setWord(lesson.words[i]);
+                    // @ts-ignore
+                    setDisplayWord(lesson.words[i].basicWord);
+                } else {
+                    setIsTranslation(true);
+                    console.log('b' + i);
+                    //setWord(lesson.words[index]);
+                    // @ts-ignore
+                    setDisplayWord(lesson.words[i].translation);
+                }
+            }
+        }
+
+        console.log(word);
+    }
+
+    const handleSwitchTranslationFirst = () => {
+        translationFirst ? setTranslationFirst(false) : setTranslationFirst(true);
+        resetLesson();
+    }
+
+    useEffect(() => {
+       resetLesson();
+    }, [lesson]);
+
+    const resetLesson = () => {
+        setIndex(0);
+        setIsTranslation(false);
+        // @ts-ignore
+        setWord(lesson?.words[index]);
+        // @ts-ignore
+        setDisplayWord(lesson?.words[index].basicWord);
+    }
+
     return (<div>
         <div className="lesson-header">
             <IconButton>
                 <KeyboardReturnIcon className="basic-icon"/>
             </IconButton>
-            1 / 20 + licznik prawidłowych jeśli test
+            {index + 1} / {lesson?.words.length} + licznik prawidłowych jeśli test
         </div>
         <div className="lesson-body">
             <div>
-                Słowo
-                <IconButton>
-                    <VolumeUpIcon className="basic-icon"/>
-                </IconButton>
+                {displayWord}
+                {isTranslation && (
+                    <IconButton>
+                        <VolumeUpIcon className="basic-icon"/>
+                    </IconButton>
+                )}
             </div>
             <div>
-                Przykład (jeśli en)
-                <IconButton>
-                    <VolumeUpIcon className="basic-icon"/>
-                </IconButton>
+                {(isTranslation && word?.example != '') && (
+                    <div>
+                        {word?.example}
+                        <IconButton>
+                            <VolumeUpIcon className="basic-icon"/>
+                        </IconButton>
+                    </div>
+                )}
             </div>
         </div>
         <div className="lesson-footer">
@@ -39,11 +120,11 @@ export default function LessonTest(): React.ReactElement {
             </div>
             <div>
                 Jeśli w trybie nauki
-                <IconButton>
-                    <ArrowCircleLeftIcon className="basic-icon"/>
+                <IconButton disabled={index < 1}>
+                    <ArrowCircleLeftIcon className="basic-icon" onClick={() => handleShowWord('prev')} />
                 </IconButton>
-                <IconButton>
-                    <ArrowCircleRightIcon className="basic-icon"/>
+                <IconButton disabled={index >= ((lesson?.words?.length ?? 0) - 1) && isTranslation == true}>
+                    <ArrowCircleRightIcon className="basic-icon" onClick={() => handleShowWord('next')} />
                 </IconButton>
             </div>
             <div>
@@ -54,7 +135,7 @@ export default function LessonTest(): React.ReactElement {
                     <SchoolIcon className="basic-icon"/> Tryb nauki/testu
                 </IconButton>
                 <IconButton>
-                    <TranslateIcon className="basic-icon"/> Przełączanie PL/EN EN/PL
+                    <TranslateIcon className="basic-icon" onClick={handleSwitchTranslationFirst}/> Przełączanie PL/EN EN/PL
                 </IconButton>
             </div>
         </div>
