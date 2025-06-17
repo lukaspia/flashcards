@@ -16,13 +16,18 @@ import SwapCallsIcon from '@mui/icons-material/SwapCalls';
 import SyncAltIcon from '@mui/icons-material/SyncAlt';
 import {useParams} from "react-router";
 import useLesson from "../hooks/useLesson";
+import shuffle from "../utils/ArrayShuffler";
+import {Word} from "../components/word/Word";
 
 export default function LessonTest(): React.ReactElement {
     const {id} = useParams();
     const [lesson, isLoading, isError, setLesson] = useLesson(id ? parseInt(id) : 0);
 
+    const [words, setWords] = useState<Word[]>([]);
+
     const [studyMode, setStudyMode] = useState('learning');
     const [translationFirst, setTranslationFirst] = useState(false);
+    const [mixingWords, setMixingWords] = useState(false);
 
     const [index, setIndex] = useState(0);
     const [isTranslation, setIsTranslation] = useState(false);
@@ -90,9 +95,43 @@ export default function LessonTest(): React.ReactElement {
         studyMode == 'learning' ? setStudyMode('testing') : setStudyMode('learning');
     }
 
+    const handleSwitchMixingWords = () => {
+        if(mixingWords) {
+            if (lesson && lesson.words) {
+                setWords([...lesson.words]);
+            }
+            setMixingWords(false);
+            // @ts-ignore
+            //setLesson(baseLesson);
+        } else {
+            // @ts-ignore
+            shuffle(words);
+            setMixingWords(true);
+        }
+
+
+        //mixingWords ? setMixingWords(false) : setMixingWords(true);
+        // @ts-ignore
+        //console.log(lesson.words);
+        // @ts-ignore
+        //shuffle(lesson.words);
+        //let words = shuffle(lesson.words);
+        // @ts-ignore
+        console.log(words);
+        //console.log(mixingWords);
+    }
+
+    useEffect(() => {
+        if (lesson && lesson.words) {
+            setWords([...lesson.words]);
+        } else {
+            setWords([]);
+        }
+    }, [lesson]);
+
     useEffect(() => {
         lessonReset();
-    }, [lesson, translationFirst, studyMode]);
+    }, [lesson, translationFirst, studyMode, mixingWords]);
 
     const lessonReset = () => {
         setIndex(0);
@@ -186,9 +225,9 @@ export default function LessonTest(): React.ReactElement {
                     {studyMode == 'learning' ? <SchoolIcon className="basic-icon"/> :
                         <QuizIcon className="basic-icon"/>}
                 </IconButton>
-                <IconButton onClick={handleSwitchLearningProcess}>
-                    {studyMode == 'learning' ? <SyncAltIcon className="basic-icon"/> :
-                        <SwapCallsIcon className="basic-icon"/>}
+                <IconButton onClick={handleSwitchMixingWords}>
+                    {mixingWords ? <SwapCallsIcon className="basic-icon"/> :
+                        <SyncAltIcon className="basic-icon"/>}
                 </IconButton>
                 <IconButton onClick={handleSwitchTranslationFirst}>
                     <TextFieldsIcon className="basic-icon"/> {translationFirst ?
