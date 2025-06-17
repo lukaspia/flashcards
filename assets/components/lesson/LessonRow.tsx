@@ -25,6 +25,11 @@ export default function LessonRow({lesson, handleRemoveClickOpen}: LessonRowProp
         navigate(path);
     }
 
+    const handleTestLesson = () => {
+        const path = generatePath(ROUTES.LESSON_TEST, {id: lesson.id});
+        navigate(path);
+    }
+
     return (
         <>
             <td>
@@ -38,7 +43,7 @@ export default function LessonRow({lesson, handleRemoveClickOpen}: LessonRowProp
                     <DeleteForeverIcon className="basic-icon" onClick={handleRemoveLesson} />
                 </IconButton>
                 <IconButton >
-                    <QuizIcon className="basic-icon" />
+                    <QuizIcon className="basic-icon" onClick={handleTestLesson} />
                 </IconButton>
             </td>
         </>
