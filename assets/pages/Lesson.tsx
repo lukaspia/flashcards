@@ -26,14 +26,15 @@ export default function LessonTest(): React.ReactElement {
 
 
     const handleShowWord = (direction: string) => {
-
         let i = index;
         console.log(index);
         console.log(isTranslation);
 
         if(lesson != undefined) {
             if(direction == 'prev') {
-                i = index - 1;
+                if(index > 0) {
+                    i = index - 1;
+                }
                 setIndex(i);
                 if(translationFirst) {
                     setIsTranslation(true);
@@ -47,7 +48,9 @@ export default function LessonTest(): React.ReactElement {
                 setWord(lesson.words[i]);
             } else {
                 if(isTranslation) {
-                    i = index + 1;
+                    if(lesson.words.length > index + 1) {
+                        i = index + 1;
+                    }
                     setIndex(i);
                     setIsTranslation(false);
                     console.log('a' + i);
@@ -69,20 +72,26 @@ export default function LessonTest(): React.ReactElement {
 
     const handleSwitchTranslationFirst = () => {
         translationFirst ? setTranslationFirst(false) : setTranslationFirst(true);
-        resetLesson();
     }
 
     useEffect(() => {
-       resetLesson();
-    }, [lesson]);
+       lessonReset();
+    }, [lesson, translationFirst]);
 
-    const resetLesson = () => {
+    const lessonReset = () => {
         setIndex(0);
-        setIsTranslation(false);
         // @ts-ignore
-        setWord(lesson?.words[index]);
-        // @ts-ignore
-        setDisplayWord(lesson?.words[index].basicWord);
+        setWord(lesson?.words[0]);
+
+        if(translationFirst) {
+            setIsTranslation(true);
+            // @ts-ignore
+            setDisplayWord(lesson?.words[0].translation);
+        } else {
+            setIsTranslation(false);
+            // @ts-ignore
+            setDisplayWord(lesson?.words[0].basicWord);
+        }
     }
 
     return (<div>
@@ -120,7 +129,7 @@ export default function LessonTest(): React.ReactElement {
             </div>
             <div>
                 Jeśli w trybie nauki
-                <IconButton disabled={index < 1}>
+                <IconButton disabled={index < 1 && isTranslation == false}>
                     <ArrowCircleLeftIcon className="basic-icon" onClick={() => handleShowWord('prev')} />
                 </IconButton>
                 <IconButton disabled={index >= ((lesson?.words?.length ?? 0) - 1) && isTranslation == true}>
@@ -128,14 +137,14 @@ export default function LessonTest(): React.ReactElement {
                 </IconButton>
             </div>
             <div>
-                <IconButton>
-                    <RestartAltIcon className="basic-icon"/> Resetowanie lekcji
+                <IconButton onClick={lessonReset}>
+                    <RestartAltIcon className="basic-icon"/>
                 </IconButton>
                 <IconButton>
                     <SchoolIcon className="basic-icon"/> Tryb nauki/testu
                 </IconButton>
-                <IconButton>
-                    <TranslateIcon className="basic-icon" onClick={handleSwitchTranslationFirst}/> Przełączanie PL/EN EN/PL
+                <IconButton onClick={handleSwitchTranslationFirst}>
+                    <TranslateIcon className="basic-icon" />
                 </IconButton>
             </div>
         </div>
