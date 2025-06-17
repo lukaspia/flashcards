@@ -12,6 +12,8 @@ import TextFieldsIcon from '@mui/icons-material/TextFields';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import QuizIcon from '@mui/icons-material/Quiz';
+import SwapCallsIcon from '@mui/icons-material/SwapCalls';
+import SyncAltIcon from '@mui/icons-material/SyncAlt';
 import {useParams} from "react-router";
 import useLesson from "../hooks/useLesson";
 
@@ -143,25 +145,38 @@ export default function LessonTest(): React.ReactElement {
             </div>
         </div>
         <div className="lesson-footer">
-            {studyMode == 'testing' ?
-                (
-                    <div>
-                        <Button>TAK</Button>
-                        <Button>NIE</Button>
-                    </div>
-                )
-                :
-                (
-                    <div>
-                        <IconButton disabled={index < 1 && isTranslation == false}>
-                            <ArrowCircleLeftIcon className="basic-icon" onClick={() => handleShowWord('prev')}/>
-                        </IconButton>
-                        <IconButton
-                            disabled={index >= ((lesson?.words?.length ?? 0) - 1) && (translationFirst ? isTranslation === false : isTranslation === true)}>
-                            <ArrowCircleRightIcon className="basic-icon" onClick={() => handleShowWord('next')}/>
-                        </IconButton>
-                    </div>
-                )
+            {studyMode == 'testing' ? (
+                <div>
+                    {(translationFirst ? isTranslation === false : isTranslation === true) ? (
+                        <div>
+                            <div>
+                                Znałeś odpowiedź?
+                            </div>
+                            <div>
+                                <Button onClick={() => handleShowWord('next')}>TAK</Button>
+                                <Button onClick={() => handleShowWord('next')}>NIE</Button>
+                            </div>
+                        </div>
+                        ): (
+                        <div>
+                            <Button onClick={() => handleShowWord('next')}>Odpowiedź</Button>
+                        </div>
+                        )
+                    }
+                </div>
+            )
+            :
+            (
+                <div>
+                    <IconButton disabled={index < 1 && isTranslation == false}>
+                        <ArrowCircleLeftIcon className="basic-icon" onClick={() => handleShowWord('prev')}/>
+                    </IconButton>
+                    <IconButton
+                        disabled={index >= ((lesson?.words?.length ?? 0) - 1) && (translationFirst ? isTranslation === false : isTranslation === true)}>
+                        <ArrowCircleRightIcon className="basic-icon" onClick={() => handleShowWord('next')}/>
+                    </IconButton>
+                </div>
+            )
             }
             <div>
                 <IconButton onClick={lessonReset}>
@@ -170,6 +185,10 @@ export default function LessonTest(): React.ReactElement {
                 <IconButton onClick={handleSwitchLearningProcess}>
                     {studyMode == 'learning' ? <SchoolIcon className="basic-icon"/> :
                         <QuizIcon className="basic-icon"/>}
+                </IconButton>
+                <IconButton onClick={handleSwitchLearningProcess}>
+                    {studyMode == 'learning' ? <SyncAltIcon className="basic-icon"/> :
+                        <SwapCallsIcon className="basic-icon"/>}
                 </IconButton>
                 <IconButton onClick={handleSwitchTranslationFirst}>
                     <TextFieldsIcon className="basic-icon"/> {translationFirst ?
