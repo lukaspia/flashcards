@@ -14,14 +14,17 @@ import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import QuizIcon from '@mui/icons-material/Quiz';
 import SwapCallsIcon from '@mui/icons-material/SwapCalls';
 import SyncAltIcon from '@mui/icons-material/SyncAlt';
-import {useParams} from "react-router";
+import {useNavigate, useParams} from "react-router";
 import useLesson from "../hooks/useLesson";
 import shuffle from "../utils/ArrayShuffler";
 import {Word} from "../components/word/Word";
 import Grid from "@mui/material/Grid";
+import {generatePath} from "../utils/PathUtils";
+import {ROUTES} from "../constants/Routes";
 
 export default function LessonTest(): React.ReactElement {
     const {id} = useParams();
+    const navigate = useNavigate();
     const [lesson, isLoading, isError, setLesson] = useLesson(id ? parseInt(id) : 0);
 
     const [words, setWords] = useState<Word[]>([]);
@@ -158,6 +161,12 @@ export default function LessonTest(): React.ReactElement {
         setRound(round + 1);
         lessonReset();
     }
+
+    const handleLessonList = () => {
+        const path = generatePath(ROUTES.LESSON_PANEL);
+        navigate(path);
+    }
+
     //TODO na końcu ściągnąć pochwalny tekst z ai: Wygeneruj krótki tekst który pochwali osobę której dobrze poszło powtarzanie słówek. Tekst wygenerować już na wstępie, żeby był gotowy na pozytywne zakończenie
     //TODO Dorobić oznaczanie ważności słowa (może wybór z jakiś zdefiniowanych kategorii)
 
@@ -166,7 +175,7 @@ export default function LessonTest(): React.ReactElement {
 
             <Grid container spacing={2}>
                 <Grid size={1}>
-                    <IconButton>
+                    <IconButton onClick={handleLessonList}>
                         <KeyboardReturnIcon className="basic-icon"/>
                     </IconButton>
                 </Grid>
