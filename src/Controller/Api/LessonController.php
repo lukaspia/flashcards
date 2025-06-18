@@ -76,8 +76,15 @@ class LessonController extends AbstractApiController
     #[Route('/lesson/{id}', name: 'get_lesson', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function getLesson(Lesson $lesson): JsonResponse
     {
+        //TODO przenieść to do security/granted i ewentualnie inne
+
         if (!($this->getUser())) {
             return $this->createResponse(null, ['Authentication required.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        if($lesson->getUser() !== $this->getUser()) {
+            return $this->createResponse(null, ['You are not authorized to view this lesson.'], Response::HTTP_FORBIDDEN);
+
         }
 
         return $this->createResponse(

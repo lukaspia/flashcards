@@ -121,6 +121,8 @@ export default function LessonTest(): React.ReactElement {
     const handleAnswer = (answer: boolean, index: number) => {
         if(!answer) {
             setNextRoundWords([...nextRoundWords, words[index]]);
+
+            console.log(lesson?.words);
         }
 
         if(index >= ((words.length ?? 0) - 1) && (translationFirst ? isTranslation === false : isTranslation === true)) {
@@ -176,6 +178,8 @@ export default function LessonTest(): React.ReactElement {
         const path = generatePath(ROUTES.LESSON_PANEL);
         navigate(path);
     }
+
+    //TODO najpierw oznaczać w słowych ile błędów, później przypisac do lekcji słowa z errorami i zaktualizowac całą lekcję przy użyciu istanijacego api
 
     //TODO Dorobić oznaczanie ważności słowa (może wybór z jakiś zdefiniowanych kategorii), koloru słówek i ilości niepowowdzeń
 
@@ -247,7 +251,7 @@ export default function LessonTest(): React.ReactElement {
                                 )}
                         </div>
                         <div>
-                            {displayWord}
+                            <span style={{color: words[index]?.color}}>{displayWord}</span>
                             {isTranslation && (
                                 <IconButton>
                                     <VolumeUpIcon className="basic-icon"/>

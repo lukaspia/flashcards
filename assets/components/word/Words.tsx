@@ -44,7 +44,10 @@ export default function Words(): React.ReactElement {
         basicWord: '',
         translation: '',
         example: '',
-        image: ''
+        image: '',
+        wordCategory: '',
+        errors: 0,
+        color: '',
     };
 
     if(words.length == 0) {
