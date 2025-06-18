@@ -26,7 +26,6 @@ export default function useLesson(id: number): LessonApiResponse {
 
         getLesson(id).then(result => {
             if (isMounted) {
-                console.log(result.data.lesson);
                 setLesson(result.data.lesson);
             }
         }).catch(error => {

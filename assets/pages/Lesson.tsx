@@ -21,7 +21,7 @@ import {Word} from "../components/word/Word";
 import Grid from "@mui/material/Grid";
 import {generatePath} from "../utils/PathUtils";
 import {ROUTES} from "../constants/Routes";
-import {getLessonMessage} from "../services/api/lessonApi";
+import {getLessonMessage, updateLesson} from "../services/api/lessonApi";
 
 export default function LessonTest(): React.ReactElement {
     const {id} = useParams();
@@ -30,6 +30,7 @@ export default function LessonTest(): React.ReactElement {
 
     const [words, setWords] = useState<Word[]>([]);
     const [nextRoundWords, setNextRoundWords] = useState<Word[]>([]);
+    const [wordsError, setWordsError] = useState<Word[]>([]);
     const [round, setRound] = useState(1);
     const [showSummary, setShowSummary] = useState(false);
     const [lessonMessage, setLessonMessage] = useState('Gratulacje!');
@@ -121,8 +122,9 @@ export default function LessonTest(): React.ReactElement {
     const handleAnswer = (answer: boolean, index: number) => {
         if(!answer) {
             setNextRoundWords([...nextRoundWords, words[index]]);
-
-            console.log(lesson?.words);
+            updateWordError(words[index].id);
+        } else {
+            updateWordError(words[index].id, false);
         }
 
         if(index >= ((words.length ?? 0) - 1) && (translationFirst ? isTranslation === false : isTranslation === true)) {
@@ -132,11 +134,33 @@ export default function LessonTest(): React.ReactElement {
         handleShowWord('next');
     }
 
+    const updateWordError = (wordId: number, increase: boolean = true) => {
+        // @ts-ignore
+        const updatedWords = wordsError.map((word) => {
+            // @ts-ignore
+            if (word.id === wordId) {
+                if(increase) {
+                    // @ts-ignore
+                    return { ...word, errors: word.errors + 1};
+                } else if(word.errors > 0) {
+                    // @ts-ignore
+                    return { ...word, errors: word.errors - 1};
+                }
+            }
+
+            return word;
+        });
+
+        setWordsError(updatedWords);
+    };
+
     useEffect(() => {
         if (lesson && lesson.words) {
             setWords([...lesson.words]);
+            setWordsError([...lesson.words])
         } else {
             setWords([]);
+            setWordsError([]);
         }
     }, [lesson]);
 
@@ -179,7 +203,25 @@ export default function LessonTest(): React.ReactElement {
         navigate(path);
     }
 
-    //TODO najpierw oznaczać w słowych ile błędów, później przypisac do lekcji słowa z errorami i zaktualizowac całą lekcję przy użyciu istanijacego api
+    const handleSaveLesson = () => {
+        const newLesson = {
+            ...lesson,
+            words: wordsError,
+        };
+
+        // @ts-ignore
+        setLesson(newLesson);
+
+        // @ts-ignore
+        updateLesson(newLesson)
+            .then((result) => {
+            })
+            .catch((error) => {
+                console.error(error);
+            }).finally(() => {
+            handleLessonList();
+        });
+    }
 
     //TODO Dorobić oznaczanie ważności słowa (może wybór z jakiś zdefiniowanych kategorii), koloru słówek i ilości niepowowdzeń
 
@@ -229,7 +271,7 @@ export default function LessonTest(): React.ReactElement {
                                     {lessonMessage}
                                 </div>
                                 <div>
-                                    <Button>Zapisz wynik i wróć do listy lekcji</Button>
+                                    <Button onClick={handleSaveLesson}>Zapisz wynik i wróć do listy lekcji</Button>
                                 </div>
                             </div>
                         )}
