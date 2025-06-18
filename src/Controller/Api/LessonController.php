@@ -8,6 +8,7 @@ namespace App\Controller\Api;
 
 use App\Entity\Lesson;
 use App\Entity\Word;
+use App\Service\AI\AIGeneratorInterface;
 use App\Service\Lesson\LessonServices;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -72,7 +73,7 @@ class LessonController extends AbstractApiController
         }
     }
 
-    #[Route('/lesson/{id}', name: 'get_lesson', methods: ['GET'])]
+    #[Route('/lesson/{id}', name: 'get_lesson', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function getLesson(Lesson $lesson): JsonResponse
     {
         if (!($this->getUser())) {
@@ -207,5 +208,22 @@ class LessonController extends AbstractApiController
                 Response::HTTP_BAD_REQUEST
             );
         }
+    }
+
+    #[Route('/lesson/message', name: 'get_lesson_message', methods: ['GET'])]
+    public function getSuccessMessage(AIGeneratorInterface $geminiService): JsonResponse
+    {
+        try {
+            $message = $geminiService->generateText('Wygeneruj krótki tekst, który pochwali osobę której dobrze poszła nauka słówek języka obcego.');
+        } catch (\Exception $e) {
+            $this->logger->error('Lesson success message error: ' . $e->getMessage());
+            return $this->createResponse(
+                null,
+                ['Lesson success message error: ' . $e->getMessage()],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
+        return $this->createResponse(['message' => $message], ['Lesson success message generated successfully'], Response::HTTP_OK);
     }
 }
