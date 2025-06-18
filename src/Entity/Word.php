@@ -34,6 +34,16 @@ class Word
     #[ORM\Column(type: "integer")]
     private int $sequence;
 
+    #[ORM\Column(type: "integer")]
+    private int $errors = 0;
+
+    #[Orm\Column(type: "string", length: 7, nullable: true)]
+    private int $color;
+
+    #[ORM\ManyToOne(targetEntity: WordCategory::class)]
+    #[ORM\JoinColumn(name: "word_category", referencedColumnName: "id")]
+    private WordCategory $wordCategory;
+
     public function getId(): ?int
     {
         return $this->id;
