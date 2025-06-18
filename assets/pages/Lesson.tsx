@@ -18,13 +18,15 @@ import {useParams} from "react-router";
 import useLesson from "../hooks/useLesson";
 import shuffle from "../utils/ArrayShuffler";
 import {Word} from "../components/word/Word";
+import Grid from "@mui/material/Grid";
 
 export default function LessonTest(): React.ReactElement {
     const {id} = useParams();
     const [lesson, isLoading, isError, setLesson] = useLesson(id ? parseInt(id) : 0);
 
     const [words, setWords] = useState<Word[]>([]);
-    const [nextRoundWords, setNexRoundWords] = useState<Word[]>([]);
+    const [nextRoundWords, setNextRoundWords] = useState<Word[]>([]);
+    const [round, setRound] = useState(1);
     const [showSummary, setShowSummary] = useState(false);
 
     const [studyMode, setStudyMode] = useState('learning');
@@ -113,15 +115,12 @@ export default function LessonTest(): React.ReactElement {
 
     const handleAnswer = (answer: boolean, index: number) => {
         if(!answer) {
-            const word = words[index];
-            setNexRoundWords([...nextRoundWords, word]);
+            setNextRoundWords([...nextRoundWords, words[index]]);
         }
 
         if(index >= ((words.length ?? 0) - 1) && (translationFirst ? isTranslation === false : isTranslation === true)) {
             setShowSummary(true);
         }
-
-        console.log(nextRoundWords);
 
         handleShowWord('next');
     }
@@ -152,18 +151,70 @@ export default function LessonTest(): React.ReactElement {
         }
     }
 
+    const nextRound = () => {
+        setWords([...nextRoundWords]);
+        setNextRoundWords([]);
+        setShowSummary(false);
+        setRound(round + 1);
+        lessonReset();
+    }
+    //TODO na końcu ściągnąć pochwalny tekst z ai: Wygeneruj krótki tekst który pochwali osobę której dobrze poszło powtarzanie słówek. Tekst wygenerować już na wstępie, żeby był gotowy na pozytywne zakończenie
+    //TODO Dorobić oznaczanie ważności słowa (może wybór z jakiś zdefiniowanych kategorii)
+
     return (<div>
         <div className="lesson-header">
-            <IconButton>
-                <KeyboardReturnIcon className="basic-icon"/>
-            </IconButton>
-            {index + 1} / {words.length} + licznik prawidłowych jeśli test
+
+            <Grid container spacing={2}>
+                <Grid size={1}>
+                    <IconButton>
+                        <KeyboardReturnIcon className="basic-icon"/>
+                    </IconButton>
+                </Grid>
+                <Grid size={2}>
+                    {studyMode == 'testing' && (
+                        <div>
+                            Nieprawidłowo {nextRoundWords.length}
+                        </div>
+                    )}
+                </Grid>
+                <Grid size={9}>
+                    Słowo {index + 1} / {words.length} runda {round}
+                </Grid>
+            </Grid>
         </div>
 
         {showSummary ?
             (
                 <div>
-                    summary
+                    <div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Prawidłowo</th>
+                                    <th>Nieprawidłowo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{words.length - nextRoundWords.length}</td>
+                                    <td>{nextRoundWords.length}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        {nextRoundWords.length === 0 && (
+                            <div>
+                                <div>
+                                    Gratulacje!
+                                </div>
+                                <div>
+                                    <Button>Zapisz wynik i wróć do listy lekcji</Button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    <div>
+                        {nextRoundWords.length > 0 && (<Button onClick={nextRound}>Kolejna runda</Button>)}
+                    </div>
                 </div>
             )
             :
