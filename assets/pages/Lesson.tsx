@@ -24,6 +24,8 @@ export default function LessonTest(): React.ReactElement {
     const [lesson, isLoading, isError, setLesson] = useLesson(id ? parseInt(id) : 0);
 
     const [words, setWords] = useState<Word[]>([]);
+    const [nextRoundWords, setNexRoundWords] = useState<Word[]>([]);
+    const [showSummary, setShowSummary] = useState(false);
 
     const [studyMode, setStudyMode] = useState('learning');
     const [translationFirst, setTranslationFirst] = useState(false);
@@ -47,7 +49,7 @@ export default function LessonTest(): React.ReactElement {
 
                     setIsTranslation(true);
                     // @ts-ignore
-                    setDisplayWord(lesson.words[i].translation);
+                    setDisplayWord(words[i].translation);
                 } else {
                     if (!isTranslation) {
                         if (index > 0) {
@@ -59,29 +61,29 @@ export default function LessonTest(): React.ReactElement {
 
                     setIsTranslation(false);
                     // @ts-ignore
-                    setDisplayWord(lesson.words[i].basicWord);
+                    setDisplayWord(words[i].basicWord);
                 }
             } else {
                 if (isTranslation) {
                     if (!translationFirst) {
-                        if (lesson.words.length > index + 1) {
+                        if (words.length > index + 1) {
                             i = index + 1;
                         }
                     }
                     setIndex(i);
                     setIsTranslation(false);
                     // @ts-ignore
-                    setDisplayWord(lesson.words[i].basicWord);
+                    setDisplayWord(words[i].basicWord);
                 } else {
                     if (translationFirst) {
-                        if (lesson.words.length > index + 1) {
+                        if (words.length > index + 1) {
                             i = index + 1;
                         }
                     }
                     setIndex(i);
                     setIsTranslation(true);
                     // @ts-ignore
-                    setDisplayWord(lesson.words[i].translation);
+                    setDisplayWord(words[i].translation);
                 }
             }
         }
@@ -102,23 +104,26 @@ export default function LessonTest(): React.ReactElement {
             }
             setMixingWords(false);
             // @ts-ignore
-            //setLesson(baseLesson);
         } else {
             // @ts-ignore
             shuffle(words);
             setMixingWords(true);
         }
+    }
 
+    const handleAnswer = (answer: boolean, index: number) => {
+        if(!answer) {
+            const word = words[index];
+            setNexRoundWords([...nextRoundWords, word]);
+        }
 
-        //mixingWords ? setMixingWords(false) : setMixingWords(true);
-        // @ts-ignore
-        //console.log(lesson.words);
-        // @ts-ignore
-        //shuffle(lesson.words);
-        //let words = shuffle(lesson.words);
-        // @ts-ignore
-        console.log(words);
-        //console.log(mixingWords);
+        if(index >= ((words.length ?? 0) - 1) && (translationFirst ? isTranslation === false : isTranslation === true)) {
+            setShowSummary(true);
+        }
+
+        console.log(nextRoundWords);
+
+        handleShowWord('next');
     }
 
     useEffect(() => {
@@ -139,11 +144,11 @@ export default function LessonTest(): React.ReactElement {
         if (translationFirst) {
             setIsTranslation(true);
             // @ts-ignore
-            setDisplayWord(lesson?.words[0].translation);
+            setDisplayWord(words[0]?.translation);
         } else {
             setIsTranslation(false);
             // @ts-ignore
-            setDisplayWord(lesson?.words[0].basicWord);
+            setDisplayWord(words[0]?.basicWord);
         }
     }
 
@@ -152,89 +157,105 @@ export default function LessonTest(): React.ReactElement {
             <IconButton>
                 <KeyboardReturnIcon className="basic-icon"/>
             </IconButton>
-            {index + 1} / {lesson?.words.length} + licznik prawidłowych jeśli test
+            {index + 1} / {words.length} + licznik prawidłowych jeśli test
         </div>
-        <div className="lesson-body">
-            <div>
-                {// @ts-ignore
-                    lesson?.words[index].image && (
-                        <img src={// @ts-ignore
-                            lesson?.words[index].image} alt="Word illustration" className="small-image"/>
-                    )}
-            </div>
-            <div>
-                {displayWord}
-                {isTranslation && (
-                    <IconButton>
-                        <VolumeUpIcon className="basic-icon"/>
-                    </IconButton>
-                )}
-            </div>
-            <div>
-                {// @ts-ignore
-                    (isTranslation && lesson?.words[index].example != '') && (
-                        <div>
-                            {// @ts-ignore
-                                lesson?.words[index].example}
-                            <IconButton>
-                                <VolumeUpIcon className="basic-icon"/>
-                            </IconButton>
-                        </div>
-                    )}
-            </div>
-        </div>
-        <div className="lesson-footer">
-            {studyMode == 'testing' ? (
+
+        {showSummary ?
+            (
                 <div>
-                    {(translationFirst ? isTranslation === false : isTranslation === true) ? (
-                        <div>
-                            <div>
-                                Znałeś odpowiedź?
-                            </div>
-                            <div>
-                                <Button onClick={() => handleShowWord('next')}>TAK</Button>
-                                <Button onClick={() => handleShowWord('next')}>NIE</Button>
-                            </div>
-                        </div>
-                        ): (
-                        <div>
-                            <Button onClick={() => handleShowWord('next')}>Odpowiedź</Button>
-                        </div>
-                        )
-                    }
+                    summary
                 </div>
             )
             :
             (
                 <div>
-                    <IconButton disabled={index < 1 && isTranslation == false}>
-                        <ArrowCircleLeftIcon className="basic-icon" onClick={() => handleShowWord('prev')}/>
-                    </IconButton>
-                    <IconButton
-                        disabled={index >= ((lesson?.words?.length ?? 0) - 1) && (translationFirst ? isTranslation === false : isTranslation === true)}>
-                        <ArrowCircleRightIcon className="basic-icon" onClick={() => handleShowWord('next')}/>
-                    </IconButton>
+                    <div className="lesson-body">
+                        <div>
+                            {// @ts-ignore
+                                words[index]?.image && (
+                                    <img src={// @ts-ignore
+                                        words[index].image} alt="Word illustration" className="small-image"/>
+                                )}
+                        </div>
+                        <div>
+                            {displayWord}
+                            {isTranslation && (
+                                <IconButton>
+                                    <VolumeUpIcon className="basic-icon"/>
+                                </IconButton>
+                            )}
+                        </div>
+                        <div>
+                            {// @ts-ignore
+                                (isTranslation && words[index].example != '') && (
+                                    <div>
+                                        {// @ts-ignore
+                                            words[index].example}
+                                        <IconButton>
+                                            <VolumeUpIcon className="basic-icon"/>
+                                        </IconButton>
+                                    </div>
+                                )}
+                        </div>
+                    </div>
+                    <div className="lesson-footer">
+                        {studyMode == 'testing' ? (
+                                <div>
+                                    {(translationFirst ? isTranslation === false : isTranslation === true) ? (
+                                        <div>
+                                            <div>
+                                                Znałeś odpowiedź?
+                                            </div>
+                                            <div>
+                                                <Button onClick={() => handleAnswer(true, index)}>TAK</Button>
+                                                <Button onClick={() => handleAnswer(false, index)}>NIE</Button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <Button onClick={() => handleShowWord('next')}>Odpowiedź</Button>
+                                        </div>
+                                    )
+                                    }
+                                </div>
+                            )
+                            :
+                            (
+                                <div>
+                                    <IconButton disabled={index < 1 && isTranslation == false}>
+                                        <ArrowCircleLeftIcon className="basic-icon"
+                                                             onClick={() => handleShowWord('prev')}/>
+                                    </IconButton>
+                                    <IconButton
+                                        disabled={index >= ((words.length ?? 0) - 1) && (translationFirst ? isTranslation === false : isTranslation === true)}>
+                                        <ArrowCircleRightIcon className="basic-icon"
+                                                              onClick={() => handleShowWord('next')}/>
+                                    </IconButton>
+                                </div>
+                            )
+                        }
+                        <div>
+                            <IconButton onClick={lessonReset}>
+                                <RestartAltIcon className="basic-icon"/>
+                            </IconButton>
+                            <IconButton onClick={handleSwitchLearningProcess}>
+                                {studyMode == 'learning' ? <SchoolIcon className="basic-icon"/> :
+                                    <QuizIcon className="basic-icon"/>}
+                            </IconButton>
+                            <IconButton onClick={handleSwitchMixingWords}>
+                                {mixingWords ? <SwapCallsIcon className="basic-icon"/> :
+                                    <SyncAltIcon className="basic-icon"/>}
+                            </IconButton>
+                            <IconButton onClick={handleSwitchTranslationFirst}>
+                                <TextFieldsIcon className="basic-icon"/> {translationFirst ?
+                                <ArrowLeftIcon className="basic-icon"/> : <ArrowRightIcon className="basic-icon"/>}
+                                <TranslateIcon
+                                    className="basic-icon"/>
+                            </IconButton>
+                        </div>
+                    </div>
                 </div>
             )
-            }
-            <div>
-                <IconButton onClick={lessonReset}>
-                    <RestartAltIcon className="basic-icon"/>
-                </IconButton>
-                <IconButton onClick={handleSwitchLearningProcess}>
-                    {studyMode == 'learning' ? <SchoolIcon className="basic-icon"/> :
-                        <QuizIcon className="basic-icon"/>}
-                </IconButton>
-                <IconButton onClick={handleSwitchMixingWords}>
-                    {mixingWords ? <SwapCallsIcon className="basic-icon"/> :
-                        <SyncAltIcon className="basic-icon"/>}
-                </IconButton>
-                <IconButton onClick={handleSwitchTranslationFirst}>
-                    <TextFieldsIcon className="basic-icon"/> {translationFirst ?
-                    <ArrowLeftIcon className="basic-icon"/> : <ArrowRightIcon className="basic-icon"/>} <TranslateIcon
-                    className="basic-icon"/>
-                </IconButton>
-            </div>
-        </div>
+        }
     </div>);
 }
