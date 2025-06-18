@@ -26,3 +26,7 @@ export async function updateLesson(lesson: Lesson) {
 export async function removeLessons(lesson: Lesson) {
     return await  axios.delete(`${BASE_URL}/lesson/` + lesson.id).then(res => res.data);
 }
+
+export async function getLessonMessage() {
+    return await axios.get(`${BASE_URL}/lesson/message`).then(res => res.data);
+}

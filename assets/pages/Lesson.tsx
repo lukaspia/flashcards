@@ -21,6 +21,7 @@ import {Word} from "../components/word/Word";
 import Grid from "@mui/material/Grid";
 import {generatePath} from "../utils/PathUtils";
 import {ROUTES} from "../constants/Routes";
+import {getLessonMessage} from "../services/api/lessonApi";
 
 export default function LessonTest(): React.ReactElement {
     const {id} = useParams();
@@ -31,6 +32,7 @@ export default function LessonTest(): React.ReactElement {
     const [nextRoundWords, setNextRoundWords] = useState<Word[]>([]);
     const [round, setRound] = useState(1);
     const [showSummary, setShowSummary] = useState(false);
+    const [lessonMessage, setLessonMessage] = useState('Gratulacje!');
 
     const [studyMode, setStudyMode] = useState('learning');
     const [translationFirst, setTranslationFirst] = useState(false);
@@ -140,6 +142,14 @@ export default function LessonTest(): React.ReactElement {
         lessonReset();
     }, [lesson, translationFirst, studyMode, mixingWords]);
 
+    useEffect(() => {
+        getLessonMessage().then(response => {
+            if (response.data.message) {
+                setLessonMessage(response.data.message);
+            }
+        });
+    }, [])
+
     const lessonReset = () => {
         setIndex(0);
 
@@ -167,8 +177,7 @@ export default function LessonTest(): React.ReactElement {
         navigate(path);
     }
 
-    //TODO na końcu ściągnąć pochwalny tekst z ai: Wygeneruj krótki tekst który pochwali osobę której dobrze poszło powtarzanie słówek. Tekst wygenerować już na wstępie, żeby był gotowy na pozytywne zakończenie
-    //TODO Dorobić oznaczanie ważności słowa (może wybór z jakiś zdefiniowanych kategorii)
+    //TODO Dorobić oznaczanie ważności słowa (może wybór z jakiś zdefiniowanych kategorii), koloru słówek i ilości niepowowdzeń
 
     return (<div>
         <div className="lesson-header">
@@ -213,7 +222,7 @@ export default function LessonTest(): React.ReactElement {
                         {nextRoundWords.length === 0 && (
                             <div>
                                 <div>
-                                    Gratulacje!
+                                    {lessonMessage}
                                 </div>
                                 <div>
                                     <Button>Zapisz wynik i wróć do listy lekcji</Button>
