@@ -22,6 +22,7 @@ import Grid from "@mui/material/Grid";
 import {generatePath} from "../utils/PathUtils";
 import {ROUTES} from "../constants/Routes";
 import {getLessonMessage, updateLesson} from "../services/api/lessonApi";
+import {Lesson} from "../components/lesson/Lesson";
 
 export default function LessonTest(): React.ReactElement {
     const {id} = useParams();
@@ -41,7 +42,7 @@ export default function LessonTest(): React.ReactElement {
 
     const [index, setIndex] = useState(0);
     const [isTranslation, setIsTranslation] = useState(false);
-    const [displayWord, setDisplayWord] = useState(null);
+    const [displayWord, setDisplayWord] = useState<string|null>(null);
 
     const handleShowWord = (direction: string) => {
         let i = index;
@@ -56,7 +57,6 @@ export default function LessonTest(): React.ReactElement {
                     }
 
                     setIsTranslation(true);
-                    // @ts-ignore
                     setDisplayWord(words[i].translation);
                 } else {
                     if (!isTranslation) {
@@ -66,9 +66,7 @@ export default function LessonTest(): React.ReactElement {
                         setIndex(i);
                     }
 
-
                     setIsTranslation(false);
-                    // @ts-ignore
                     setDisplayWord(words[i].basicWord);
                 }
             } else {
@@ -80,7 +78,6 @@ export default function LessonTest(): React.ReactElement {
                     }
                     setIndex(i);
                     setIsTranslation(false);
-                    // @ts-ignore
                     setDisplayWord(words[i].basicWord);
                 } else {
                     if (translationFirst) {
@@ -90,7 +87,6 @@ export default function LessonTest(): React.ReactElement {
                     }
                     setIndex(i);
                     setIsTranslation(true);
-                    // @ts-ignore
                     setDisplayWord(words[i].translation);
                 }
             }
@@ -111,9 +107,7 @@ export default function LessonTest(): React.ReactElement {
                 setWords([...lesson.words]);
             }
             setMixingWords(false);
-            // @ts-ignore
         } else {
-            // @ts-ignore
             shuffle(words);
             setMixingWords(true);
         }
@@ -135,15 +129,11 @@ export default function LessonTest(): React.ReactElement {
     }
 
     const updateWordError = (wordId: number, increase: boolean = true) => {
-        // @ts-ignore
         const updatedWords = wordsError.map((word) => {
-            // @ts-ignore
             if (word.id === wordId) {
                 if(increase) {
-                    // @ts-ignore
                     return { ...word, errors: word.errors + 1};
                 } else if(word.errors > 0) {
-                    // @ts-ignore
                     return { ...word, errors: word.errors - 1};
                 }
             }
@@ -181,11 +171,9 @@ export default function LessonTest(): React.ReactElement {
 
         if (translationFirst) {
             setIsTranslation(true);
-            // @ts-ignore
             setDisplayWord(words[0]?.translation);
         } else {
             setIsTranslation(false);
-            // @ts-ignore
             setDisplayWord(words[0]?.basicWord);
         }
     }
@@ -207,12 +195,10 @@ export default function LessonTest(): React.ReactElement {
         const newLesson = {
             ...lesson,
             words: wordsError,
-        };
+        } as Lesson;
 
-        // @ts-ignore
         setLesson(newLesson);
 
-        // @ts-ignore
         updateLesson(newLesson)
             .then((result) => {
             })
@@ -222,6 +208,8 @@ export default function LessonTest(): React.ReactElement {
             handleLessonList();
         });
     }
+
+    //TODO -> ogarnąć dlaczego nie ładuje od razu słowa po odświeżeniu strony
 
     //TODO Dorobić oznaczanie ważności słowa (może wybór z jakiś zdefiniowanych kategorii), koloru słówek i ilości niepowowdzeń
 
@@ -286,10 +274,8 @@ export default function LessonTest(): React.ReactElement {
                 <div>
                     <div className="lesson-body">
                         <div>
-                            {// @ts-ignore
-                                words[index]?.image && (
-                                    <img src={// @ts-ignore
-                                        words[index].image} alt="Word illustration" className="small-image"/>
+                            {words[index]?.image && (
+                                    <img src={words[index].image} alt="Word illustration" className="small-image"/>
                                 )}
                         </div>
                         <div>
@@ -301,11 +287,9 @@ export default function LessonTest(): React.ReactElement {
                             )}
                         </div>
                         <div>
-                            {// @ts-ignore
-                                (isTranslation && words[index].example != '') && (
+                            {(isTranslation && words[index].example != '') && (
                                     <div>
-                                        {// @ts-ignore
-                                            words[index].example}
+                                        {words[index].example}
                                         <IconButton>
                                             <VolumeUpIcon className="basic-icon"/>
                                         </IconButton>
