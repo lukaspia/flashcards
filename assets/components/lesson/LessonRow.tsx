@@ -30,10 +30,16 @@ export default function LessonRow({lesson, handleRemoveClickOpen}: LessonRowProp
         navigate(path);
     }
 
+    const wordsWithError = lesson.words ? lesson.words.filter(word => word.errors > 0) : [];
+    const countWordsWithError = wordsWithError.length;
+
     return (
         <>
             <td>
                 {lesson.name}
+            </td>
+            <td>
+                {lesson.words.length} {countWordsWithError > 0 ? 'do powtórki ' + countWordsWithError : ''}
             </td>
             <td>
                 <IconButton >
