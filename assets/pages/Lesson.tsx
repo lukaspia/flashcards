@@ -212,8 +212,6 @@ export default function LessonTest(): React.ReactElement {
         });
     }
 
-    //TODO Dorobić oznaczanie ważności słowa (może wybór z jakiś zdefiniowanych kategorii), koloru słówek i ilości niepowowdzeń
-
     return (<div>
         <div className="lesson-header">
 

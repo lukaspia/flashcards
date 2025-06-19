@@ -14,6 +14,10 @@ import {uploadImage, removeWordImage} from "../../services/api/api";
 import {translateWord} from "../../services/api/wordApi";
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import {readText} from "../../utils/TextReader";
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
 
 const VisuallyHiddenInput = styled('input')({
     clip: 'rect(0 0 0 0)',
@@ -196,12 +200,31 @@ export default function WordRow({ keyId, word}: WordRowProps) {
                 </Grid>
                 <Grid size={5}>
                     <div>
-
+                        <input id="word-color" type="color" value={word.color ?? '#000000'} onChange={e => handleUpdateWord(keyId, 'color', e.target.value)}/>
+                    </div>
+                    <div>
+                        <FormControl variant="standard" sx={{ m: 1, minWidth: 120 }}>
+                            <InputLabel id="demo-simple-select-standard-label">Kategoria</InputLabel>
+                            <Select
+                                labelId="demo-simple-select-standard-label"
+                                id="demo-simple-select-standard"
+                                value="10"
+                                //onChange={handleChange}
+                                label="Age"
+                            >
+                                <MenuItem value="">
+                                    <em>None</em>
+                                </MenuItem>
+                                <MenuItem value={10}>Ten</MenuItem>
+                                <MenuItem value={20}>Twenty</MenuItem>
+                                <MenuItem value={30}>Thirty</MenuItem>
+                            </Select>
+                        </FormControl>
                     </div>
                 </Grid>
                 <Grid size={5}>
                     <div>
-                        <TextField
+                    <TextField
                             label="Przykład użycia"
                             multiline
                             rows={2}
