@@ -25,6 +25,7 @@ import {getLessonMessage, updateLesson} from "../services/api/lessonApi";
 import {Lesson} from "../components/lesson/Lesson";
 import TipsAndUpdatesIcon from '@mui/icons-material/TipsAndUpdates';
 import AllInclusiveIcon from '@mui/icons-material/AllInclusive';
+import Tooltip from '@mui/material/Tooltip';
 
 export default function LessonTest(): React.ReactElement {
     const {id} = useParams();
@@ -351,27 +352,30 @@ export default function LessonTest(): React.ReactElement {
                             )
                         }
                         <div>
-                            <IconButton onClick={lessonReset}>
-                                <RestartAltIcon className="basic-icon"/>
-                            </IconButton>
+                            <Tooltip title="Resetuj" placement="top-start">
+                                <IconButton onClick={lessonReset}>
+                                    <RestartAltIcon className="basic-icon"/>
+                                </IconButton>
+                            </Tooltip>
                             <IconButton onClick={handleSwitchHardWordsMode}>
-                                {hardWordsMode ? <AllInclusiveIcon className="basic-icon"/> :
-                                    <TipsAndUpdatesIcon className="basic-icon"/>}
+                                {hardWordsMode ? <Tooltip title="Włącz wszystkie słowa" placement="top-start"><AllInclusiveIcon className="basic-icon"/></Tooltip> :
+                                    <Tooltip title="Włącz trudne słowa" placement="top-start"><TipsAndUpdatesIcon className="basic-icon"/></Tooltip>}
                             </IconButton>
                             <IconButton onClick={handleSwitchLearningProcess}>
-                                {studyMode == 'learning' ? <SchoolIcon className="basic-icon"/> :
-                                    <QuizIcon className="basic-icon"/>}
+                                {studyMode == 'learning' ? <Tooltip title="Tryb testu" placement="top-start"><QuizIcon className="basic-icon"/></Tooltip> :
+                                    <Tooltip title="Tryb nauki" placement="top-start"><SchoolIcon className="basic-icon"/></Tooltip>}
                             </IconButton>
                             <IconButton onClick={handleSwitchMixingWords}>
-                                {mixingWords ? <SwapCallsIcon className="basic-icon"/> :
-                                    <SyncAltIcon className="basic-icon"/>}
+                                {mixingWords ? <Tooltip title="Słowa w kolejności" placement="top-start"><SyncAltIcon className="basic-icon"/></Tooltip> :
+                                    <Tooltip title="Mieszaj słowa" placement="top-start"><SwapCallsIcon className="basic-icon"/></Tooltip>}
                             </IconButton>
-                            <IconButton onClick={handleSwitchTranslationFirst}>
-                                <TextFieldsIcon className="basic-icon"/> {translationFirst ?
-                                <ArrowLeftIcon className="basic-icon"/> : <ArrowRightIcon className="basic-icon"/>}
-                                <TranslateIcon
-                                    className="basic-icon"/>
-                            </IconButton>
+                            <Tooltip title="Przełącz kierunek" placement="top-start">
+                                <IconButton onClick={handleSwitchTranslationFirst}>
+                                    <TextFieldsIcon className="basic-icon"/> {translationFirst ?
+                                    <ArrowLeftIcon className="basic-icon"/> : <ArrowRightIcon className="basic-icon"/>}
+                                    <TranslateIcon className="basic-icon"/>
+                                </IconButton>
+                            </Tooltip>
                         </div>
                     </div>
                 </div>

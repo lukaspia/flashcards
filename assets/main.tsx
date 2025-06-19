@@ -39,4 +39,4 @@ function initApp() {
     );
 }
 
-initApp();
+document.addEventListener("DOMContentLoaded", initApp);
