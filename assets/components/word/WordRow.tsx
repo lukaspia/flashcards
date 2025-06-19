@@ -1,6 +1,6 @@
 import {useSortable} from "@dnd-kit/sortable";
 import {CSS} from "@dnd-kit/utilities";
-import React, {useContext, useState} from "react";
+import React, {useContext, useEffect, useState} from "react";
 import Grid from "@mui/material/Grid";
 import {TextField} from "@mui/material";
 import IconButton from "@mui/material/IconButton";
@@ -136,6 +136,12 @@ export default function WordRow({ keyId, word}: WordRowProps) {
             setSlowRead(key + type);
         }
     }
+
+    useEffect(() => {
+        if(!word.wordCategory?.id) {
+            handleUpdateWord(keyId, 'wordCategory', wordsCategories[0]?.id ?? '')
+        }
+    }, [wordsCategories]);
 
     return (
         <div key={word.id} className={`word-${word.id}`} ref={setNodeRef} style={style}>

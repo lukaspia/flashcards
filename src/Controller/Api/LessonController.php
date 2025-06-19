@@ -150,6 +150,7 @@ class LessonController extends AbstractApiController
         $words = $existingLesson->getWords();
         $words->clear();
 
+        //TODO zrobić do tego DataTransfer?
         if (isset($data['words'])) {
             $lessonWords = $this->entityManager->getRepository(Word::class)->findByLessonId($data['id']);
             foreach ($data['words'] as $word) {
