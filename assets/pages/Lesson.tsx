@@ -23,6 +23,8 @@ import {generatePath} from "../utils/PathUtils";
 import {ROUTES} from "../constants/Routes";
 import {getLessonMessage, updateLesson} from "../services/api/lessonApi";
 import {Lesson} from "../components/lesson/Lesson";
+import TipsAndUpdatesIcon from '@mui/icons-material/TipsAndUpdates';
+import AllInclusiveIcon from '@mui/icons-material/AllInclusive';
 
 export default function LessonTest(): React.ReactElement {
     const {id} = useParams();
@@ -39,6 +41,7 @@ export default function LessonTest(): React.ReactElement {
     const [studyMode, setStudyMode] = useState('learning');
     const [translationFirst, setTranslationFirst] = useState(false);
     const [mixingWords, setMixingWords] = useState(false);
+    const [hardWordsMode, setHardWordsMode] = useState(false);
 
     const [index, setIndex] = useState(0);
     const [isTranslation, setIsTranslation] = useState(false);
@@ -99,6 +102,21 @@ export default function LessonTest(): React.ReactElement {
 
     const handleSwitchLearningProcess = () => {
         studyMode == 'learning' ? setStudyMode('testing') : setStudyMode('learning');
+    }
+
+    const handleSwitchHardWordsMode = () => {
+        if(hardWordsMode) {
+            if (lesson && lesson.words) {
+                setWords([...lesson.words]);
+            }
+            setHardWordsMode(false)
+        } else {
+            if (lesson && lesson.words) {
+                const wordsWithError = lesson.words ? lesson.words.filter(word => word.errors > 0) : [];
+                setWords([...wordsWithError]);
+            }
+            setHardWordsMode(true)
+        }
     }
 
     const handleSwitchMixingWords = () => {
@@ -335,6 +353,10 @@ export default function LessonTest(): React.ReactElement {
                         <div>
                             <IconButton onClick={lessonReset}>
                                 <RestartAltIcon className="basic-icon"/>
+                            </IconButton>
+                            <IconButton onClick={handleSwitchHardWordsMode}>
+                                {hardWordsMode ? <AllInclusiveIcon className="basic-icon"/> :
+                                    <TipsAndUpdatesIcon className="basic-icon"/>}
                             </IconButton>
                             <IconButton onClick={handleSwitchLearningProcess}>
                                 {studyMode == 'learning' ? <SchoolIcon className="basic-icon"/> :
