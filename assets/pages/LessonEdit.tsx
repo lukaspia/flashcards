@@ -1,4 +1,4 @@
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import SaveIcon from '@mui/icons-material/Save';
@@ -9,6 +9,7 @@ import Words from "../components/word/Words";
 import {updateLesson} from "../services/api/lessonApi";
 import CollapseSuccessAlert from "../components/ui/CollapseSuccessAlert";
 import WordsContext from "../services/context/WordsContext";
+import {getCategories} from "../services/api/wordApi";
 
 export default function LessonEdit(): React.ReactElement {
     const {id} = useParams();
@@ -16,6 +17,7 @@ export default function LessonEdit(): React.ReactElement {
     const [isSaving, setIsSaving] = useState(false);
     const [openSuccessAlert, setOpenSuccessAlert] = useState(false);
     const [successAlertMessage, setSuccessAlertMessage] = useState('');
+    const [categories, setCategories] = useState<any[]>([]);
 
     const handleSetLessonName = (name: string) => {
         if(lesson != undefined) {
@@ -58,7 +60,14 @@ export default function LessonEdit(): React.ReactElement {
     const wordsContextValue = {
         words: lesson?.words || [],
         updateWords: updateWords,
+        wordsCategories: categories,
     };
+
+    useEffect(() => {
+        getCategories().then((result) => {
+            setCategories(result.data);
+        });
+    },[])
 
     return (
         <div className="lesson-edit">

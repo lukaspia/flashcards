@@ -45,7 +45,7 @@ export default function WordRow({ keyId, word}: WordRowProps) {
         transition,
     } = useSortable({ id: keyId });
 
-    const {words, updateWords} = useContext(WordsContext);
+    const {words, updateWords, wordsCategories} = useContext(WordsContext);
     const [slowRead, setSlowRead] = useState('');
     const [sourceLanguage, setSourceLanguage] = useState('pl-PL');
     const [targetLanguage, setTargetLanguage] = useState('en-US');
@@ -206,18 +206,18 @@ export default function WordRow({ keyId, word}: WordRowProps) {
                         <FormControl variant="standard" sx={{ m: 1, minWidth: 120 }}>
                             <InputLabel id="demo-simple-select-standard-label">Kategoria</InputLabel>
                             <Select
-                                labelId="demo-simple-select-standard-label"
-                                id="demo-simple-select-standard"
-                                value="10"
-                                //onChange={handleChange}
-                                label="Age"
+                                id="word-category"
+                                value={word.wordCategory?.id ?? (wordsCategories[0]?.id ?? '')}
+                                onChange={e => handleUpdateWord(keyId, 'wordCategory', e.target.value)}
+                                label="Kategoria"
                             >
-                                <MenuItem value="">
-                                    <em>None</em>
-                                </MenuItem>
-                                <MenuItem value={10}>Ten</MenuItem>
-                                <MenuItem value={20}>Twenty</MenuItem>
-                                <MenuItem value={30}>Thirty</MenuItem>
+                                {
+                                    wordsCategories.map(
+                                        (category) => (
+                                            <MenuItem key={category.id} value={category.id}>{category.name}</MenuItem>
+                                        )
+                                    )
+                                }
                             </Select>
                         </FormControl>
                     </div>

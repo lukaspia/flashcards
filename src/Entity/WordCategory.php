@@ -4,8 +4,10 @@ namespace App\Entity;
 
 use App\Repository\WordCategoryRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: WordCategoryRepository::class)]
+#[Groups('lesson:read')]
 class WordCategory
 {
     #[ORM\Id]

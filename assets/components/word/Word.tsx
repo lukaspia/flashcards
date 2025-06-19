@@ -4,7 +4,7 @@ export interface Word {
     translation: string;
     example: string;
     image: string;
-    wordCategory: string;
+    wordCategory: any;
     errors: number;
     color: string;
 }
