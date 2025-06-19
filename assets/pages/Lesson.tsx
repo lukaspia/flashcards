@@ -145,9 +145,17 @@ export default function LessonTest(): React.ReactElement {
     };
 
     useEffect(() => {
+        getLessonMessage().then(response => {
+            if (response.data.message) {
+                setLessonMessage(response.data.message);
+            }
+        });
+    }, []);
+
+    useEffect(() => {
         if (lesson && lesson.words) {
             setWords([...lesson.words]);
-            setWordsError([...lesson.words])
+            setWordsError([...lesson.words]);
         } else {
             setWords([]);
             setWordsError([]);
@@ -156,15 +164,11 @@ export default function LessonTest(): React.ReactElement {
 
     useEffect(() => {
         lessonReset();
-    }, [lesson, translationFirst, studyMode, mixingWords]);
+    }, [words]);
 
     useEffect(() => {
-        getLessonMessage().then(response => {
-            if (response.data.message) {
-                setLessonMessage(response.data.message);
-            }
-        });
-    }, [])
+        lessonReset();
+    }, [translationFirst, studyMode, mixingWords]);
 
     const lessonReset = () => {
         setIndex(0);
@@ -183,7 +187,6 @@ export default function LessonTest(): React.ReactElement {
         setNextRoundWords([]);
         setShowSummary(false);
         setRound(round + 1);
-        lessonReset();
     }
 
     const handleLessonList = () => {
@@ -208,8 +211,6 @@ export default function LessonTest(): React.ReactElement {
             handleLessonList();
         });
     }
-
-    //TODO -> ogarnąć dlaczego nie ładuje od razu słowa po odświeżeniu strony
 
     //TODO Dorobić oznaczanie ważności słowa (może wybór z jakiś zdefiniowanych kategorii), koloru słówek i ilości niepowowdzeń
 
