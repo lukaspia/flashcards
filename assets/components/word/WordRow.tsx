@@ -206,7 +206,7 @@ export default function WordRow({ keyId, word}: WordRowProps) {
                 </Grid>
                 <Grid size={5}>
                     <div>
-                        <input className="word-color" type="color" value={word.color ?? '#000000'} onChange={e => handleUpdateWord(keyId, 'color', e.target.value)}/>
+                        <input className="word-color" type="color" value={word.color && word.color.trim() !== '' ? word.color : '#000000'} onChange={e => handleUpdateWord(keyId, 'color', e.target.value)}/>
                     </div>
                     <div>
                         <FormControl variant="standard" sx={{ m: 1, minWidth: 120 }}>

@@ -76,15 +76,12 @@ class LessonController extends AbstractApiController
     #[Route('/lesson/{id}', name: 'get_lesson', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function getLesson(Lesson $lesson): JsonResponse
     {
-        //TODO przenieść to do security/granted i ewentualnie inne
-
         if (!($this->getUser())) {
             return $this->createResponse(null, ['Authentication required.'], Response::HTTP_UNAUTHORIZED);
         }
 
-        if($lesson->getUser() !== $this->getUser()) {
+        if(!$this->isGranted('LESSON_VIEW', $lesson)) {
             return $this->createResponse(null, ['You are not authorized to view this lesson.'], Response::HTTP_FORBIDDEN);
-
         }
 
         return $this->createResponse(
@@ -147,10 +144,13 @@ class LessonController extends AbstractApiController
             return $this->createResponse(null, ['Lesson not found'], Response::HTTP_NOT_FOUND);
         }
 
+        if(!$this->isGranted('LESSON_EDIT', $existingLesson)) {
+            return $this->createResponse(null, ['You are not authorized to edit this lesson.'], Response::HTTP_FORBIDDEN);
+        }
+
         $words = $existingLesson->getWords();
         $words->clear();
 
-        //TODO zrobić do tego DataTransfer?
         if (isset($data['words'])) {
             $lessonWords = $this->entityManager->getRepository(Word::class)->findByLessonId($data['id']);
             foreach ($data['words'] as $word) {

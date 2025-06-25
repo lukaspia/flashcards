@@ -28,14 +28,29 @@ final class LessonVoter extends Voter
         }
 
         return match ($attribute) {
-            self::VIEW => true,
-            self::EDIT => true,
+            self::VIEW => $this->canView($subject, $user),
+            self::EDIT => $this->canEdit($subject, $user),
             self::DELETE => $this->canDelete($subject, $user),
             default => throw new \LogicException('This code should not be reached!')
         };
     }
 
-    public function canDelete(Lesson $lesson, UserInterface $user): bool
+    private function canDelete(Lesson $lesson, UserInterface $user): bool
+    {
+        return $this->isLessonOwner($lesson, $user);
+    }
+
+    private function canView(Lesson $lesson, UserInterface $user): bool
+    {
+        return $this->isLessonOwner($lesson, $user);
+    }
+
+    private function canEdit(Lesson $lesson, UserInterface $user): bool
+    {
+        return $this->isLessonOwner($lesson, $user);
+    }
+
+    private function isLessonOwner(Lesson $lesson, UserInterface $user): bool
     {
         return $lesson->getUser() === $user;
     }

@@ -102,9 +102,14 @@ class Lesson
     public function updateWordsOrder(): void
     {
         $order = 1;
+        /**
+         * @var Word $word
+         */
         foreach ($this->words as $word) {
             $word->setSequence($order);
             $order++;
         }
+
+        //throw new \Exception('SOMETHING WRONG ' . $word->getSequence());
     }
 }
