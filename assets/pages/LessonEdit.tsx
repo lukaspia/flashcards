@@ -3,13 +3,17 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import SaveIcon from '@mui/icons-material/Save';
 import useLesson from "../hooks/useLesson";
-import {useParams} from "react-router";
+import {useNavigate, useParams} from "react-router";
 import LoadingPreloader from "../components/ui/LoadingPreloader";
 import Words from "../components/word/Words";
 import {updateLesson} from "../services/api/lessonApi";
 import CollapseSuccessAlert from "../components/ui/CollapseSuccessAlert";
 import WordsContext from "../services/context/WordsContext";
 import {getCategories} from "../services/api/wordApi";
+import KeyboardReturnIcon from "@mui/icons-material/KeyboardReturn";
+import IconButton from "@mui/material/IconButton";
+import {generatePath} from "../utils/PathUtils";
+import {ROUTES} from "../constants/Routes";
 
 export default function LessonEdit(): React.ReactElement {
     const {id} = useParams();
@@ -18,6 +22,7 @@ export default function LessonEdit(): React.ReactElement {
     const [openSuccessAlert, setOpenSuccessAlert] = useState(false);
     const [successAlertMessage, setSuccessAlertMessage] = useState('');
     const [categories, setCategories] = useState<any[]>([]);
+    const navigate = useNavigate();
 
     const handleSetLessonName = (name: string) => {
         if(lesson != undefined) {
@@ -63,6 +68,11 @@ export default function LessonEdit(): React.ReactElement {
         wordsCategories: categories,
     };
 
+    const handleLessonList = () => {
+        const path = generatePath(ROUTES.LESSON_PANEL);
+        navigate(path);
+    }
+
     useEffect(() => {
         getCategories().then((result) => {
             setCategories(result.data);
@@ -72,6 +82,10 @@ export default function LessonEdit(): React.ReactElement {
     return (
         <div className="lesson-edit">
             <div className="lesson-header">
+                <IconButton onClick={handleLessonList}>
+                    <KeyboardReturnIcon className="basic-icon"/>
+                </IconButton>
+
                 <h4>Edycja lekcji</h4>
 
                 <LoadingPreloader isLoading={isLoading} />

@@ -7,6 +7,7 @@ import {Lesson} from "./Lesson";
 import {useNavigate} from "react-router";
 import {ROUTES} from "../../constants/Routes";
 import {generatePath} from "../../utils/PathUtils";
+import Tooltip from '@mui/material/Tooltip';
 
 interface LessonRowProps {
     lesson: Lesson;
@@ -43,13 +44,19 @@ export default function LessonRow({lesson, handleRemoveClickOpen}: LessonRowProp
             </td>
             <td>
                 <IconButton >
-                    <EditIcon className="basic-icon" onClick={handleEditLesson} />
+                    <Tooltip title="Edytuj lekcję" placement="top-start">
+                        <EditIcon className="basic-icon" onClick={handleEditLesson} />
+                    </Tooltip>
                 </IconButton>
                 <IconButton >
-                    <DeleteForeverIcon className="basic-icon" onClick={handleRemoveLesson} />
+                    <Tooltip title="Usuń lekcję" placement="top-start">
+                        <DeleteForeverIcon className="basic-icon" onClick={handleRemoveLesson} />
+                    </Tooltip>
                 </IconButton>
                 <IconButton >
-                    <QuizIcon className="basic-icon" onClick={handleTestLesson} />
+                    <Tooltip title="Ucz się lub testuj" placement="top-start">
+                        <QuizIcon className="basic-icon" onClick={handleTestLesson} />
+                    </Tooltip>
                 </IconButton>
             </td>
         </>
