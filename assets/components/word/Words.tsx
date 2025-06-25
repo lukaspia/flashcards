@@ -44,7 +44,10 @@ export default function Words(): React.ReactElement {
         basicWord: '',
         translation: '',
         example: '',
-        image: ''
+        image: '',
+        wordCategory: '',
+        errors: 0,
+        color: '',
     };
 
     if(words.length == 0) {
@@ -79,7 +82,7 @@ export default function Words(): React.ReactElement {
                 <Grid container spacing={2}>
                     <Grid size={2}>
                         <div>
-                            <h2>Lista słów</h2>
+                            <h5>Lista słów</h5>
                         </div>
                     </Grid>
                     <Grid size={10}>
@@ -93,12 +96,12 @@ export default function Words(): React.ReactElement {
             <Grid container spacing={2}>
                 <Grid size={{ xs: 6, md: 6 }}>
                     <div>
-                        <h3>Słowa PL</h3>
+                        <h6>Słowa PL</h6>
                     </div>
                 </Grid>
                 <Grid size={{ xs: 6, md: 6 }}>
                     <div>
-                        <h3>Słowa EN</h3>
+                        <h6>Słowa EN</h6>
                     </div>
                 </Grid>
             </Grid>
@@ -119,7 +122,7 @@ export default function Words(): React.ReactElement {
             </DndContext>
 
             <Button
-                className="btn btn-primary"
+                className="btn button-primary"
                 variant="contained"
                 disabled={words.length > 29}
                 onClick={handleAddWord}

@@ -1,14 +1,19 @@
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import SaveIcon from '@mui/icons-material/Save';
 import useLesson from "../hooks/useLesson";
-import {useParams} from "react-router";
+import {useNavigate, useParams} from "react-router";
 import LoadingPreloader from "../components/ui/LoadingPreloader";
 import Words from "../components/word/Words";
 import {updateLesson} from "../services/api/lessonApi";
 import CollapseSuccessAlert from "../components/ui/CollapseSuccessAlert";
 import WordsContext from "../services/context/WordsContext";
+import {getCategories} from "../services/api/wordApi";
+import KeyboardReturnIcon from "@mui/icons-material/KeyboardReturn";
+import IconButton from "@mui/material/IconButton";
+import {generatePath} from "../utils/PathUtils";
+import {ROUTES} from "../constants/Routes";
 
 export default function LessonEdit(): React.ReactElement {
     const {id} = useParams();
@@ -16,6 +21,8 @@ export default function LessonEdit(): React.ReactElement {
     const [isSaving, setIsSaving] = useState(false);
     const [openSuccessAlert, setOpenSuccessAlert] = useState(false);
     const [successAlertMessage, setSuccessAlertMessage] = useState('');
+    const [categories, setCategories] = useState<any[]>([]);
+    const navigate = useNavigate();
 
     const handleSetLessonName = (name: string) => {
         if(lesson != undefined) {
@@ -58,16 +65,33 @@ export default function LessonEdit(): React.ReactElement {
     const wordsContextValue = {
         words: lesson?.words || [],
         updateWords: updateWords,
+        wordsCategories: categories,
     };
+
+    const handleLessonList = () => {
+        const path = generatePath(ROUTES.LESSON_PANEL);
+        navigate(path);
+    }
+
+    useEffect(() => {
+        getCategories().then((result) => {
+            setCategories(result.data);
+        });
+    },[])
 
     return (
         <div className="lesson-edit">
             <div className="lesson-header">
-                <h1>Edycja lekcji</h1>
+                <IconButton onClick={handleLessonList}>
+                    <KeyboardReturnIcon className="basic-icon"/>
+                </IconButton>
+
+                <h4>Edycja lekcji</h4>
 
                 <LoadingPreloader isLoading={isLoading} />
 
                 <TextField
+                    className="lesson-name-input"
                     required
                     id="outlined-required"
                     label="Nazwa lekcji"
@@ -90,7 +114,7 @@ export default function LessonEdit(): React.ReactElement {
 
             <div className="lesson-footer">
                 <Button
-                    className="btn btn-primary"
+                    className="btn button-primary"
                     variant="contained"
                     onClick={handleSaveLesson}
                     endIcon={<SaveIcon />}>

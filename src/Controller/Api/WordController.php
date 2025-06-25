@@ -6,6 +6,7 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 
+use App\Entity\WordCategory;
 use App\Service\AI\AIGeneratorInterface;
 use App\Service\AI\GeminiService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -50,5 +51,13 @@ class WordController extends AbstractApiController
         }
 
         return $this->createResponse(['translation' => reset($result), 'prompt_data' => $data], ['Translate successfully'], Response::HTTP_OK);
+    }
+
+    #[Route('/word/get-categories', name: 'word_get_categories', methods: ['GET'])]
+    public function getCategories(): JsonResponse
+    {
+        $categories = $this->entityManager->getRepository(WordCategory::class)->findAll();
+
+        return $this->createResponse($categories, ['Categories fetched successfully'], Response::HTTP_OK);
     }
 }

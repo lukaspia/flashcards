@@ -19,11 +19,18 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class DeleteWordCategoryCommand extends Command
 {
     /**
-     * @param \Doctrine\ORM\EntityManagerInterface $entityManager
+     * @var \Doctrine\ORM\EntityManagerInterface
      */
-    public function __construct(private readonly EntityManagerInterface $entityManager)
+    private EntityManagerInterface $entityManager;
+
+    /**
+     * @param \App\Service\UserService $userService
+     */
+    public function __construct(EntityManagerInterface $entityManager)
     {
         parent::__construct();
+
+        $this->entityManager = $entityManager;
     }
 
     /**
@@ -33,11 +40,7 @@ class DeleteWordCategoryCommand extends Command
     {
         $this
             ->setHelp('This command allows you to delete a word category...')
-            ->addArgument(
-                'category_name',
-                InputArgument::OPTIONAL,
-                'The category name of the new word category'
-            );
+            ->addArgument('category_name', InputArgument::OPTIONAL, 'The category name of the new word category');
     }
 
     /**
@@ -48,6 +51,7 @@ class DeleteWordCategoryCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
+
         $io->info($this->getHelp());
 
         if (!($wordCategoryName = $input->getArgument('category_name'))) {
@@ -57,7 +61,7 @@ class DeleteWordCategoryCommand extends Command
 
         $wordCategory = $this->entityManager->getRepository(WordCategory::class)->findBy(['name' => $wordCategoryName]);
 
-        if (empty($wordCategory)) {
+        if(empty($wordCategory)) {
             $io->error(['Category not found.']);
             return Command::FAILURE;
         }

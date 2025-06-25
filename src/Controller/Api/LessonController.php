@@ -8,6 +8,7 @@ namespace App\Controller\Api;
 
 use App\Entity\Lesson;
 use App\Entity\Word;
+use App\Service\AI\AIGeneratorInterface;
 use App\Service\Lesson\LessonServices;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -17,7 +18,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
-use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
+use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Exception\InvalidArgumentException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -29,7 +30,7 @@ class LessonController extends AbstractApiController
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        private DenormalizerInterface $denormalizer,
+        private SerializerInterface $serializer,
         private LessonServices $lessonServices,
         private LoggerInterface $logger,
         private ValidatorInterface $validator
@@ -72,11 +73,18 @@ class LessonController extends AbstractApiController
         }
     }
 
-    #[Route('/lesson/{id}', name: 'get_lesson', methods: ['GET'])]
+    #[Route('/lesson/{id}', name: 'get_lesson', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function getLesson(Lesson $lesson): JsonResponse
     {
+        //TODO przenieść to do security/granted i ewentualnie inne
+
         if (!($this->getUser())) {
             return $this->createResponse(null, ['Authentication required.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        if($lesson->getUser() !== $this->getUser()) {
+            return $this->createResponse(null, ['You are not authorized to view this lesson.'], Response::HTTP_FORBIDDEN);
+
         }
 
         return $this->createResponse(
@@ -142,6 +150,7 @@ class LessonController extends AbstractApiController
         $words = $existingLesson->getWords();
         $words->clear();
 
+        //TODO zrobić do tego DataTransfer?
         if (isset($data['words'])) {
             $lessonWords = $this->entityManager->getRepository(Word::class)->findByLessonId($data['id']);
             foreach ($data['words'] as $word) {
@@ -151,7 +160,7 @@ class LessonController extends AbstractApiController
                 }
 
                 try {
-                    $wordEntity = $this->denormalizer->denormalize($word, Word::class, null, $context);
+                    $wordEntity = $this->serializer->denormalize($word, Word::class, null, $context);
                 } catch (ExceptionInterface $e) {
                     return $this->createResponse(
                         null,
@@ -166,7 +175,7 @@ class LessonController extends AbstractApiController
         }
 
         try {
-            $lesson = $this->denormalizer->denormalize($data, Lesson::class, null, [
+            $lesson = $this->serializer->denormalize($data, Lesson::class, null, [
                 AbstractNormalizer::OBJECT_TO_POPULATE => $existingLesson,
                 AbstractNormalizer::GROUPS => [self::LESSON_WRITE_GROUP],
             ]);
@@ -207,5 +216,22 @@ class LessonController extends AbstractApiController
                 Response::HTTP_BAD_REQUEST
             );
         }
+    }
+
+    #[Route('/lesson/message', name: 'get_lesson_message', methods: ['GET'])]
+    public function getSuccessMessage(AIGeneratorInterface $geminiService): JsonResponse
+    {
+        try {
+            $message = $geminiService->generateText('Wygeneruj krótki tekst, który pochwali osobę której dobrze poszła nauka słówek języka obcego.');
+        } catch (\Exception $e) {
+            $this->logger->error('Lesson success message error: ' . $e->getMessage());
+            return $this->createResponse(
+                null,
+                ['Lesson success message error: ' . $e->getMessage()],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
+        return $this->createResponse(['message' => $message], ['Lesson success message generated successfully'], Response::HTTP_OK);
     }
 }
