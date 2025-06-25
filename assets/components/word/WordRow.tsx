@@ -1,6 +1,6 @@
 import {useSortable} from "@dnd-kit/sortable";
 import {CSS} from "@dnd-kit/utilities";
-import React, {useContext, useState} from "react";
+import React, {useContext, useEffect, useState} from "react";
 import Grid from "@mui/material/Grid";
 import {TextField} from "@mui/material";
 import IconButton from "@mui/material/IconButton";
@@ -14,6 +14,10 @@ import {uploadImage, removeWordImage} from "../../services/api/api";
 import {translateWord} from "../../services/api/wordApi";
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 import {readText} from "../../utils/TextReader";
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
 
 const VisuallyHiddenInput = styled('input')({
     clip: 'rect(0 0 0 0)',
@@ -41,7 +45,7 @@ export default function WordRow({ keyId, word}: WordRowProps) {
         transition,
     } = useSortable({ id: keyId });
 
-    const {words, updateWords} = useContext(WordsContext);
+    const {words, updateWords, wordsCategories} = useContext(WordsContext);
     const [slowRead, setSlowRead] = useState('');
     const [sourceLanguage, setSourceLanguage] = useState('pl-PL');
     const [targetLanguage, setTargetLanguage] = useState('en-US');
@@ -133,6 +137,12 @@ export default function WordRow({ keyId, word}: WordRowProps) {
         }
     }
 
+    useEffect(() => {
+        if(!word.wordCategory?.id) {
+            handleUpdateWord(keyId, 'wordCategory', wordsCategories[0]?.id ?? '')
+        }
+    }, [wordsCategories]);
+
     return (
         <div key={word.id} className={`word-${word.id}`} ref={setNodeRef} style={style}>
             <Grid container spacing={2}>
@@ -196,12 +206,31 @@ export default function WordRow({ keyId, word}: WordRowProps) {
                 </Grid>
                 <Grid size={5}>
                     <div>
-
+                        <input className="word-color" type="color" value={word.color ?? '#000000'} onChange={e => handleUpdateWord(keyId, 'color', e.target.value)}/>
+                    </div>
+                    <div>
+                        <FormControl variant="standard" sx={{ m: 1, minWidth: 120 }}>
+                            <InputLabel>Kategoria</InputLabel>
+                            <Select
+                                id="word-category"
+                                value={word.wordCategory?.id ?? (wordsCategories[0]?.id ?? '')}
+                                onChange={e => handleUpdateWord(keyId, 'wordCategory', e.target.value)}
+                                label="Kategoria"
+                            >
+                                {
+                                    wordsCategories.map(
+                                        (category) => (
+                                            <MenuItem key={category.id} value={category.id}>{category.name}</MenuItem>
+                                        )
+                                    )
+                                }
+                            </Select>
+                        </FormControl>
                     </div>
                 </Grid>
                 <Grid size={5}>
                     <div>
-                        <TextField
+                    <TextField
                             label="Przykład użycia"
                             multiline
                             rows={2}

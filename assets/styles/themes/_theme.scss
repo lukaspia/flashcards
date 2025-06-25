@@ -1,7 +1,22 @@
 body {
-  background-color: white;
+    background-color: $baseBackground;
+    color: $textColor;
 }
 
-.small-image {
-  max-width: 50px;
+a {
+    color: $linkColor;
+    text-decoration: none;
+}
+
+a:hover {
+    color: $textColor;
+}
+
+.section-separator {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.MuiPaper-root {
+    width: 30% !important;
 }

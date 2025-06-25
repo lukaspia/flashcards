@@ -1,0 +1,40 @@
+.lesson {
+    text-align: center;
+    .lesson-body {
+        height: 150px;
+        .img-continer {
+            height: 100px;
+        }
+        .word {
+            font-size: 30px;
+            font-weight: bold;
+        }
+    }
+
+    .lesson-footer {
+        margin-top: 50px;
+
+        .footer-pagination {
+            .footer-buttons-helper {
+                height: 50px;
+            }
+        }
+
+        .footer-options {
+            margin-top: 30px;
+            margin-bottom: 10px;
+        }
+    }
+
+    table {
+        width: 100%;
+    }
+
+    .answer-correct {
+        color: $trueColor;
+    }
+
+    .answer-wrong {
+        color: $falseColor;
+    }
+}

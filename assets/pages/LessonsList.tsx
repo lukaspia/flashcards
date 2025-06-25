@@ -1,4 +1,4 @@
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useState, useEffect} from 'react';
 import Button from '@mui/material/Button';
 import Pagination from '@mui/material/Pagination';
 import AddLessonDialog from '../components/lesson/LessonAddDialog';
@@ -55,13 +55,13 @@ export default function LessonsList(): React.ReactElement {
 
     return (
         <div className="lesson-list">
-            <div className="lesson-list-header">
-                <h1>Lista lekcji</h1>
+            <div className="lesson-list-header lesson-list-section">
+                <h4>Lista lekcji</h4>
 
                 <LoadingPreloader isLoading={isLoading} />
 
                 <Button
-                    className="btn btn-primary"
+                    className="btn button-primary"
                     variant="contained"
                     onClick={handleOpenAddDialog}
                     endIcon={<AddIcon />}>
@@ -80,7 +80,7 @@ export default function LessonsList(): React.ReactElement {
                 handleRemoveClickOpen={handleOpenRemoveDialog}
             />
 
-            <div className="pagination-container">
+            <div className="pagination-container lesson-list-section">
                 <Pagination
                     count={totalPages}
                     page={currentPage}
