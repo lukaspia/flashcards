@@ -18,12 +18,12 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class DeleteUserCommand extends Command
 {
     /**
-     * @var \App\Service\UserService
+     * @var \App\Service\User\UserService
      */
     private UserService $userService;
 
     /**
-     * @param \App\Service\UserService $userService
+     * @param \App\Service\User\UserService $userService
      */
     public function __construct(UserService $userService)
     {

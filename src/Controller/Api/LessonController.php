@@ -38,6 +38,10 @@ class LessonController extends AbstractApiController
         parent::__construct($entityManager);
     }
 
+    /**
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
     #[Route('/lessons', name: 'lessons', methods: ['GET'])]
     public function index(Request $request): JsonResponse
     {
@@ -73,6 +77,10 @@ class LessonController extends AbstractApiController
         }
     }
 
+    /**
+     * @param \App\Entity\Lesson $lesson
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
     #[Route('/lesson/{id}', name: 'get_lesson', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function getLesson(Lesson $lesson): JsonResponse
     {
@@ -80,8 +88,12 @@ class LessonController extends AbstractApiController
             return $this->createResponse(null, ['Authentication required.'], Response::HTTP_UNAUTHORIZED);
         }
 
-        if(!$this->isGranted('LESSON_VIEW', $lesson)) {
-            return $this->createResponse(null, ['You are not authorized to view this lesson.'], Response::HTTP_FORBIDDEN);
+        if (!$this->isGranted('LESSON_VIEW', $lesson)) {
+            return $this->createResponse(
+                null,
+                ['You are not authorized to view this lesson.'],
+                Response::HTTP_FORBIDDEN
+            );
         }
 
         return $this->createResponse(
@@ -91,6 +103,10 @@ class LessonController extends AbstractApiController
         );
     }
 
+    /**
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
     #[Route('/lesson', name: 'add_lesson', methods: ['POST'])]
     public function addLesson(Request $request): JsonResponse
     {
@@ -130,6 +146,10 @@ class LessonController extends AbstractApiController
         }
     }
 
+    /**
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
     #[Route('/lesson', name: 'update_lesson', methods: ['PUT'])]
     public function updateLesson(Request $request): JsonResponse
     {
@@ -144,8 +164,12 @@ class LessonController extends AbstractApiController
             return $this->createResponse(null, ['Lesson not found'], Response::HTTP_NOT_FOUND);
         }
 
-        if(!$this->isGranted('LESSON_EDIT', $existingLesson)) {
-            return $this->createResponse(null, ['You are not authorized to edit this lesson.'], Response::HTTP_FORBIDDEN);
+        if (!$this->isGranted('LESSON_EDIT', $existingLesson)) {
+            return $this->createResponse(
+                null,
+                ['You are not authorized to edit this lesson.'],
+                Response::HTTP_FORBIDDEN
+            );
         }
 
         $words = $existingLesson->getWords();
@@ -192,6 +216,10 @@ class LessonController extends AbstractApiController
         );
     }
 
+    /**
+     * @param \App\Entity\Lesson $lesson
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
     #[Route('/lesson/{id}', name: 'remove_lesson', methods: ['DELETE'])]
     public function removeLesson(Lesson $lesson): JsonResponse
     {
@@ -218,11 +246,17 @@ class LessonController extends AbstractApiController
         }
     }
 
+    /**
+     * @param \App\Service\AI\AIGeneratorInterface $geminiService
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
     #[Route('/lesson/message', name: 'get_lesson_message', methods: ['GET'])]
     public function getSuccessMessage(AIGeneratorInterface $geminiService): JsonResponse
     {
         try {
-            $message = $geminiService->generateText('Wygeneruj krótki tekst, który pochwali osobę której dobrze poszła nauka słówek języka obcego.');
+            $message = $geminiService->generateText(
+                'Wygeneruj krótki tekst, który pochwali osobę której dobrze poszła nauka słówek języka obcego.'
+            );
         } catch (\Exception $e) {
             $this->logger->error('Lesson success message error: ' . $e->getMessage());
             return $this->createResponse(
@@ -232,6 +266,8 @@ class LessonController extends AbstractApiController
             );
         }
 
-        return $this->createResponse(['message' => $message], ['Lesson success message generated successfully'], Response::HTTP_OK);
+        return $this->createResponse(['message' => $message],
+                                     ['Lesson success message generated successfully'],
+                                     Response::HTTP_OK);
     }
 }

@@ -109,7 +109,6 @@ class Lesson
             $word->setSequence($order);
             $order++;
         }
-
         //throw new \Exception('SOMETHING WRONG ' . $word->getSequence());
     }
 }

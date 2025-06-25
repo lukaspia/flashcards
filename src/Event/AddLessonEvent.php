@@ -20,7 +20,7 @@ class AddLessonEvent extends Event
     public const NAME = 'lesson.added';
 
     /**
-     * @var \App\Entity\User
+     * @var \App\Entity\Lesson
      */
     protected Lesson $lesson;
 

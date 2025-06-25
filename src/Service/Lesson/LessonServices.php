@@ -57,6 +57,10 @@ class LessonServices
         return $lesson;
     }
 
+    /**
+     * @param \App\Entity\Lesson $lesson
+     * @return \App\Entity\Lesson
+     */
     public function updateLesson(Lesson $lesson): Lesson
     {
         return $this->saveLesson($lesson);
@@ -76,6 +80,10 @@ class LessonServices
         return $lesson;
     }
 
+    /**
+     * @param \App\Entity\Lesson $lesson
+     * @return \App\Entity\Lesson
+     */
     private function saveLesson(Lesson $lesson): Lesson
     {
         $errors = $this->validator->validate($lesson);

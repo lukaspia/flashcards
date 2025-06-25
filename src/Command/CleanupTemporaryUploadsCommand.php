@@ -27,6 +27,9 @@ class CleanupTemporaryUploadsCommand extends Command
      */
     private ParameterBagInterface $parameterBag;
 
+    /**
+     * @param \Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface $parameterBag
+     */
     public function __construct(ParameterBagInterface $parameterBag)
     {
         parent::__construct();
@@ -34,12 +37,20 @@ class CleanupTemporaryUploadsCommand extends Command
         $this->parameterBag = $parameterBag;
     }
 
+    /**
+     * @return void
+     */
     protected function configure(): void
     {
         $this
             ->setHelp('This command deletes temporary files older than a specified duration.');
     }
 
+    /**
+     * @param \Symfony\Component\Console\Input\InputInterface $input
+     * @param \Symfony\Component\Console\Output\OutputInterface $output
+     * @return int
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
@@ -72,6 +83,11 @@ class CleanupTemporaryUploadsCommand extends Command
         return Command::SUCCESS;
     }
 
+    /**
+     * @param string $filePath
+     * @param string $targetDateString
+     * @return bool
+     */
     private function isFileCreatedBeforeDate(string $filePath, string $targetDateString): bool
     {
         if (!file_exists($filePath)) {

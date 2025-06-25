@@ -36,8 +36,7 @@ class WordCategoryInputDataTransformer implements DenormalizerInterface, Seriali
 
         if (is_array($data) && isset($data['id'])) {
             $categoryId = $data['id'];
-        }
-        elseif (is_int($data)) {
+        } elseif (is_int($data)) {
             $categoryId = $data;
         } else {
             return $this->serializer->denormalize($data, $type, $format, $context);

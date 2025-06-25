@@ -28,13 +28,14 @@ abstract class AbstractApiController extends AbstractController
      * @param mixed|null $data
      * @param array $messages
      * @param int $statusCode
+     * @param array $context
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     protected function createResponse(
         mixed $data = null,
         array $messages = [],
         int $statusCode = Response::HTTP_OK,
-        $context = []
+        array $context = []
     ): JsonResponse {
         $status = 'error';
         if ($statusCode >= 200 && $statusCode < 299) {

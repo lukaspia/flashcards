@@ -29,6 +29,10 @@ class GeminiService implements AIGeneratorInterface
         $this->model = $this->geminiClient->generativeModel(model: 'gemini-2.0-flash');
     }
 
+    /**
+     * @param string $prompt
+     * @return string
+     */
     public function generateText(string $prompt): string
     {
         try {
@@ -39,25 +43,31 @@ class GeminiService implements AIGeneratorInterface
         }
     }
 
+    /**
+     * @param string $prompt
+     * @param array $answerProperties
+     * @return array
+     */
     public function generateStructuredAnswer(string $prompt, array $answerProperties): array
     {
         foreach ($answerProperties as $answerProperty) {
-            if(!($answerProperty instanceof Schema)) {
+            if (!($answerProperty instanceof Schema)) {
                 throw new \InvalidArgumentException('Expected Schema instance');
             }
         }
 
         $result = $this->model->withGenerationConfig(
             generationConfig: new GenerationConfig(
-                responseMimeType: ResponseMimeType::APPLICATION_JSON,
-                responseSchema: new Schema(
-                    type: DataType::ARRAY,
-                    items: new Schema(type: DataType::OBJECT,
-                        properties: $answerProperties,
-                        required: array_keys($answerProperties),
-                    )
-                )
-            )
+                                  responseMimeType: ResponseMimeType::APPLICATION_JSON,
+                                  responseSchema:   new Schema(
+                                                        type:  DataType::ARRAY,
+                                                        items: new Schema(
+                                                                   type:       DataType::OBJECT,
+                                                                   properties: $answerProperties,
+                                                                   required:   array_keys($answerProperties),
+                                                               )
+                                                    )
+                              )
         )->generateContent($prompt);
 
         return $result->json();

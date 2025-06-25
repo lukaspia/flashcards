@@ -18,14 +18,19 @@ class FileManager
         $this->filesystem = $filesystem;
     }
 
+    /**
+     * @param string $sourcePath
+     * @param string $destinationPath
+     * @return bool
+     */
     public function moveFile(string $sourcePath, string $destinationPath): bool
     {
-        if(!$this->filesystem->exists($sourcePath)) {
+        if (!$this->filesystem->exists($sourcePath)) {
             return false;
         }
 
         try {
-            if(!$this->filesystem->exists(dirname($destinationPath))) {
+            if (!$this->filesystem->exists(dirname($destinationPath))) {
                 $this->filesystem->mkdir(dirname($destinationPath));
             }
 

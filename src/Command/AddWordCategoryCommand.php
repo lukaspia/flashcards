@@ -23,9 +23,7 @@ class AddWordCategoryCommand extends Command
     private EntityManagerInterface $entityManager;
 
     /**
-     * @param \Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface $passwordHasher
      * @param \Doctrine\ORM\EntityManagerInterface $entityManager
-     * @param \Symfony\Component\Validator\Validator\ValidatorInterface $validator
      */
     public function __construct(EntityManagerInterface $entityManager)
     {
@@ -59,7 +57,7 @@ class AddWordCategoryCommand extends Command
             $wordCategoryName = $io->ask('Word category name');
             $input->setArgument('category_name', $wordCategoryName);
 
-            if($wordCategoryName === '') {
+            if ($wordCategoryName === '') {
                 $io->error(['Error creating word category. Name cannot be empty.']);
                 return Command::FAILURE;
             }

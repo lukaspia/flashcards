@@ -30,8 +30,7 @@ class AddUserCommand extends Command
     private UserService $userService;
 
     /**
-     * @param \Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface $passwordHasher
-     * @param \Doctrine\ORM\EntityManagerInterface $entityManager
+     * @param \App\Service\User\UserService $userService
      * @param \Symfony\Component\Validator\Validator\ValidatorInterface $validator
      */
     public function __construct(UserService $userService, ValidatorInterface $validator)

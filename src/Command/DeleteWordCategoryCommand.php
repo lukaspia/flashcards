@@ -24,7 +24,7 @@ class DeleteWordCategoryCommand extends Command
     private EntityManagerInterface $entityManager;
 
     /**
-     * @param \App\Service\UserService $userService
+     * @param \Doctrine\ORM\EntityManagerInterface $entityManager
      */
     public function __construct(EntityManagerInterface $entityManager)
     {
@@ -61,7 +61,7 @@ class DeleteWordCategoryCommand extends Command
 
         $wordCategory = $this->entityManager->getRepository(WordCategory::class)->findBy(['name' => $wordCategoryName]);
 
-        if(empty($wordCategory)) {
+        if (empty($wordCategory)) {
             $io->error(['Category not found.']);
             return Command::FAILURE;
         }

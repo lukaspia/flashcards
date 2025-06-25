@@ -32,8 +32,11 @@ class WordServices
      * @param \Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface $parameterBag
      * @param \App\Utils\FileManager $fileManager
      */
-    public function __construct(EntityManagerInterface $entityManager, ParameterBagInterface $parameterBag, FileManager $fileManager)
-    {
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        ParameterBagInterface $parameterBag,
+        FileManager $fileManager
+    ) {
         $this->entityManager = $entityManager;
         $this->parameterBag = $parameterBag;
         $this->fileManager = $fileManager;
@@ -92,7 +95,7 @@ class WordServices
     }
 
     /**
-     * @param array $words
+     * @param \Doctrine\Common\Collections\Collection $words
      * @return void
      */
     public function moveWordsImagesFromTemporary(Collection $words): void
@@ -102,17 +105,17 @@ class WordServices
         $uploadDirRelative = $this->parameterBag->get('word_image_upload_dir_relative');
 
         foreach ($words as $word) {
-            if(!($word instanceof Word)) {
+            if (!($word instanceof Word)) {
                 continue;
             }
 
-            if($image = $word->getImage()) {
+            if ($image = $word->getImage()) {
                 $fileName = basename($image);
                 $fileRelativePath = $word->getImageRelativePath() . $fileName;
                 $wordFile = $uploadDir . $fileRelativePath;
                 $urlFile = $uploadDirRelative . $fileRelativePath;
 
-                if($this->fileManager->moveFile($uploadDirTemp . $fileName, $wordFile)) {
+                if ($this->fileManager->moveFile($uploadDirTemp . $fileName, $wordFile)) {
                     $word->setImage('/' . $urlFile);
                     $this->entityManager->persist($word);
                 }

@@ -16,6 +16,11 @@ class WordRepository extends ServiceEntityRepository
         parent::__construct($registry, Word::class);
     }
 
+    /**
+     * @param int $lessonId
+     * @return array
+     * @throws \Doctrine\ORM\Query\QueryException
+     */
     public function findByLessonId(int $lessonId): array
     {
         return $this->createQueryBuilder('w')
