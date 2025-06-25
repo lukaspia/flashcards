@@ -26,6 +26,7 @@ import {Lesson} from "../components/lesson/Lesson";
 import TipsAndUpdatesIcon from '@mui/icons-material/TipsAndUpdates';
 import AllInclusiveIcon from '@mui/icons-material/AllInclusive';
 import Tooltip from '@mui/material/Tooltip';
+import {readText} from "../utils/TextReader";
 
 export default function LessonTest(): React.ReactElement {
     const {id} = useParams();
@@ -231,6 +232,20 @@ export default function LessonTest(): React.ReactElement {
         });
     }
 
+    //TODO przenieść to na wspólną przestrzeń z LessonEdit
+    const [slowRead, setSlowRead] = useState('');
+    const [targetLanguage, setTargetLanguage] = useState('en-US');
+
+    const handleReadText = (text: string, key: number, type: string) => {
+        if(slowRead == key + type) {
+            readText(text, targetLanguage, 0.7);
+            setSlowRead('');
+        } else {
+            readText(text, targetLanguage);
+            setSlowRead(key + type);
+        }
+    }
+
     return (<div className="lesson">
         <div className="lesson-header">
 
@@ -300,7 +315,7 @@ export default function LessonTest(): React.ReactElement {
                             <span className="word" style={{color: words[index]?.color}}>{displayWord}</span>
                             {isTranslation && (
                                 <IconButton>
-                                    <VolumeUpIcon className="basic-icon"/>
+                                    <VolumeUpIcon className="basic-icon" onClick={() => handleReadText(words[index]?.translation, index, 'translation')}/>
                                 </IconButton>
                             )}
                         </div>
@@ -309,7 +324,7 @@ export default function LessonTest(): React.ReactElement {
                                     <div>
                                         {words[index].example}
                                         <IconButton>
-                                            <VolumeUpIcon className="basic-icon"/>
+                                            <VolumeUpIcon className="basic-icon" onClick={() => handleReadText(words[index]?.example, index, 'example')}/>
                                         </IconButton>
                                     </div>
                                 )}
