@@ -72,11 +72,12 @@ export default function LessonEdit(): React.ReactElement {
     return (
         <div className="lesson-edit">
             <div className="lesson-header">
-                <h1>Edycja lekcji</h1>
+                <h4>Edycja lekcji</h4>
 
                 <LoadingPreloader isLoading={isLoading} />
 
                 <TextField
+                    className="lesson-name-input"
                     required
                     id="outlined-required"
                     label="Nazwa lekcji"
@@ -99,7 +100,7 @@ export default function LessonEdit(): React.ReactElement {
 
             <div className="lesson-footer">
                 <Button
-                    className="btn btn-primary"
+                    className="btn button-primary"
                     variant="contained"
                     onClick={handleSaveLesson}
                     endIcon={<SaveIcon />}>

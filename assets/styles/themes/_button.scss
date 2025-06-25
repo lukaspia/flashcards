@@ -1,0 +1,51 @@
+@mixin button-primary {
+    color: $buttonPrimaryColor;
+    background-color: $buttonPrimaryBackgroundColor;
+}
+
+@mixin button-primary-hover {
+    color: $buttonPrimaryColor;
+    background-color: $buttonPrimaryBackgroundHighlightColor;
+}
+
+.button-primary {
+    @include button-primary;
+}
+
+.button-primary:hover {
+    @include button-primary-hover;
+}
+
+.MuiButton-root.button-primary {
+    @include button-primary;
+}
+
+.MuiButton-root.button-primary:hover {
+    @include button-primary-hover;
+}
+
+//!!!!!!!!!Pogrupować to na dole i spróbować rozwiązać problem ze stylami mui i wyrównać przycisk odpowiedz z przyciskami tak nie
+
+.MuiButton-root.button-true {
+    color: $buttonPrimaryColor;
+    background-color: $trueColor;
+}
+
+.MuiButton-root.button-true:hover {
+    color: $buttonPrimaryColor;
+    background-color: $trueHighlightColor;
+}
+
+.MuiButton-root.button-false {
+    color: $buttonPrimaryColor;
+    background-color: $falseHighlightColor;
+}
+
+.MuiButton-root.button-false:hover {
+    color: $buttonPrimaryColor;
+    background-color: $falseColor;
+}
+
+.MuiButton-root.button-separator {
+    margin: 5px;
+}

@@ -231,7 +231,7 @@ export default function LessonTest(): React.ReactElement {
         });
     }
 
-    return (<div>
+    return (<div className="lesson">
         <div className="lesson-header">
 
             <Grid container spacing={2}>
@@ -260,8 +260,8 @@ export default function LessonTest(): React.ReactElement {
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Prawidłowo</th>
-                                    <th>Nieprawidłowo</th>
+                                    <th className="answer-correct">Prawidłowo</th>
+                                    <th className="answer-wrong">Nieprawidłowo</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -273,17 +273,17 @@ export default function LessonTest(): React.ReactElement {
                         </table>
                         {nextRoundWords.length === 0 && (
                             <div>
-                                <div>
+                                <div className="section-separator">
                                     {lessonMessage}
                                 </div>
-                                <div>
-                                    <Button onClick={handleSaveLesson}>Zapisz wynik i wróć do listy lekcji</Button>
+                                <div  className="section-separator">
+                                    <Button className="button-primary" variant="contained" onClick={handleSaveLesson}>Zapisz wynik i wróć do listy lekcji</Button>
                                 </div>
                             </div>
                         )}
                     </div>
                     <div>
-                        {nextRoundWords.length > 0 && (<Button onClick={nextRound}>Kolejna runda</Button>)}
+                        {nextRoundWords.length > 0 && (<Button className="button-primary" variant="contained" onClick={nextRound}>Kolejna runda</Button>)}
                     </div>
                 </div>
             )
@@ -291,13 +291,13 @@ export default function LessonTest(): React.ReactElement {
             (
                 <div>
                     <div className="lesson-body">
-                        <div>
+                        <div className="img-continer">
                             {words[index]?.image && (
-                                    <img src={words[index].image} alt="Word illustration" className="small-image"/>
+                                    <img src={words[index].image} alt="Word illustration" className="medium-image"/>
                                 )}
                         </div>
                         <div>
-                            <span style={{color: words[index]?.color}}>{displayWord}</span>
+                            <span className="word" style={{color: words[index]?.color}}>{displayWord}</span>
                             {isTranslation && (
                                 <IconButton>
                                     <VolumeUpIcon className="basic-icon"/>
@@ -317,20 +317,25 @@ export default function LessonTest(): React.ReactElement {
                     </div>
                     <div className="lesson-footer">
                         {studyMode == 'testing' ? (
-                                <div>
+                                <div className="footer-pagination testing-mode">
                                     {(translationFirst ? isTranslation === false : isTranslation === true) ? (
                                         <div>
-                                            <div>
-                                                Znałeś odpowiedź?
+                                            <div className="footer-buttons-helper">
+                                                Odpowiedź prawidłowa?
                                             </div>
                                             <div>
-                                                <Button onClick={() => handleAnswer(true, index)}>TAK</Button>
-                                                <Button onClick={() => handleAnswer(false, index)}>NIE</Button>
+                                                <Button className="btn button-false button-separator" variant="contained" onClick={() => handleAnswer(false, index)}>NIE</Button>
+                                                <Button className="btn button-true button-separator" variant="contained" onClick={() => handleAnswer(true, index)}>TAK</Button>
                                             </div>
                                         </div>
                                     ) : (
                                         <div>
-                                            <Button onClick={() => handleShowWord('next')}>Odpowiedź</Button>
+                                            <div className="footer-buttons-helper">
+
+                                            </div>
+                                            <div>
+                                                <Button className="btn button-primary" variant="contained" onClick={() => handleShowWord('next')}>Odpowiedź</Button>
+                                            </div>
                                         </div>
                                     )
                                     }
@@ -338,20 +343,20 @@ export default function LessonTest(): React.ReactElement {
                             )
                             :
                             (
-                                <div>
-                                    <IconButton disabled={index < 1 && isTranslation == false}>
-                                        <ArrowCircleLeftIcon className="basic-icon"
+                                <div className="footer-pagination learning-mode">
+                                    <IconButton size="large" disabled={index < 1 && isTranslation == false}>
+                                        <ArrowCircleLeftIcon fontSize="large" className="basic-icon"
                                                              onClick={() => handleShowWord('prev')}/>
                                     </IconButton>
-                                    <IconButton
+                                    <IconButton size="large"
                                         disabled={index >= ((words.length ?? 0) - 1) && (translationFirst ? isTranslation === false : isTranslation === true)}>
-                                        <ArrowCircleRightIcon className="basic-icon"
+                                        <ArrowCircleRightIcon fontSize="large" className="basic-icon"
                                                               onClick={() => handleShowWord('next')}/>
                                     </IconButton>
                                 </div>
                             )
                         }
-                        <div>
+                        <div className="footer-options">
                             <Tooltip title="Resetuj" placement="top-start">
                                 <IconButton onClick={lessonReset}>
                                     <RestartAltIcon className="basic-icon"/>

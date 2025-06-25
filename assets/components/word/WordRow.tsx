@@ -206,11 +206,11 @@ export default function WordRow({ keyId, word}: WordRowProps) {
                 </Grid>
                 <Grid size={5}>
                     <div>
-                        <input id="word-color" type="color" value={word.color ?? '#000000'} onChange={e => handleUpdateWord(keyId, 'color', e.target.value)}/>
+                        <input className="word-color" type="color" value={word.color ?? '#000000'} onChange={e => handleUpdateWord(keyId, 'color', e.target.value)}/>
                     </div>
                     <div>
                         <FormControl variant="standard" sx={{ m: 1, minWidth: 120 }}>
-                            <InputLabel id="demo-simple-select-standard-label">Kategoria</InputLabel>
+                            <InputLabel>Kategoria</InputLabel>
                             <Select
                                 id="word-category"
                                 value={word.wordCategory?.id ?? (wordsCategories[0]?.id ?? '')}

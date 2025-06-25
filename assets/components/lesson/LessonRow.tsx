@@ -39,7 +39,7 @@ export default function LessonRow({lesson, handleRemoveClickOpen}: LessonRowProp
                 {lesson.name}
             </td>
             <td>
-                {lesson.words.length} {countWordsWithError > 0 ? 'do powtórki ' + countWordsWithError : ''}
+                {lesson.words.length} {countWordsWithError > 0 ? '(do powtórki ' + countWordsWithError + ')': ''}
             </td>
             <td>
                 <IconButton >
