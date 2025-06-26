@@ -20,16 +20,10 @@ class AddLessonEvent extends Event
     public const NAME = 'lesson.added';
 
     /**
-     * @var \App\Entity\Lesson
-     */
-    protected Lesson $lesson;
-
-    /**
      * @param \App\Entity\Lesson $lesson
      */
-    public function __construct(Lesson $lesson)
+    public function __construct(protected readonly Lesson $lesson)
     {
-        $this->lesson = $lesson;
     }
 
     /**

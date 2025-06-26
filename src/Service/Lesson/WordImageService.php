@@ -7,39 +7,23 @@ namespace App\Service\Lesson;
 
 
 use App\Entity\Word;
-use App\Utils\FileManager;
+use App\Utils\FileManagerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Doctrine\Common\Collections\Collection;
 
-class WordServices
+readonly class WordImageService implements WordImageServiceInterface
 {
-    /**
-     * @var \Doctrine\ORM\EntityManagerInterface
-     */
-    private EntityManagerInterface $entityManager;
-    /**
-     * @var \Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface
-     */
-    private ParameterBagInterface $parameterBag;
-    /**
-     * @var \App\Utils\FileManager
-     */
-    private FileManager $fileManager;
-
     /**
      * @param \Doctrine\ORM\EntityManagerInterface $entityManager
      * @param \Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface $parameterBag
      * @param \App\Utils\FileManager $fileManager
      */
     public function __construct(
-        EntityManagerInterface $entityManager,
-        ParameterBagInterface $parameterBag,
-        FileManager $fileManager
+        private EntityManagerInterface $entityManager,
+        private ParameterBagInterface $parameterBag,
+        private FileManagerInterface $fileManager
     ) {
-        $this->entityManager = $entityManager;
-        $this->parameterBag = $parameterBag;
-        $this->fileManager = $fileManager;
     }
 
     /**

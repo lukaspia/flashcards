@@ -3,7 +3,7 @@
 namespace App\Command;
 
 use App\Entity\User;
-use App\Service\User\UserService;
+use App\Service\User\UserServiceInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -21,24 +21,14 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class AddUserCommand extends Command
 {
     /**
-     * @var \Symfony\Component\Validator\Validator\ValidatorInterface
-     */
-    private ValidatorInterface $validator;
-    /**
-     * @var \App\Service\UserService
-     */
-    private UserService $userService;
-
-    /**
      * @param \App\Service\User\UserService $userService
      * @param \Symfony\Component\Validator\Validator\ValidatorInterface $validator
      */
-    public function __construct(UserService $userService, ValidatorInterface $validator)
-    {
+    public function __construct(
+        private readonly UserServiceInterface $userService,
+        private readonly ValidatorInterface $validator
+    ) {
         parent::__construct();
-
-        $this->validator = $validator;
-        $this->userService = $userService;
     }
 
     /**

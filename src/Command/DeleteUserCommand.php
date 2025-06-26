@@ -2,7 +2,7 @@
 
 namespace App\Command;
 
-use App\Service\User\UserService;
+use App\Service\User\UserServiceInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -18,18 +18,11 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class DeleteUserCommand extends Command
 {
     /**
-     * @var \App\Service\User\UserService
-     */
-    private UserService $userService;
-
-    /**
      * @param \App\Service\User\UserService $userService
      */
-    public function __construct(UserService $userService)
+    public function __construct(private readonly UserServiceInterface $userService)
     {
         parent::__construct();
-
-        $this->userService = $userService;
     }
 
     /**

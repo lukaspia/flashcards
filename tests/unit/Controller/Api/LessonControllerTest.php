@@ -6,7 +6,7 @@ use App\Controller\Api\LessonController;
 use App\Entity\Lesson;
 use App\Entity\User;
 use App\Repository\LessonRepository;
-use App\Service\Lesson\LessonServices;
+use App\Service\Lesson\LessonService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -33,7 +33,7 @@ class LessonControllerTest extends WebTestCase
     {
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->denormalizer = $this->createMock(DenormalizerInterface::class);
-        $this->lessonServices = $this->createMock(LessonServices::class);
+        $this->lessonServices = $this->createMock(LessonService::class);
         $this->logger = $this->createMock(LoggerInterface::class);
         $this->validator = $this->createMock(ValidatorInterface::class);
         $this->lessonRepository = $this->createMock(LessonRepository::class);

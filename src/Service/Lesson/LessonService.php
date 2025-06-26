@@ -13,37 +13,17 @@ use Symfony\Component\Validator\Exception\InvalidArgumentException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
-class LessonServices
+readonly class LessonService implements LessonServiceInterface
 {
-    /**
-     * @var \Doctrine\ORM\EntityManagerInterface
-     */
-    private EntityManagerInterface $entityManager;
-    /**
-     * @var \Symfony\Component\Validator\Validator\ValidatorInterface
-     */
-    private ValidatorInterface $validator;
-    /**
-     * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
-     */
-    private EventDispatcherInterface $eventDispatcher;
-    /**
-     * @var \App\Service\Lesson\WordServices
-     */
-    private WordServices $wordServices;
-
     public function __construct(
-        EntityManagerInterface $entityManager,
-        ValidatorInterface $validator,
-        EventDispatcherInterface $eventDispatcher,
-        WordServices $wordServices
+        private EntityManagerInterface $entityManager,
+        private ValidatorInterface $validator,
+        private EventDispatcherInterface $eventDispatcher,
+        private WordImageServiceInterface $wordServices
     ) {
-        $this->entityManager = $entityManager;
-        $this->validator = $validator;
-        $this->eventDispatcher = $eventDispatcher;
-        $this->wordServices = $wordServices;
     }
-
+//TODO zamienić w każdej klasie wstrzyknięcia na php8 i jako readonly
+//TODO zastanowic się co z fabrykami
     /**
      * @param \App\Entity\Lesson $lesson
      * @return \App\Entity\Lesson

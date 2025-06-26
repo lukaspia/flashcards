@@ -8,7 +8,6 @@ namespace App\Controller\Api;
 
 use App\Entity\WordCategory;
 use App\Service\AI\AIGeneratorInterface;
-use App\Service\AI\GeminiService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,16 +18,11 @@ use Gemini\Enums\DataType;
 
 class WordController extends AbstractApiController
 {
-    /**
-     * @var \App\Service\AI\GeminiService
-     */
-    private GeminiService $geminiService;
-
-    public function __construct(EntityManagerInterface $entityManager, AIGeneratorInterface $geminiService)
-    {
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        private readonly AIGeneratorInterface $geminiService
+    ) {
         parent::__construct($entityManager);
-
-        $this->geminiService = $geminiService;
     }
 
     /**

@@ -18,18 +18,11 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class AddWordCategoryCommand extends Command
 {
     /**
-     * @var \Doctrine\ORM\EntityManagerInterface
-     */
-    private EntityManagerInterface $entityManager;
-
-    /**
      * @param \Doctrine\ORM\EntityManagerInterface $entityManager
      */
-    public function __construct(EntityManagerInterface $entityManager)
+    public function __construct(private readonly EntityManagerInterface $entityManager)
     {
         parent::__construct();
-
-        $this->entityManager = $entityManager;
     }
 
     /**

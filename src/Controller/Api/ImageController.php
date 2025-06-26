@@ -8,7 +8,7 @@ namespace App\Controller\Api;
 
 use App\Entity\Word;
 use App\Form\UploadWordImageTypeForm;
-use App\Service\Lesson\WordServices;
+use App\Service\Lesson\WordImageServiceInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -17,16 +17,11 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ImageController extends AbstractApiController
 {
-    /**
-     * @var \App\Service\Lesson\WordServices
-     */
-    private WordServices $wordServices;
-
-    public function __construct(EntityManagerInterface $entityManager, WordServices $wordServices)
-    {
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        private readonly WordImageServiceInterface $wordServices
+    ) {
         parent::__construct($entityManager);
-
-        $this->wordServices = $wordServices;
     }
 
     /**

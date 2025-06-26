@@ -12,22 +12,11 @@ namespace App\Service\Response;
 class OperationResponse
 {
     /**
-     * @var bool
-     */
-    private bool $success;
-    /**
-     * @var string
-     */
-    private string $message;
-
-    /**
      * @param bool $success
      * @param string $message
      */
-    public function __construct(bool $success, string $message)
+    public function __construct(private bool $success, private string $message)
     {
-        $this->success = $success;
-        $this->message = $message;
     }
 
     /**

@@ -23,18 +23,11 @@ class CleanupTemporaryUploadsCommand extends Command
     private const THRESHOLD = 5;
 
     /**
-     * @var \Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface
-     */
-    private ParameterBagInterface $parameterBag;
-
-    /**
      * @param \Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface $parameterBag
      */
-    public function __construct(ParameterBagInterface $parameterBag)
+    public function __construct(private readonly ParameterBagInterface $parameterBag)
     {
         parent::__construct();
-
-        $this->parameterBag = $parameterBag;
     }
 
     /**

@@ -9,13 +9,10 @@ use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
 
 
-class FileManager
+readonly class FileManager implements FileManagerInterface
 {
-    private Filesystem $filesystem;
-
-    public function __construct(Filesystem $filesystem)
+    public function __construct(private Filesystem $filesystem)
     {
-        $this->filesystem = $filesystem;
     }
 
     /**

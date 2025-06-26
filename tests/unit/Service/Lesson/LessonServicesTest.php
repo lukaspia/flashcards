@@ -6,7 +6,7 @@ namespace App\Tests\Service\Lesson;
 
 use App\Entity\Lesson;
 use App\Event\AddLessonEvent;
-use App\Service\Lesson\LessonServices;
+use App\Service\Lesson\LessonService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Validator\ConstraintViolationList;
@@ -19,7 +19,7 @@ class LessonServicesTest extends TestCase
     private EntityManagerInterface $entityManager;
     private ValidatorInterface $validator;
     private EventDispatcherInterface $eventDispatcher;
-    private LessonServices $lessonServices;
+    private LessonService $lessonServices;
     private Lesson $lesson;
 
     protected function setUp(): void
@@ -28,7 +28,7 @@ class LessonServicesTest extends TestCase
         $this->validator = $this->createMock(ValidatorInterface::class);
         $this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
 
-        $this->lessonServices = new LessonServices(
+        $this->lessonServices = new LessonService(
             $this->entityManager,
             $this->validator,
             $this->eventDispatcher

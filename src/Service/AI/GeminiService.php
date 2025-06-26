@@ -6,8 +6,6 @@ declare(strict_types=1);
 namespace App\Service\AI;
 
 
-use App\Service\AI\AIGeneratorInterface;
-use Gemini\Client;
 use Gemini\Resources\GenerativeModel;
 use Gemini\Data\GenerationConfig;
 use Gemini\Data\Schema;
@@ -16,17 +14,12 @@ use Gemini\Enums\ResponseMimeType;
 
 class GeminiService implements AIGeneratorInterface
 {
-    /**
-     * @var \Gemini\Client
-     */
-    private Client $geminiClient;
-
     private GenerativeModel $model;
 
     public function __construct(string $apiKey)
     {
-        $this->geminiClient = \Gemini::client($apiKey);
-        $this->model = $this->geminiClient->generativeModel(model: 'gemini-2.0-flash');
+        $geminiClient = \Gemini::client($apiKey);
+        $this->model = $geminiClient->generativeModel(model: 'gemini-2.0-flash');
     }
 
     /**

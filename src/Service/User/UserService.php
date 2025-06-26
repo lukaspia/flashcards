@@ -14,35 +14,14 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
-class UserService
+readonly class UserService implements UserServiceInterface
 {
-    /**
-     * @var \Doctrine\ORM\EntityManagerInterface
-     */
-    private EntityManagerInterface $entityManager;
-    /**
-     * @var \Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface
-     */
-    private UserPasswordHasherInterface $passwordHasher;
-    /**
-     * @var \Symfony\Component\Validator\Validator\ValidatorInterface
-     */
-    private ValidatorInterface $validator;
-    /**
-     * @var \Symfony\Contracts\EventDispatcher\EventDispatcherInterface
-     */
-    private EventDispatcherInterface $eventDispatcher;
-
     public function __construct(
-        EntityManagerInterface $entityManager,
-        UserPasswordHasherInterface $passwordHasher,
-        ValidatorInterface $validator,
-        EventDispatcherInterface $eventDispatcher
+        private EntityManagerInterface $entityManager,
+        private UserPasswordHasherInterface $passwordHasher,
+        private ValidatorInterface $validator,
+        private EventDispatcherInterface $eventDispatcher
     ) {
-        $this->entityManager = $entityManager;
-        $this->passwordHasher = $passwordHasher;
-        $this->validator = $validator;
-        $this->eventDispatcher = $eventDispatcher;
     }
 
     /**

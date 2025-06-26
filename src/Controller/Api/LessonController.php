@@ -9,7 +9,7 @@ namespace App\Controller\Api;
 use App\Entity\Lesson;
 use App\Entity\Word;
 use App\Service\AI\AIGeneratorInterface;
-use App\Service\Lesson\LessonServices;
+use App\Service\Lesson\LessonServiceInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -30,10 +30,10 @@ class LessonController extends AbstractApiController
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        private SerializerInterface $serializer,
-        private LessonServices $lessonServices,
-        private LoggerInterface $logger,
-        private ValidatorInterface $validator
+        private readonly SerializerInterface $serializer,
+        private readonly LessonServiceInterface $lessonServices,
+        private readonly LoggerInterface $logger,
+        private readonly ValidatorInterface $validator
     ) {
         parent::__construct($entityManager);
     }

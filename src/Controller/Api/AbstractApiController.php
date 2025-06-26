@@ -14,14 +14,12 @@ use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
 abstract class AbstractApiController extends AbstractController
 {
-    protected EntityManagerInterface $entityManager;
 
     /**
      * @param \Doctrine\ORM\EntityManagerInterface $entityManager
      */
-    public function __construct(EntityManagerInterface $entityManager)
+    public function __construct(protected readonly EntityManagerInterface $entityManager)
     {
-        $this->entityManager = $entityManager;
     }
 
     /**
