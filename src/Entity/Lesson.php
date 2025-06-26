@@ -14,6 +14,9 @@ use Doctrine\ORM\Mapping as ORM;
 #[Groups('lesson:read')]
 class Lesson
 {
+    public const LESSON_READ_GROUP = 'lesson:read';
+    public const LESSON_WRITE_GROUP = 'lesson:write';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]

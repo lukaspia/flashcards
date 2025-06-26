@@ -22,7 +22,7 @@ readonly class LessonService implements LessonServiceInterface
         private WordImageServiceInterface $wordServices
     ) {
     }
-//TODO zamienić w każdej klasie wstrzyknięcia na php8 i jako readonly
+
 //TODO zastanowic się co z fabrykami
     /**
      * @param \App\Entity\Lesson $lesson
