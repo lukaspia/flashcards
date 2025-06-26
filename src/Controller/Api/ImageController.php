@@ -7,6 +7,7 @@ namespace App\Controller\Api;
 
 
 use App\Entity\Word;
+use App\Factory\WordImageProcessorFactoryInterface;
 use App\Form\UploadWordImageTypeForm;
 use App\Service\Lesson\WordImageServiceInterface;
 use Doctrine\ORM\EntityManagerInterface;
@@ -19,7 +20,8 @@ class ImageController extends AbstractApiController
 {
     public function __construct(
         EntityManagerInterface $entityManager,
-        private readonly WordImageServiceInterface $wordServices
+        private readonly WordImageServiceInterface $wordServices,
+        private readonly WordImageProcessorFactoryInterface $wordImageProcessorFactory
     ) {
         parent::__construct($entityManager);
     }
@@ -43,40 +45,15 @@ class ImageController extends AbstractApiController
             $imageFile = $form->get('image')->getData();
             $wordId = $form->get('word')->getData();
 
+            //TODO gdzieś wynieść tworzenie tej nazwy
+            //TODO zastanowic jeszcze co z tymi response w kontekście fabryk
+
             if ($imageFile) {
                 $newFilename = md5($wordId) . '.' . $imageFile->guessExtension();
 
                 try {
-                    /** @var Word $word */
-                    $word = $this->entityManager->getRepository(Word::class)->find($wordId);
-
-                    if ($word) {
-                        if ($word->getImage()) {
-                            $this->wordServices->removeWordImageFile($word);
-                        }
-
-                        $imageFile->move(
-                            $this->getParameter('word_image_upload_dir') . $word->getImageRelativePath(),
-                            $newFilename
-                        );
-
-                        $word->setImage(
-                            '/' . $this->getParameter('word_image_upload_dir_relative') . $word->getImageRelativePath(
-                            ) . $newFilename
-                        );
-
-                        $this->entityManager->persist($word);
-                        $this->entityManager->flush();
-
-                        $image = $word->getImage();
-                    } else {
-                        $imageFile->move(
-                            $this->getParameter('word_image_upload_dir_temp'),
-                            $newFilename
-                        );
-
-                        $image = '/' . $this->getParameter('word_image_upload_dir_relative') . 'temp/' . $newFilename;
-                    }
+                    $processor = $this->wordImageProcessorFactory->createProcessor((int)$wordId);
+                    $image = $processor->process($imageFile, $newFilename);
 
                     return $this->createResponse(['image' => $image, 'url' => ''],
                                                  ['Image uploaded successfully'],

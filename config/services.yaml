@@ -25,6 +25,14 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
+    App\Factory\ImageProcessorFactory:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $wordServices: '@App\Service\Lesson\WordImageServiceInterface'
+            $wordImageUploadDir: '%word_image_upload_dir%'
+            $wordImageUploadDirRelative: '%word_image_upload_dir_relative%'
+            $wordImageUploadDirTemp: '%word_image_upload_dir_temp%'
+
     App\Service\AI\GeminiService:
         arguments: ['%env(GEMINI_API_KEY)%']
 
