@@ -33,7 +33,11 @@ class DeleteWordCategoryCommand extends Command
     {
         $this
             ->setHelp('This command allows you to delete a word category...')
-            ->addArgument('category_name', InputArgument::OPTIONAL, 'The category name of the new word category');
+            ->addArgument(
+                'category_name',
+                InputArgument::OPTIONAL,
+                'The category name of the new word category'
+            );
     }
 
     /**
@@ -44,7 +48,6 @@ class DeleteWordCategoryCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-
         $io->info($this->getHelp());
 
         if (!($wordCategoryName = $input->getArgument('category_name'))) {

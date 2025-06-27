@@ -49,29 +49,37 @@ class CleanupTemporaryUploadsCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $io->info('Starting temporary upload cleanup...');
 
-        $threshold = (new \DateTimeImmutable())->modify('-' . self::THRESHOLD . ' hours');
-
-        $cleanedCount = 0;
-
         $tempDirectory = $this->parameterBag->get('word_image_upload_dir_temp');
-
         if (!is_dir($tempDirectory)) {
             return Command::FAILURE;
         }
 
         $files = scandir($tempDirectory);
+        $threshold = (new \DateTimeImmutable())->modify('-' . self::THRESHOLD . ' hours');
+        $deletedFiles = 0;
 
         foreach ($files as $file) {
-            if (!in_array($file, array(".", ".."))) {
-                if ($this->isFileCreatedBeforeDate($tempDirectory . '/' . $file, $threshold->format('Y-m-d H:i:s'))) {
-                    unlink($tempDirectory . '/' . $file);
-                    $cleanedCount++;
-                    $io->success('File: ' . $file . ' was deleted.');
+            if (in_array($file, ['.', '..'])) {
+                continue;
+            }
+
+            $filePath = $tempDirectory . '/' . $file;
+
+            try {
+                if ($this->isFileCreatedBeforeDate($filePath, $threshold->format('Y-m-d H:i:s'))) {
+                    if (@unlink($filePath)) {
+                        $deletedFiles++;
+                        $io->success(sprintf('Successfully deleted file: %s', $filePath));
+                    } else {
+                        $io->warning(sprintf('Failed to delete file (permission issue?): %s', $filePath));
+                    }
                 }
+            } catch (\Exception $e) {
+                $io->error(sprintf('Error processing file %s: %s', $filePath, $e->getMessage()));
             }
         }
 
-        $io->success('Deleted files: ' . $cleanedCount);
+        $io->success('Deleted files: ' . $deletedFiles);
 
         return Command::SUCCESS;
     }
@@ -87,13 +95,12 @@ class CleanupTemporaryUploadsCommand extends Command
             return false;
         }
 
-        $fileCreationTime = filectime($filePath);
-
         $targetTimestamp = strtotime($targetDateString);
-
         if ($targetTimestamp === false) {
             return false;
         }
+
+        $fileCreationTime = filectime($filePath);
 
         return $fileCreationTime < $targetTimestamp;
     }

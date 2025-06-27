@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Command;
 
 use App\Entity\User;
@@ -38,9 +40,22 @@ class AddUserCommand extends Command
     {
         $this
             ->setHelp('This command allows you to create a user...')
-            ->addArgument('username', InputArgument::OPTIONAL, 'The username of the new user')
-            ->addArgument('password', InputArgument::OPTIONAL, 'The plain password of the new user')
-            ->addOption('admin', null, InputOption::VALUE_NONE, 'If set, the user is created as an administrator');
+            ->addArgument(
+                'username',
+                InputArgument::OPTIONAL,
+                'The username of the new user'
+            )
+            ->addArgument(
+                'password',
+                InputArgument::OPTIONAL,
+                'The plain password of the new user'
+            )
+            ->addOption(
+                'admin',
+                null,
+                InputOption::VALUE_NONE,
+                'If set, the user is created as an administrator'
+            );
     }
 
     /**
@@ -51,41 +66,82 @@ class AddUserCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-
         $io->info($this->getHelp());
 
-        if (!($username = $input->getArgument('username'))) {
-            $username = $io->ask('Username');
-            $input->setArgument('username', $username);
-
-            $errors = $this->validator->validatePropertyValue(User::class, 'username', $username);
-            if (count($errors) > 0) {
-                $io->error(['Error creating user.', $errors]);
-                return Command::FAILURE;
-            }
+        $username = $this->getUsername($input, $io);
+        if ($username === null) {
+            return Command::FAILURE;
         }
 
-        if (!($password = $input->getArgument('password'))) {
-            $password = $io->askHidden('Password (your input will be hidden)');
-            $input->setArgument('password', $password);
-
-            $errors = $this->validator->validatePropertyValue(User::class, 'password', $password);
-            if (count($errors) > 0) {
-                $io->error(['Error creating user.', $errors]);
-                return Command::FAILURE;
-            }
+        $password = $this->getPassword($input, $io);
+        if ($password === null) {
+            return Command::FAILURE;
         }
 
         $isAdmin = $input->getOption('admin');
 
-        $response = $this->userService->addUser($username, $password, (bool)$isAdmin);
+        try {
+            $response = $this->userService->addUser($username, $password, (bool)$isAdmin);
 
-        if ($response->isSuccess()) {
-            $io->success($response->getMessage());
-            return Command::SUCCESS;
+            if ($response->isSuccess()) {
+                $io->success($response->getMessage());
+                return Command::SUCCESS;
+            }
+
+            $io->error(['Error creating user.', $response->getMessage()]);
+            return Command::FAILURE;
+        } catch (\Throwable $e) {
+            $io->error(['Error creating user.', $e->getMessage()]);
+            return Command::FAILURE;
+        }
+    }
+
+    private function getUsername(InputInterface $input, SymfonyStyle $io): ?string
+    {
+        $username = trim((string)$input->getArgument('username') ?: '');
+
+        while (empty($username)) {
+            $username = trim((string)$io->ask('Please enter the username'));
+
+            if (empty($username)) {
+                $io->warning('Username cannot be empty');
+            }
         }
 
-        $io->error(['Error creating user.', $response->getMessage()]);
-        return Command::FAILURE;
+        $errors = $this->validator->validatePropertyValue(User::class, 'username', $username);
+        if (count($errors) > 0) {
+            $io->error(['Error creating user.', $errors]);
+            return null;
+        }
+
+        return $username;
+    }
+
+    private function getPassword(InputInterface $input, SymfonyStyle $io): ?string
+    {
+        $password = $input->getArgument('password');
+
+        if (empty($password)) {
+            $password = $io->askHidden('Password (your input will be hidden)');
+
+            if ($password === null) {
+                return null;
+            }
+        }
+
+        $confirmPassword = $io->askHidden('Please confirm the password');
+
+        if ($password !== $confirmPassword) {
+            $io->error('Passwords do not match');
+            return null;
+        }
+
+        $errors = $this->validator->validatePropertyValue(User::class, 'password', $password);
+        if (count($errors) > 0) {
+            $io->error(['Error creating user.', $errors]);
+            return null;
+        }
+
+        return $password;
     }
 }

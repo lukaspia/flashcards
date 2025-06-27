@@ -32,7 +32,11 @@ class DeleteUserCommand extends Command
     {
         $this
             ->setHelp('This command allows you to delete a user...')
-            ->addArgument('username', InputArgument::OPTIONAL, 'The username of the new user');
+            ->addArgument(
+                'username',
+                InputArgument::OPTIONAL,
+                'The username of the new user'
+            );
     }
 
     /**
@@ -43,7 +47,6 @@ class DeleteUserCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-
         $io->info($this->getHelp());
 
         if (!($username = $input->getArgument('username'))) {
