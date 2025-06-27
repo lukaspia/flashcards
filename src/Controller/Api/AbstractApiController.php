@@ -35,10 +35,7 @@ abstract class AbstractApiController extends AbstractController
         int $statusCode = Response::HTTP_OK,
         array $context = []
     ): JsonResponse {
-        $status = 'error';
-        if ($statusCode >= 200 && $statusCode < 299) {
-            $status = 'success';
-        }
+        $status = ($statusCode >= 200 && $statusCode < 300) ? 'success' : 'error';
 
         $response = [
             'status' => $status,
@@ -47,7 +44,7 @@ abstract class AbstractApiController extends AbstractController
         ];
 
         $context = array_merge($context, [
-            ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER => function ($obj) {
+            ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER => function ($obj): mixed {
                 return $obj->getId();
             }
         ]);

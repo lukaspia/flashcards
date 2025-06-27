@@ -40,17 +40,24 @@ class WordController extends AbstractApiController
                                          Response::HTTP_BAD_REQUEST);
         }
 
+        $word = trim($data['word']);
+        $sourceLanguage = trim($data['sourceLanguage']);
+        $targetLanguage = trim($data['targetLanguage']);
+
         $prompt = sprintf(
-            'Translate this from %s to %s: "%s" (use most popular translation) and answer set as "translation", then show example of using this translation in some sentence, and answer set as "example".',
-            $data['sourceLanguage'],
-            $data['targetLanguage'],
-            $data['word']
+            'Translate the following from %s to %s: "%s" (use most popular translation) and respond set as "translation", then show example of using this translation in some sentence, and answer set as "example".',
+            $sourceLanguage,
+            $targetLanguage,
+            $word
         );
+
+        $schema = [
+            'translation' => new Schema(type: DataType::STRING),
+            'example' => new Schema(type: DataType::STRING)
+        ];
+
         try {
-            $result = $this->geminiService->generateStructuredAnswer(
-                $prompt,
-                ['translation' => new Schema(type: DataType::STRING), 'example' => new Schema(type: DataType::STRING)]
-            );
+            $result = $this->geminiService->generateStructuredAnswer($prompt, $schema);
         } catch (\Exception $e) {
             return $this->createResponse(['prompt_data' => $data],
                                          ['Something went wrong.' . $e->getMessage()],

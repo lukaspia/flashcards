@@ -91,10 +91,48 @@ class ImageController extends AbstractApiController
     #[Route('/image/{id}', name: 'image_delete', methods: ['DELETE'])]
     public function deleteImage(Word $word): JsonResponse
     {
-        if ($this->wordServices->removeWordImage($word)) {
-            return $this->createResponse(null, ['Image deleted successfully'], Response::HTTP_OK);
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->createResponse(
+                null,
+                ['Authentication required.'],
+                Response::HTTP_UNAUTHORIZED
+            );
         }
 
-        return $this->createResponse(null, ['Image not found or can\'t be remove'], Response::HTTP_NOT_FOUND);
+        if($word->getLesson()->getUser() !== $user) {
+            return $this->createResponse(
+                null,
+                ['You do not have permission to delete this image.'],
+                Response::HTTP_FORBIDDEN
+            );
+        }
+
+        try {
+            if ($this->wordServices->removeWordImage($word)) {
+                $this->logger->info('Image deleted successfully', [
+                    'wordId' => $word->getId(),
+                    'userId' => $user->getId()
+                ]);
+                return $this->createResponse(null, ['Image deleted successfully'], Response::HTTP_OK);
+            }
+
+            $this->logger->warning('Image not found for deletion', [
+                'wordId' => $word->getId(),
+                'userId' => $user->getId()
+            ]);
+            return $this->createResponse(null, ['Image not found or can\'t be remove'], Response::HTTP_NOT_FOUND);
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to delete image', [
+                'wordId' => $word->getId(),
+                'userId' => $user->getId(),
+                'error' => $e->getMessage()
+            ]);
+            return $this->createResponse(
+                null,
+                ['Failed to delete image'],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
     }
 }
