@@ -8,6 +8,7 @@ namespace App\Controller\Api;
 
 use App\Entity\Word;
 use App\Factory\WordImageProcessorFactoryInterface;
+use App\File\FileNameGeneratorInterface;
 use App\Form\UploadWordImageTypeForm;
 use App\Service\Lesson\WordImageServiceInterface;
 use Doctrine\ORM\EntityManagerInterface;
@@ -21,7 +22,8 @@ class ImageController extends AbstractApiController
     public function __construct(
         EntityManagerInterface $entityManager,
         private readonly WordImageServiceInterface $wordServices,
-        private readonly WordImageProcessorFactoryInterface $wordImageProcessorFactory
+        private readonly WordImageProcessorFactoryInterface $wordImageProcessorFactory,
+        public readonly FileNameGeneratorInterface $fileNameGenerator
     ) {
         parent::__construct($entityManager);
     }
@@ -45,11 +47,8 @@ class ImageController extends AbstractApiController
             $imageFile = $form->get('image')->getData();
             $wordId = $form->get('word')->getData();
 
-            //TODO gdzieś wynieść tworzenie tej nazwy
-            //TODO zastanowic jeszcze co z tymi response w kontekście fabryk
-
             if ($imageFile) {
-                $newFilename = md5($wordId) . '.' . $imageFile->guessExtension();
+                $newFilename = $this->fileNameGenerator->generate((string)$wordId, $imageFile->getClientOriginalName());
 
                 try {
                     $processor = $this->wordImageProcessorFactory->createProcessor((int)$wordId);

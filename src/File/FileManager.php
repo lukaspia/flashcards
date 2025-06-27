@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 
-namespace App\Utils;
+namespace App\File;
 
-use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
+use Symfony\Component\Filesystem\Filesystem;
 
 
 readonly class FileManager implements FileManagerInterface

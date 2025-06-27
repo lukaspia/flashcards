@@ -7,17 +7,17 @@ namespace App\Service\Lesson;
 
 
 use App\Entity\Word;
-use App\Utils\FileManagerInterface;
+use App\File\FileManagerInterface;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Doctrine\Common\Collections\Collection;
 
 readonly class WordImageService implements WordImageServiceInterface
 {
     /**
      * @param \Doctrine\ORM\EntityManagerInterface $entityManager
      * @param \Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface $parameterBag
-     * @param \App\Utils\FileManager $fileManager
+     * @param \App\File\FileManager $fileManager
      */
     public function __construct(
         private EntityManagerInterface $entityManager,
