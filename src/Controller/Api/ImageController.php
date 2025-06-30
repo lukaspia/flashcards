@@ -35,7 +35,7 @@ class ImageController extends AbstractApiController
      * @param \Symfony\Component\HttpFoundation\Request $request
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    #[Route('/image/upload', name: 'image_upload', methods: ['POST'])]
+    #[Route('/images/upload', name: 'image_upload', methods: ['POST'])]
     public function uploadImage(Request $request): JsonResponse
     {
         if (!($this->getUser())) {
@@ -88,7 +88,7 @@ class ImageController extends AbstractApiController
      * @param \App\Entity\Word $word
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    #[Route('/image/{id}', name: 'image_delete', methods: ['DELETE'])]
+    #[Route('/images/{id}', name: 'image_delete', methods: ['DELETE'])]
     public function deleteImage(Word $word): JsonResponse
     {
         $user = $this->getUser();

@@ -28,7 +28,7 @@ class WordController extends AbstractApiController
      * @param \Symfony\Component\HttpFoundation\Request $request
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    #[Route('/word/translate', name: 'word_translate', methods: ['POST'])]
+    #[Route('/words/translate', name: 'word_translate', methods: ['POST'])]
     public function translate(Request $request): JsonResponse
     {
         $data = $request->toArray();
@@ -66,7 +66,7 @@ class WordController extends AbstractApiController
     /**
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    #[Route('/word/get-categories', name: 'word_get_categories', methods: ['GET'])]
+    #[Route('/words/categories', name: 'word_categories', methods: ['GET'])]
     public function getCategories(): JsonResponse
     {
         $categories = $this->entityManager->getRepository(WordCategory::class)->findAll();

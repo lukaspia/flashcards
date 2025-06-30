@@ -45,16 +45,23 @@ class LessonController extends AbstractApiController
         $criteria = ['user' => $user];
         $order = ['id' => 'DESC'];
 
-        /** @var \App\Repository\LessonRepository $lessonRepository */
-        $lessonRepository = $this->entityManager->getRepository(Lesson::class);
-
         try {
+            /** @var \App\Repository\LessonRepository $lessonRepository */
+            $lessonRepository = $this->entityManager->getRepository(Lesson::class);
             $lessons = $lessonRepository->findPaginatedLessons($criteria, $order, $limit, $page);
             $totalItems = $lessonRepository->countLessonsByCriteria($criteria);
             $totalPages = ceil($totalItems / $limit);
 
+            $page = min($page, $totalPages);
+
             return $this->createResponse(
-                ['lessons' => $lessons, 'page' => $page, 'totalItems' => $totalItems, 'totalPages' => $totalPages], [],
+                [
+                    'lessons' => $lessons,
+                    'page' => $page,
+                    'totalItems' => $totalItems,
+                    'totalPages' => $totalPages
+                ],
+                [],
                 Response::HTTP_OK,
                 ['groups' => Lesson::LESSON_READ_GROUP]
             );
@@ -72,7 +79,7 @@ class LessonController extends AbstractApiController
      * @param \App\Entity\Lesson $lesson
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    #[Route('/lesson/{id}', name: 'get_lesson', requirements: ['id' => '\d+'], methods: ['GET'])]
+    #[Route('/lessons/{id}', name: 'get_lesson', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function getLesson(Lesson $lesson): JsonResponse
     {
         if (!($this->getUser())) {
@@ -98,7 +105,7 @@ class LessonController extends AbstractApiController
      * @param \Symfony\Component\HttpFoundation\Request $request
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    #[Route('/lesson', name: 'add_lesson', methods: ['POST'])]
+    #[Route('/lessons', name: 'add_lesson', methods: ['POST'])]
     public function addLesson(Request $request): JsonResponse
     {
         $data = $request->request->all();
@@ -126,7 +133,7 @@ class LessonController extends AbstractApiController
      * @param \Symfony\Component\HttpFoundation\Request $request
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    #[Route('/lesson', name: 'update_lesson', methods: ['PUT'])]
+    #[Route('/lessons', name: 'update_lesson', methods: ['PUT'])]
     public function updateLesson(Request $request): JsonResponse
     {
         $data = $request->toArray();
@@ -166,7 +173,7 @@ class LessonController extends AbstractApiController
      * @param \App\Entity\Lesson $lesson
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    #[Route('/lesson/{id}', name: 'remove_lesson', methods: ['DELETE'])]
+    #[Route('/lessons/{id}', name: 'remove_lesson', methods: ['DELETE'])]
     public function removeLesson(Lesson $lesson): JsonResponse
     {
         if (!$this->isGranted('LESSON_DELETE', $lesson)) {
@@ -196,7 +203,7 @@ class LessonController extends AbstractApiController
      * @param \App\Service\AI\AIGeneratorInterface $geminiService
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    #[Route('/lesson/message', name: 'get_lesson_message', methods: ['GET'])]
+    #[Route('/lessons/message', name: 'get_lesson_message', methods: ['GET'])]
     public function getSuccessMessage(AIGeneratorInterface $geminiService): JsonResponse
     {
         try {
