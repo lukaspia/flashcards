@@ -19,11 +19,11 @@ readonly class LessonService implements LessonServiceInterface
         private EntityManagerInterface $entityManager,
         private ValidatorInterface $validator,
         private EventDispatcherInterface $eventDispatcher,
-        private WordImageServiceInterface $wordServices
+        private WordImageServiceInterface $wordImageServices
     ) {
     }
 
-//TODO zastanowic się co z fabrykami
+
     /**
      * @param \App\Entity\Lesson $lesson
      * @return \App\Entity\Lesson
@@ -31,7 +31,6 @@ readonly class LessonService implements LessonServiceInterface
     public function addLesson(Lesson $lesson): Lesson
     {
         $lesson = $this->saveLesson($lesson);
-
         $this->eventDispatcher->dispatch(new AddLessonEvent($lesson), AddLessonEvent::NAME);
 
         return $lesson;
@@ -75,7 +74,7 @@ readonly class LessonService implements LessonServiceInterface
         $this->entityManager->persist($lesson);
         $this->entityManager->flush();
 
-        $this->wordServices->moveWordsImagesFromTemporary($lesson->getWords());
+        $this->wordImageServices->moveWordsImagesFromTemporary($lesson->getWords());
 
         return $lesson;
     }
