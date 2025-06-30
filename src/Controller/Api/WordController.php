@@ -7,20 +7,19 @@ namespace App\Controller\Api;
 
 
 use App\Entity\WordCategory;
+use App\Schema\TranslationSchema;
 use App\Service\AI\AIGeneratorInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Response;
-use Gemini\Data\Schema;
-use Gemini\Enums\DataType;
 
 class WordController extends AbstractApiController
 {
     public function __construct(
         EntityManagerInterface $entityManager,
-        private readonly AIGeneratorInterface $geminiService
+        private readonly AIGeneratorInterface $aiGeneratorService
     ) {
         parent::__construct($entityManager);
     }
@@ -51,13 +50,8 @@ class WordController extends AbstractApiController
             $word
         );
 
-        $schema = [
-            'translation' => new Schema(type: DataType::STRING),
-            'example' => new Schema(type: DataType::STRING)
-        ];
-
         try {
-            $result = $this->geminiService->generateStructuredAnswer($prompt, $schema);
+            $result = $this->aiGeneratorService->generateStructuredAnswer($prompt, TranslationSchema::getSchema());
         } catch (\Exception $e) {
             return $this->createResponse(['prompt_data' => $data],
                                          ['Something went wrong.' . $e->getMessage()],
