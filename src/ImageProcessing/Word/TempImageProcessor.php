@@ -23,6 +23,12 @@ readonly class TempImageProcessor implements WordImageProcessorInterface
     public function process(UploadedFile $imageFile, string $newFilename): string
     {
         try {
+            if (!is_dir($this->wordImageUploadDirTemp)) {
+                if (!@mkdir($this->wordImageUploadDirTemp, 0775, true) && !is_dir($this->wordImageUploadDirTemp)) {
+                    throw new \RuntimeException(sprintf('Directory "%s" was not created', $this->wordImageUploadDirTemp));
+                }
+            }
+
             $imageFile->move(
                 $this->wordImageUploadDirTemp,
                 $newFilename
