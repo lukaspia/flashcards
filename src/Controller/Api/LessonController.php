@@ -108,21 +108,30 @@ class LessonController extends AbstractApiController
     #[Route('/lessons', name: 'add_lesson', methods: ['POST'])]
     public function addLesson(Request $request): JsonResponse
     {
-        $data = $request->request->all();
-
         if (!($user = $this->getUser())) {
             return $this->createResponse(null, ['Authentication required.'], Response::HTTP_UNAUTHORIZED);
         }
 
         try {
+            $data = $request->request->all();
+            if (empty($data)) {
+                return $this->createResponse(
+                    null,
+                    ['No data provided'],
+                    Response::HTTP_BAD_REQUEST
+                );
+            }
+
             $lesson = $this->lessonFactory->createFromRequestData($data, $user);
             $this->lessonServices->addLesson($lesson);
 
             $this->logger->info('Lesson created successfully', ['lesson' => $lesson]);
-            return $this->createResponse(['lesson' => $lesson],
-                                         ['Lesson created successfully'],
-                                         Response::HTTP_CREATED,
-                                         ['groups' => Lesson::LESSON_READ_GROUP]);
+            return $this->createResponse(
+                ['lesson' => $lesson],
+                ['Lesson created successfully'],
+                Response::HTTP_CREATED,
+                ['groups' => Lesson::LESSON_READ_GROUP]
+            );
         } catch (\RuntimeException|InvalidArgumentException|\Exception $e) {
             $this->logger->error('Lesson not created: ' . $e->getMessage());
             return $this->createResponse(null, ['Lesson not created', $e], Response::HTTP_BAD_REQUEST);
@@ -137,6 +146,14 @@ class LessonController extends AbstractApiController
     public function updateLesson(Request $request): JsonResponse
     {
         $data = $request->toArray();
+
+        if (empty($data)) {
+            return $this->createResponse(
+                null,
+                ['No data provided'],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
 
         $existingLesson = null;
         if (isset($data['id'])) {
@@ -187,7 +204,7 @@ class LessonController extends AbstractApiController
         try {
             $this->lessonServices->removeLesson($lesson);
 
-            $this->logger->info('Lesson removed', ['lesson' => $lesson]);
+            $this->logger->info('Lesson removed successfully', ['lesson' => $lesson]);
             return $this->createResponse(null, ['Lesson remove successfully'], Response::HTTP_NO_CONTENT);
         } catch (\Exception $e) {
             $this->logger->error('Lesson remove error: ' . $e->getMessage());
@@ -200,15 +217,20 @@ class LessonController extends AbstractApiController
     }
 
     /**
-     * @param \App\Service\AI\AIGeneratorInterface $geminiService
+     * @param \App\Service\AI\AIGeneratorInterface $aiGeneratorService
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     #[Route('/lessons/message', name: 'get_lesson_message', methods: ['GET'])]
-    public function getSuccessMessage(AIGeneratorInterface $geminiService): JsonResponse
+    public function getSuccessMessage(AIGeneratorInterface $aiGeneratorService): JsonResponse
     {
         try {
-            $message = $geminiService->generateText(
-                'Wygeneruj krótki tekst, który pochwali osobę której dobrze poszła nauka słówek języka obcego.'
+            $prompt = 'Generate a short, encouraging message in Polish to congratulate someone on their successful foreign language vocabulary learning.';
+            $message = $aiGeneratorService->generateText($prompt);
+
+            return $this->createResponse(
+                ['message' => $message],
+                ['Lesson success message generated successfully'],
+                Response::HTTP_OK
             );
         } catch (\Exception $e) {
             $this->logger->error('Lesson success message error: ' . $e->getMessage());
@@ -218,9 +240,5 @@ class LessonController extends AbstractApiController
                 Response::HTTP_BAD_REQUEST
             );
         }
-
-        return $this->createResponse(['message' => $message],
-                                     ['Lesson success message generated successfully'],
-                                     Response::HTTP_OK);
     }
 }
