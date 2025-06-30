@@ -31,12 +31,16 @@ readonly class LessonFactory implements LessonFactoryInterface
      */
     public function createFromRequestData(array $data, UserInterface $user): Lesson
     {
-        $lesson = $this->serializer->denormalize($data, Lesson::class, 'json');
-        $lesson->setUser($user);
+        try {
+            $lesson = $this->serializer->denormalize($data, Lesson::class, 'json');
+            $lesson->setUser($user);
 
-        $this->validateLesson($lesson);
+            $this->validateLesson($lesson);
 
-        return $lesson;
+            return $lesson;
+        } catch (\Exception $e) {
+            throw new \RuntimeException('Failed to create lesson: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -46,16 +50,24 @@ readonly class LessonFactory implements LessonFactoryInterface
      */
     public function updateFromRequestData(Lesson $lesson, array $data): Lesson
     {
-        $this->updateLessonWords($lesson, $data);
+        if (empty($data)) {
+            return $lesson;
+        }
 
-        $updatedLesson = $this->serializer->denormalize($data, Lesson::class, null, [
-            AbstractNormalizer::OBJECT_TO_POPULATE => $lesson,
-            AbstractNormalizer::GROUPS => [Lesson::LESSON_WRITE_GROUP],
-        ]);
+        try {
+            $this->updateLessonWords($lesson, $data);
 
-        $this->validateLesson($updatedLesson);
+            $updatedLesson = $this->serializer->denormalize($data, Lesson::class, null, [
+                AbstractNormalizer::OBJECT_TO_POPULATE => $lesson,
+                AbstractNormalizer::GROUPS => [Lesson::LESSON_WRITE_GROUP],
+            ]);
 
-        return $updatedLesson;
+            $this->validateLesson($updatedLesson);
+
+            return $updatedLesson;
+        } catch (\Exception $e) {
+            throw new \RuntimeException('Failed to update lesson: ' . $e->getMessage(), 0, $e);
+        }
     }
 
     /**
@@ -77,10 +89,10 @@ readonly class LessonFactory implements LessonFactoryInterface
      */
     private function updateLessonWords(Lesson $lesson, array $data): void
     {
-        $words = $lesson->getWords();
-        $words->clear();
-
         if (isset($data['words'])) {
+            $words = $lesson->getWords();
+            $words->clear();
+
             $lessonWords = $this->entityManager->getRepository(Word::class)->findByLessonId($lesson->getId());
 
             foreach ($data['words'] as $wordData) {

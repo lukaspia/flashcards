@@ -27,8 +27,6 @@ class WordCategoryInputDataTransformer implements DenormalizerInterface, Seriali
      */
     public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): mixed
     {
-        $categoryId = null;
-
         if (is_array($data) && isset($data['id'])) {
             $categoryId = $data['id'];
         } elseif (is_int($data)) {
