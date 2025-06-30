@@ -18,8 +18,16 @@ class GeminiService implements AIGeneratorInterface
 
     public function __construct(string $apiKey)
     {
-        $geminiClient = \Gemini::client($apiKey);
-        $this->model = $geminiClient->generativeModel(model: 'gemini-2.0-flash');
+        if (empty($apiKey)) {
+            throw new \InvalidArgumentException('API key cannot be empty');
+        }
+
+        try {
+            $geminiClient = \Gemini::client($apiKey);
+            $this->model = $geminiClient->generativeModel(model: 'gemini-2.0-flash');
+        } catch (\Exception $e) {
+            throw new \RuntimeException('Failed to initialize Gemini service', 0, $e);
+        }
     }
 
     /**
