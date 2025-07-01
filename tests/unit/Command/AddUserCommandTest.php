@@ -3,8 +3,8 @@
 namespace App\Tests\Command;
 
 use App\Command\AddUserCommand;
+use App\DTO\OperationResponse;
 use App\Entity\User;
-use App\Service\Response\OperationResponse;
 use App\Service\User\UserService;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Application;

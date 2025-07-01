@@ -3,7 +3,7 @@
 namespace App\Tests\Command;
 
 use App\Command\DeleteUserCommand;
-use App\Service\Response\OperationResponse;
+use App\DTO\OperationResponse;
 use App\Service\User\UserService;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Application;

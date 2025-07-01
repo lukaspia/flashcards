@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Service\Response;
 
-use App\Service\Response\OperationResponse;
+use App\DTO\OperationResponse;
 use PHPUnit\Framework\TestCase;
 
 class OperationResponseTest extends TestCase

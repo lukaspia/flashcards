@@ -6,9 +6,9 @@ declare(strict_types=1);
 namespace App\Service\User;
 
 
+use App\DTO\OperationResponse;
 use App\Entity\User;
 use App\Event\AddUserEvent;
-use App\Service\Response\OperationResponse;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -28,7 +28,7 @@ readonly class UserService implements UserServiceInterface
      * @param string $username
      * @param string $password
      * @param bool $isAdmin
-     * @return \App\Service\Response\OperationResponse
+     * @return \App\DTO\OperationResponse
      */
     public function addUser(
         string $username,
@@ -59,7 +59,7 @@ readonly class UserService implements UserServiceInterface
 
     /**
      * @param string $username
-     * @return \App\Service\Response\OperationResponse
+     * @return \App\DTO\OperationResponse
      */
     public function deleteUser(string $username): OperationResponse
     {

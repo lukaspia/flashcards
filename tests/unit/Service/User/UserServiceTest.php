@@ -4,7 +4,6 @@ namespace App\Tests\Service\User;
 
 use App\Entity\User;
 use App\Event\AddUserEvent;
-use App\Service\Response\OperationResponse;
 use App\Service\User\UserService;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
