@@ -34,12 +34,14 @@ readonly class WordImageService implements WordImageServiceInterface
      */
     public function getWordImageFilePath(Word $word): ?string
     {
-        if ($image = $word->getImage()) {
-            $publicDir = $this->parameterBag->get('public_dir');
-            return rtrim($publicDir, '/') . $image;
+        if (!$word->getImage()) {
+            return null;
         }
 
-        return null;
+        $publicDir = $this->parameterBag->get('public_dir');
+        $imagePath = $word->getImage();
+
+        return rtrim($publicDir, '/') . $imagePath;
     }
 
     /**
@@ -48,18 +50,29 @@ readonly class WordImageService implements WordImageServiceInterface
      */
     public function removeWordImage(Word $word): bool
     {
-        if ($word->getImage()) {
-            $this->removeWordImageFile($word);
+        if (!$word->getImage()) {
+            return false;
+        }
+
+        try {
+            $this->entityManager->beginTransaction();
+
+            $fileRemoved = $this->removeWordImageFile($word);
+
+            if (!$fileRemoved) {
+                throw new \RuntimeException('Failed to remove the image file');
+            }
 
             $word->setImage(null);
-
             $this->entityManager->persist($word);
             $this->entityManager->flush();
 
+            $this->entityManager->commit();
             return true;
+        } catch (\Exception $e) {
+            $this->entityManager->rollback();
+            throw new \RuntimeException('Failed to remove word image: ' . $e->getMessage());
         }
-
-        return false;
     }
 
     /**
