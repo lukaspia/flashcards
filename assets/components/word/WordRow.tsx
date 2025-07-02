@@ -13,7 +13,7 @@ import WordsContext from "../../services/context/WordsContext";
 import {uploadImage, removeWordImage} from "../../services/api/api";
 import {translateWord} from "../../services/api/wordApi";
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
-import {readText} from "../../utils/TextReader";
+import {readText} from "../../utils/text-reader";
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';

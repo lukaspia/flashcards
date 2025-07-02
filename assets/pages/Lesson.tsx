@@ -16,17 +16,17 @@ import SwapCallsIcon from '@mui/icons-material/SwapCalls';
 import SyncAltIcon from '@mui/icons-material/SyncAlt';
 import {useNavigate, useParams} from "react-router";
 import useLesson from "../hooks/useLesson";
-import shuffle from "../utils/ArrayShuffler";
+import shuffle from "../utils/array-shuffler";
 import {Word} from "../types/word.types";
 import Grid from "@mui/material/Grid";
-import {generatePath} from "../utils/PathUtils";
+import {generatePath} from "../utils/path-utils";
 import {ROUTES} from "../constants/Routes";
 import {getLessonMessage, updateLesson} from "../services/api/lessonApi";
 import {Lesson} from "../types/lesson.types";
 import TipsAndUpdatesIcon from '@mui/icons-material/TipsAndUpdates';
 import AllInclusiveIcon from '@mui/icons-material/AllInclusive';
 import Tooltip from '@mui/material/Tooltip';
-import {readText} from "../utils/TextReader";
+import {readText} from "../utils/text-reader";
 
 export default function LessonTest(): React.ReactElement {
     const {id} = useParams();

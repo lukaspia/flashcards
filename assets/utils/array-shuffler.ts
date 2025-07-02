@@ -1,4 +1,8 @@
 export default function shuffle(array: any[]): any[] {
+    if (!Array.isArray(array)) {
+        throw new Error('Input must be an array');
+    }
+
     let currentIndex = array.length;
 
     while (currentIndex != 0) {
@@ -7,7 +11,9 @@ export default function shuffle(array: any[]): any[] {
         currentIndex--;
 
         [array[currentIndex], array[randomIndex]] = [
-            array[randomIndex], array[currentIndex]];
+            array[randomIndex],
+            array[currentIndex]
+        ];
     }
 
     return array;

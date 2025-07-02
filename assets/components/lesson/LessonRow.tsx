@@ -6,7 +6,7 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import {Lesson} from "../../types/lesson.types";
 import {useNavigate} from "react-router";
 import {ROUTES} from "../../constants/Routes";
-import {generatePath} from "../../utils/PathUtils";
+import {generatePath} from "../../utils/path-utils";
 import Tooltip from '@mui/material/Tooltip';
 
 interface LessonRowProps {

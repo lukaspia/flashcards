@@ -12,7 +12,7 @@ import WordsContext from "../services/context/WordsContext";
 import {getCategories} from "../services/api/wordApi";
 import KeyboardReturnIcon from "@mui/icons-material/KeyboardReturn";
 import IconButton from "@mui/material/IconButton";
-import {generatePath} from "../utils/PathUtils";
+import {generatePath} from "../utils/path-utils";
 import {ROUTES} from "../constants/Routes";
 
 export default function LessonEdit(): React.ReactElement {
