@@ -42,4 +42,21 @@ readonly class FileManager implements FileManagerInterface
             throw new \RuntimeException("Error moving file: " . $exception->getMessage());
         }
     }
+
+    /**
+     * @param string $filePath
+     * @return bool
+     */
+    public function removeFile(string $filePath): bool
+    {
+        try {
+            if ($this->filesystem->exists($filePath)) {
+                $this->filesystem->remove($filePath);
+                return true;
+            }
+            return true;
+        } catch (IOExceptionInterface $exception) {
+            throw new \RuntimeException("Error removing file: " . $exception->getMessage());
+        }
+    }
 }

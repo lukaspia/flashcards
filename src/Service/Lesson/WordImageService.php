@@ -85,12 +85,13 @@ readonly class WordImageService implements WordImageServiceInterface
             return false;
         }
 
-        if (is_file($wordFilePath)) {
-            unlink($wordFilePath);
-            return true;
+        try {
+            return $this->fileManager->removeFile($wordFilePath);
+        } catch (\RuntimeException $e) {
+            throw new \RuntimeException(
+                sprintf('Failed to remove image file for word ID %s: %s', $word->getId(), $e->getMessage())
+            );
         }
-
-        return false;
     }
 
     /**
