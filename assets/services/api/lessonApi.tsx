@@ -1,5 +1,5 @@
 import axios from "axios";
-import {Lesson} from "@/components/lesson/Lesson";
+import {Lesson} from "../../types/lesson.types";
 
 const BASE_URL = "/api/v1";
 

@@ -3,7 +3,7 @@ import IconButton  from "@mui/material/IconButton";
 import EditIcon from '@mui/icons-material/Edit';
 import QuizIcon from '@mui/icons-material/Quiz';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import {Lesson} from "./Lesson";
+import {Lesson} from "../../types/lesson.types";
 import {useNavigate} from "react-router";
 import {ROUTES} from "../../constants/Routes";
 import {generatePath} from "../../utils/PathUtils";

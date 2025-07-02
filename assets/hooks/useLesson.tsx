@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import {Lesson} from "@/components/lesson/Lesson";
+import {Lesson} from "../types/lesson.types";
 import {getLesson} from "../services/api/lessonApi";
 
 type LessonApiResponse = [

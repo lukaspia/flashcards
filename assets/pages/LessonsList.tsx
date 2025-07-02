@@ -5,7 +5,7 @@ import AddLessonDialog from '../components/lesson/LessonAddDialog';
 import LessonsListRows from "../components/lesson/LessonsListRows";
 import AddIcon from "@mui/icons-material/Add";
 import LessonRemoveDialog from "../components/lesson/LessonRemoveDialog";
-import {Lesson} from '../components/lesson/Lesson';
+import {Lesson} from '../types/lesson.types';
 import useLessons from "../hooks/useLessons";
 import CollapseSuccessAlert from "../components/ui/CollapseSuccessAlert";
 import LoadingPreloader from "../components/ui/LoadingPreloader";

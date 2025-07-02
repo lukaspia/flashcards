@@ -22,7 +22,7 @@ import Grid from "@mui/material/Grid";
 import {generatePath} from "../utils/PathUtils";
 import {ROUTES} from "../constants/Routes";
 import {getLessonMessage, updateLesson} from "../services/api/lessonApi";
-import {Lesson} from "../components/lesson/Lesson";
+import {Lesson} from "../types/lesson.types";
 import TipsAndUpdatesIcon from '@mui/icons-material/TipsAndUpdates';
 import AllInclusiveIcon from '@mui/icons-material/AllInclusive';
 import Tooltip from '@mui/material/Tooltip';
