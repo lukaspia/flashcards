@@ -9,6 +9,7 @@ namespace App\Service\User;
 use App\DTO\OperationResponse;
 use App\Entity\User;
 use App\Event\AddUserEvent;
+use App\Event\RemoveUserEvent;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -56,8 +57,10 @@ readonly class UserService implements UserServiceInterface
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
-        $addUserEvent = new AddUserEvent($user);
-        $this->eventDispatcher->dispatch($addUserEvent, AddUserEvent::NAME);
+        $this->eventDispatcher->dispatch(
+            new AddUserEvent($user),
+            AddUserEvent::NAME
+        );
 
         return new OperationResponse(true, sprintf('New %s user successfully created.', $username));
     }
@@ -69,12 +72,18 @@ readonly class UserService implements UserServiceInterface
     public function deleteUser(string $username): OperationResponse
     {
         $user = $this->entityManager->getRepository(User::class)->findOneBy(['username' => $username]);
+
         if (!$user) {
             return new OperationResponse(false, sprintf('User %s not found.', $username));
         }
 
         $this->entityManager->remove($user);
         $this->entityManager->flush();
+
+        $this->eventDispatcher->dispatch(
+            new RemoveUserEvent($user),
+            RemoveUserEvent::NAME
+        );
 
         return new OperationResponse(true, sprintf('User %s successfully deleted.', $username));
     }
