@@ -100,6 +100,10 @@ readonly class WordImageService implements WordImageServiceInterface
      */
     public function moveWordsImagesFromTemporary(Collection $words): void
     {
+        if ($words->isEmpty()) {
+            return;
+        }
+
         $uploadDirTemp = $this->parameterBag->get('word_image_upload_dir_temp');
         $uploadDir = $this->parameterBag->get('word_image_upload_dir');
         $uploadDirRelative = $this->parameterBag->get('word_image_upload_dir_relative');
@@ -109,16 +113,19 @@ readonly class WordImageService implements WordImageServiceInterface
                 continue;
             }
 
-            if ($image = $word->getImage()) {
-                $fileName = basename($image);
-                $fileRelativePath = $word->getImageRelativePath() . $fileName;
-                $wordFile = $uploadDir . $fileRelativePath;
-                $urlFile = $uploadDirRelative . $fileRelativePath;
+            $image = $word->getImage();
+            if(empty($image)) {
+                continue;
+            }
 
-                if ($this->fileManager->moveFile($uploadDirTemp . $fileName, $wordFile)) {
-                    $word->setImage('/' . $urlFile);
-                    $this->entityManager->persist($word);
-                }
+            $fileName = basename($image);
+            $fileRelativePath = $word->getImageRelativePath() . $fileName;
+            $wordFile = $uploadDir . $fileRelativePath;
+            $urlFile = $uploadDirRelative . $fileRelativePath;
+
+            if ($this->fileManager->moveFile($uploadDirTemp . $fileName, $wordFile)) {
+                $word->setImage('/' . $urlFile);
+                $this->entityManager->persist($word);
             }
         }
 
