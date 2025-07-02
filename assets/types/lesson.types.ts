@@ -1,4 +1,4 @@
-import {Word} from "@/components/word/Word";
+import {Word} from "@/types/word.types";
 
 export interface Lesson {
     id: number;

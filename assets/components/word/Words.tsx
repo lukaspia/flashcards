@@ -2,7 +2,7 @@ import React, {useContext, useState} from "react";
 import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 import Button from "@mui/material/Button";
 import Grid from '@mui/material/Grid';
-import {Word} from "./Word";
+import {Word} from "../../types/word.types";
 import { styled } from '@mui/material/styles';
 import WordRow from "./WordRow";
 import {

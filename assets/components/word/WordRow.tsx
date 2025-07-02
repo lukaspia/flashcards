@@ -8,7 +8,7 @@ import ClearIcon from "@mui/icons-material/Clear";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import PlaylistRemoveIcon from "@mui/icons-material/PlaylistRemove";
 import {styled} from "@mui/material/styles";
-import {Word} from "@/components/word/Word";
+import {Word} from "@/types/word.types";
 import WordsContext from "../../services/context/WordsContext";
 import {uploadImage, removeWordImage} from "../../services/api/api";
 import {translateWord} from "../../services/api/wordApi";

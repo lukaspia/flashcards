@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import {Word} from "@/components/word/Word";
+import {Word} from "@/types/word.types";
 
 interface WordsContextType {
     words: Word[];

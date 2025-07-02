@@ -17,7 +17,7 @@ import SyncAltIcon from '@mui/icons-material/SyncAlt';
 import {useNavigate, useParams} from "react-router";
 import useLesson from "../hooks/useLesson";
 import shuffle from "../utils/ArrayShuffler";
-import {Word} from "../components/word/Word";
+import {Word} from "../types/word.types";
 import Grid from "@mui/material/Grid";
 import {generatePath} from "../utils/PathUtils";
 import {ROUTES} from "../constants/Routes";
