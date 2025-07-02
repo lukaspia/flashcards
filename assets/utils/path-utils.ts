@@ -2,11 +2,14 @@ export const generatePath = (
     pathTemplate: string,
     params: { [key: string]: string | number } = {}
 ): string => {
-    let generated = pathTemplate;
+    let generatedPath = pathTemplate;
+
     for (const key in params) {
         if (Object.prototype.hasOwnProperty.call(params, key)) {
-            generated = generated.replace(`:${key}`, String(params[key]));
+            const value = params[key];
+            generatedPath = generatedPath.replace(new RegExp(`:${key}(?![a-zA-Z0-9_])`, 'g'), String(value));
         }
     }
-    return generated;
+
+    return generatedPath;
 };
