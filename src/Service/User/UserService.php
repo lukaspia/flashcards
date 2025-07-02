@@ -35,6 +35,11 @@ readonly class UserService implements UserServiceInterface
         string $password,
         bool $isAdmin = false
     ): OperationResponse {
+        $existingUser = $this->entityManager->getRepository(User::class)->findOneBy(['username' => $username]);
+        if ($existingUser) {
+            return new OperationResponse(false, sprintf('Username "%s" is already in use', $username));
+        }
+
         $user = new User();
         $user->setUsername($username);
         $user->setRoles([$isAdmin ? User::ROLE_ADMIN : User::ROLE_USER]);
