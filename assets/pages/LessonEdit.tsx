@@ -14,43 +14,49 @@ import KeyboardReturnIcon from "@mui/icons-material/KeyboardReturn";
 import IconButton from "@mui/material/IconButton";
 import {generatePath} from "../utils/path-utils";
 import {ROUTES} from "../constants/Routes";
+import {Lesson} from "../types/lesson.types";
 
 export default function LessonEdit(): React.ReactElement {
     const {id} = useParams();
-    const [lesson, isLoading, isError, setLesson] = useLesson(id ? parseInt(id): 0);
+    const [initialLesson, isLoading, isError] = useLesson(id ? parseInt(id): 0);
+    const [editableLesson, setEditableLesson] = useState<Lesson | undefined>(undefined);
+
     const [isSaving, setIsSaving] = useState(false);
     const [openSuccessAlert, setOpenSuccessAlert] = useState(false);
     const [successAlertMessage, setSuccessAlertMessage] = useState('');
     const [categories, setCategories] = useState<any[]>([]);
     const navigate = useNavigate();
 
-    const handleSetLessonName = (name: string) => {
-        if(lesson != undefined) {
-            setLesson({...lesson, name: name});
+    useEffect(() => {
+        if (initialLesson) {
+            setEditableLesson(initialLesson);
         }
-    }
+    }, [initialLesson]);
+
+    const handleSetLessonName = (name: string) => {
+        if (editableLesson) {
+            setEditableLesson({ ...editableLesson, name: name });
+        }
+    };
 
     const handleSaveLesson = () => {
         setIsSaving(true);
-        if(lesson != undefined) {
-            updateLesson(lesson)
+        if (editableLesson) {
+            updateLesson(editableLesson)
                 .then((result) => {
-                    setLesson(result.data.lesson);
+                    setEditableLesson(result.data.lesson);
                     showSuccessAlert('Lekcja została zaktualizowana.');
                 })
-                .catch((error) => {
-                    console.error(error);
-                }).finally(() => {
-                setIsSaving(false);
-            });
+                .catch((error) => console.error(error))
+                .finally(() => setIsSaving(false));
         }
-    }
+    };
 
     const updateWords = useCallback((words: any) => {
-        if(lesson != undefined) {
-            setLesson({...lesson, words: words});
+        if (editableLesson) {
+            setEditableLesson({ ...editableLesson, words: words });
         }
-    }, [lesson, setLesson]);
+    }, [editableLesson]);
 
     const showSuccessAlert = useCallback((message: string) => {
         setSuccessAlertMessage(message);
@@ -63,7 +69,7 @@ export default function LessonEdit(): React.ReactElement {
     }, []);
 
     const wordsContextValue = {
-        words: lesson?.words || [],
+        words: editableLesson?.words || [],
         updateWords: updateWords,
         wordsCategories: categories,
     };
@@ -95,7 +101,7 @@ export default function LessonEdit(): React.ReactElement {
                     required
                     id="outlined-required"
                     label="Nazwa lekcji"
-                    value={lesson?.name || ''}
+                    value={editableLesson?.name || ''}
                     onChange={(e) => handleSetLessonName(e.target.value)}
                 />
             </div>

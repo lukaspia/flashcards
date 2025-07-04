@@ -31,7 +31,7 @@ import {readText} from "../utils/text-reader";
 export default function LessonTest(): React.ReactElement {
     const {id} = useParams();
     const navigate = useNavigate();
-    const [lesson, isLoading, isError, setLesson] = useLesson(id ? parseInt(id) : 0);
+    const [lesson, isLoading, /*, setLesson*/] = useLesson(id ? parseInt(id) : 0);
 
     const [words, setWords] = useState<Word[]>([]);
     const [nextRoundWords, setNextRoundWords] = useState<Word[]>([]);
@@ -220,7 +220,7 @@ export default function LessonTest(): React.ReactElement {
             words: wordsError,
         } as Lesson;
 
-        setLesson(newLesson);
+        //setLesson(newLesson); //TODO aktualna lekca nie będzie zaktualizowan
 
         updateLesson(newLesson)
             .then((result) => {

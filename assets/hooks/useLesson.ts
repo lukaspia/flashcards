@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import {Lesson} from "../types/lesson.types";
 import {getLesson} from "../services/api/lessonApi";
+import axios from 'axios';
 
 type LessonApiResponse = [
     Lesson | undefined,
     boolean,
     boolean,
-    (lesson: Lesson) => void,
 ];
 
 export default function useLesson(id: number): LessonApiResponse {
@@ -15,39 +15,34 @@ export default function useLesson(id: number): LessonApiResponse {
     const [isError, setIsError] = useState(false);
 
     useEffect(() => {
-        fetchLesson(id);
-    }, []);
-
-    const fetchLesson = (id: number) => {
-        let isMounted = true;
+        const controller = new AbortController();
 
         setIsLoading(true);
         setIsError(false);
+        setLesson(undefined);
 
-        getLesson(id).then(result => {
-            if (isMounted) {
+        getLesson(id, { signal: controller.signal })
+            .then(result => {
                 setLesson(result.data.lesson);
-            }
-        }).catch(error => {
-            console.error(error);
-            if (isMounted) {
-                setIsError(true);
-            }
-        }).finally(() => {
-            if(isMounted) {
+            })
+            .catch(error => {
+                if (!axios.isCancel(error)) {
+                    console.error("Failed to fetch lesson:", error);
+                    setIsError(true);
+                }
+            })
+            .finally(() => {
                 setIsLoading(false);
-            }
-        })
+            });
 
         return () => {
-            isMounted = false;
-        }
-    }
+            controller.abort();
+        };
+    }, [id]);
 
     return [
         lesson,
         isLoading,
         isError,
-        setLesson
     ];
 }
