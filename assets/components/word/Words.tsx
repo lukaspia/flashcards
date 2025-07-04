@@ -1,14 +1,12 @@
-import React, {useContext, useState} from "react";
+import React, {useContext, useEffect} from "react";
 import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 import Button from "@mui/material/Button";
 import Grid from '@mui/material/Grid';
 import {Word} from "../../types/word.types";
-import { styled } from '@mui/material/styles';
 import WordRow from "./WordRow";
 import {
     DndContext,
     closestCenter,
-    DragOverlay,
     KeyboardSensor,
     PointerSensor,
     useSensor,
@@ -16,30 +14,16 @@ import {
 } from '@dnd-kit/core';
 import {
     arrayMove,
-    useSortable,
     SortableContext,
     sortableKeyboardCoordinates,
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import WordsContext from "../../services/context/WordsContext";
 
-const VisuallyHiddenInput = styled('input')({
-    clip: 'rect(0 0 0 0)',
-    clipPath: 'inset(50%)',
-    height: 1,
-    overflow: 'hidden',
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    whiteSpace: 'nowrap',
-    width: 1,
-});
-
 export default function Words(): React.ReactElement {
-    const [activeId, setActiveId] = useState(null);
     const {words, updateWords} = useContext(WordsContext);
 
-    const emptyWord: Word = {
+    const createEmptyWord = (): Word => ({
         id: Date.now(),
         basicWord: '',
         translation: '',
@@ -48,14 +32,16 @@ export default function Words(): React.ReactElement {
         wordCategory: '',
         errors: 0,
         color: '',
-    };
+    });
 
-    if(words.length == 0) {
-        words.push(emptyWord);
-    }
+    useEffect(() => {
+        if (words.length === 0) {
+            updateWords([createEmptyWord()]);
+        }
+    }, [words, updateWords]);
 
     const handleAddWord = () => {
-        const newWords = [...words, emptyWord];
+        const newWords = [...words, createEmptyWord()];
         updateWords(newWords);
     }
 
@@ -66,14 +52,24 @@ export default function Words(): React.ReactElement {
         })
     );
 
+
     function handleDragEnd(event: any) {
         const {active, over} = event;
 
-        if (active.id !== over.id) {
-            const newWords = arrayMove(words, active.id, over.id);
-
-            updateWords(newWords);
+        if (!active || !over || active.id === over.id) {
+            return;
         }
+
+        const oldIndex = words.findIndex(word => word.id === active.id);
+        const newIndex = words.findIndex(word => word.id === over.id);
+
+        if (oldIndex === -1 || newIndex === -1) {
+            console.warn("Error: Could not find word in array during drag end.", { activeId: active.id, overId: over.id, words });
+            return;
+        }
+
+        const newWords = arrayMove(words, oldIndex, newIndex);
+        updateWords(newWords);
     }
 
     return (
@@ -112,11 +108,11 @@ export default function Words(): React.ReactElement {
                 onDragEnd={handleDragEnd}
             >
                 <SortableContext
-                    items={words}
+                    items={words.map(word => word.id)}
                     strategy={verticalListSortingStrategy}
                 >
                     {words.map((word, key) => (
-                        <WordRow key={key} keyId={key} word={word} />
+                        <WordRow key={word.id} index={key} keyId={word.id} word={word} />
                     ))}
                 </SortableContext>
             </DndContext>

@@ -33,11 +33,12 @@ const VisuallyHiddenInput = styled('input')({
 });
 
 interface WordRowProps {
+    index: number;
     keyId: number;
     word: Word;
 }
 
-export default function WordRow({ keyId, word}: WordRowProps) {
+export default function WordRow({ index, keyId, word}: WordRowProps) {
     const {
         attributes,
         listeners,
@@ -124,7 +125,7 @@ export default function WordRow({ keyId, word}: WordRowProps) {
                         <button {...attributes} {...listeners} className="drag-handle">
                             ⠿
                         </button>
-                        {keyId + 1}
+                        {index + 1}
                     </div>
                 </Grid>
                 <Grid size={5}>
