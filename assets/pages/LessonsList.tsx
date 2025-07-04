@@ -1,4 +1,4 @@
-import React, {useCallback, useState, useEffect} from 'react';
+import React, {useCallback, useState} from 'react';
 import Button from '@mui/material/Button';
 import Pagination from '@mui/material/Pagination';
 import AddLessonDialog from '../components/lesson/LessonAddDialog';
@@ -16,7 +16,7 @@ export default function LessonsList(): React.ReactElement {
     const [lessonToRemove, setLessonToRemove] = useState<Lesson|null>(null);
     const [openSuccessAlert, setOpenSuccessAlert] = useState(false);
     const [successAlertMessage, setSuccessAlertMessage] = useState('');
-    const [lessons, currentPage, totalPages, isLoading, isError, fetchLessons] = useLessons();
+    const [lessons, currentPage, totalPages, isLoading, isError, setPage] = useLessons();
 
     const handleOpenAddDialog = useCallback(() => {
         setOpenAddDialog(true)
@@ -46,12 +46,12 @@ export default function LessonsList(): React.ReactElement {
     }, []);
 
     const handlePaginationChange = useCallback((event: React.ChangeEvent<unknown>, value: number) => {
-        fetchLessons(value);
-    }, [fetchLessons]);
+        setPage(value);
+    }, [setPage]);
 
     const refreshLessons = useCallback(() => {
-        fetchLessons(1);
-    }, [fetchLessons]);
+        setPage(1);
+    }, [setPage]);
 
     return (
         <div className="lesson-list">

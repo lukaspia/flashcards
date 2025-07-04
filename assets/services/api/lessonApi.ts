@@ -3,8 +3,10 @@ import {Lesson} from "../../types/lesson.types";
 
 const BASE_URL = "/api/v1";
 
-export async function getLessons(page: number = 1) {
-    return await axios.get(`${BASE_URL}/lessons?page=` + page).then(res => res.data);
+export async function getLessons(page: number = 1, options?: {signal: AbortSignal}) {
+    return await axios.get(`${BASE_URL}/lessons?page=` + page, {
+        signal: options?.signal,
+    }).then(res => res.data);
 }
 
 export async function getLesson(id: number, options?: {signal: AbortSignal}) {

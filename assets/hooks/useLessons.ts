@@ -1,6 +1,7 @@
 import {useEffect, useState} from "react";
 import {Lesson} from "../types/lesson.types";
 import {getLessons} from "../services/api/lessonApi";
+import axios from 'axios';
 
 type LessonApiResponse = [
     Lesson[],
@@ -11,47 +12,42 @@ type LessonApiResponse = [
     (page: number) => void
 ];
 
-export default function useLessons(): LessonApiResponse {
+export default function useLessons(initialPage = 1): LessonApiResponse {
     const [lessons, setLessons] = useState<Lesson[]>([]);
-    const [currentPage, setCurrentPage] = useState(1);
+    const [currentPage, setPage] = useState(initialPage);
     const [totalPages, setTotalPages] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const [isError, setIsError] = useState(false);
 
     useEffect(() => {
-        fetchLessons();
-    }, []);
+        const controller = new AbortController();
 
-    const fetchLessons = (page: number = 1) => {
-        let isMounted = true;
+        const fetchPaginatedLessons = () => {
+            setIsLoading(true);
+            setIsError(false);
 
-        setIsLoading(true);
-        setIsError(false);
-
-        getLessons(page)
-            .then((result) => {
-                if (isMounted) {
+            getLessons(currentPage, { signal: controller.signal })
+                .then((result) => {
                     setLessons(result.data.lessons);
                     setTotalPages(result.data.totalPages);
-                    setCurrentPage(result.data.page);
-                }
-            })
-            .catch((error) => {
-                console.error(error);
-                if (isMounted) {
-                    setIsError(true);
-                }
-            })
-            .finally(() => {
-                if(isMounted) {
+                })
+                .catch((error) => {
+                    if (!axios.isCancel(error)) {
+                        console.error("Failed to fetch lessons:", error);
+                        setIsError(true);
+                    }
+                })
+                .finally(() => {
                     setIsLoading(false);
-                }
-            });
+                });
+        };
+
+        fetchPaginatedLessons();
 
         return () => {
-            isMounted = false;
-        }
-    }
+            controller.abort();
+        };
+    }, [currentPage]);
 
     return [
         lessons,
@@ -59,6 +55,6 @@ export default function useLessons(): LessonApiResponse {
         totalPages,
         isLoading,
         isError,
-        fetchLessons
+        setPage,
     ]
 }
