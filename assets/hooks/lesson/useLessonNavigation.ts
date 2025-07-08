@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {Word} from '../../types/word.types';
 
 interface UseLessonNavigationProps {
@@ -16,125 +16,93 @@ interface UseLessonNavigationResult {
     lessonReset: () => void;
 }
 
+interface NavigationState {
+    newIndex: number;
+    newIsTranslation: boolean;
+    isValid: boolean; // Czy operacja nawigacji jest możliwa
+}
+
+const calculateNextState = (
+    currentIdx: number,
+    currentIsTranslation: boolean,
+    direction: 'prev' | 'next',
+    wordsLength: number,
+    translationFirst: boolean
+): NavigationState => {
+    let newIndex = currentIdx;
+    let newIsTranslation = currentIsTranslation;
+    let isValid = true;
+
+    if (direction === 'next') {
+        if (currentIsTranslation) { // Obecnie wyświetlamy tłumaczenie, chcemy iść do następnego słowa
+            if (currentIdx < wordsLength - 1) {
+                newIndex = currentIdx + 1;
+                newIsTranslation = translationFirst; // Dla nowego słowa startujemy od trybu translationFirst
+            } else {
+                isValid = false; // Jesteśmy na ostatnim słowie i jego tłumaczeniu, nie ma dalej
+            }
+        } else { // Obecnie wyświetlamy słowo, chcemy iść do jego tłumaczenia
+            newIsTranslation = true;
+        }
+    } else { // direction === 'prev'
+        if (currentIsTranslation) { // Obecnie wyświetlamy tłumaczenie, chcemy wrócić do słowa podstawowego
+            newIsTranslation = false; // Po prostu zmieniamy widok na słowo podstawowe dla TEGO SAMEGO indeksu
+        } else { // Obecnie wyświetlamy słowo podstawowe, chcemy cofnąć się do poprzedniego słowa
+            if (currentIdx > 0) {
+                newIndex = currentIdx - 1;
+                newIsTranslation = false; // Po cofnięciu indeksu, zawsze wyświetlamy słowo podstawowe (PL)
+            } else {
+                isValid = false; // Jesteśmy na pierwszym słowie i jego podstawowej formie, nie ma dalej
+            }
+        }
+    }
+
+    return { newIndex, newIsTranslation, isValid };
+};
+
 export const useLessonNavigation = ({ words, translationFirst }: UseLessonNavigationProps): UseLessonNavigationResult => {
     const [index, setIndex] = useState(0);
     const [isTranslation, setIsTranslation] = useState(false);
     const [displayWord, setDisplayWord] = useState<string | null>(null);
 
-    const lessonReset = () => {
-        setIndex(0);
-        if (translationFirst) {
-            setIsTranslation(true);
-            setDisplayWord(words[0]?.translation || null);
-        } else {
-            setIsTranslation(false);
-            setDisplayWord(words[0]?.basicWord || null);
+    const updateDisplayWordBasedOnState = useCallback((currentIdx: number, currentIsTranslation: boolean) => {
+        if (!words.length || currentIdx < 0 || currentIdx >= words.length) {
+            setDisplayWord(null);
+            return;
         }
-    };
+        const currentWord = words[currentIdx];
+        setDisplayWord(currentIsTranslation ? currentWord.translation : currentWord.basicWord);
+    }, [words]);
+
+    const lessonReset = useCallback(() => {
+        setIndex(0);
+        const initialIsTranslation = translationFirst;
+        setIsTranslation(initialIsTranslation);
+        updateDisplayWordBasedOnState(0, initialIsTranslation);
+    }, [words, translationFirst, updateDisplayWordBasedOnState]);
 
     useEffect(() => {
         lessonReset();
-    }, [words, translationFirst]);
+    }, [words, translationFirst, lessonReset]);
 
-    /*const handleShowWord = (direction: 'prev' | 'next') => {
-        let newIndex = index;
-        let newIsTranslation = isTranslation;
+    const handleShowWord = useCallback((direction: 'prev' | 'next') => {
+        const { newIndex, newIsTranslation, isValid } = calculateNextState(
+            index,
+            isTranslation,
+            direction,
+            words.length,
+            translationFirst
+        );
 
-        if (!words.length) return;
-
-        if (direction === 'prev') {
-            if (translationFirst) {
-                if (isTranslation) {
-                    if (index > 0) newIndex = index - 1;
-                    newIsTranslation = true;
-                } else {
-                    newIsTranslation = false; // Stay on basic word if moving back from translation
-                }
-            } else {
-                if (!isTranslation) {
-                    if (index > 0) newIndex = index - 1;
-                    newIsTranslation = false;
-                } else {
-                    newIsTranslation = true; // Stay on translation if moving back from basic word
-                }
-            }
-        } else { // 'next'
-            if (isTranslation) {
-                if (!translationFirst) { // If basic word was first, and now showing translation, next should be next word's basic
-                    if (words.length > index + 1) newIndex = index + 1;
-                }
-                newIsTranslation = false;
-                setDisplayWord(words[newIndex]?.basicWord || null);
-            } else {
-                if (translationFirst) { // If translation was first, and now showing basic, next should be next word's translation
-                    if (words.length > index + 1) newIndex = index + 1;
-                }
-                newIsTranslation = true;
-                setDisplayWord(words[newIndex]?.translation || null);
-            }
+        if (!isValid) {
+            return;
         }
 
         setIndex(newIndex);
         setIsTranslation(newIsTranslation);
+        updateDisplayWordBasedOnState(newIndex, newIsTranslation);
 
-        // Update displayWord after setting index and isTranslation
-        if (newIsTranslation) {
-            setDisplayWord(words[newIndex]?.translation || null);
-        } else {
-            setDisplayWord(words[newIndex]?.basicWord || null);
-        }
-    };*/
-
-    const handleShowWord = (direction: string) => {
-        let i = index;
-
-        if (!words.length) return;
-
-        if (direction == 'prev') {
-            if (translationFirst) {
-                if (isTranslation) {
-                    if (index > 0) {
-                        i = index - 1;
-                    }
-                    setIndex(i);
-                }
-
-                setIsTranslation(true);
-                setDisplayWord(words[i].translation);
-            } else {
-                if (!isTranslation) {
-                    if (index > 0) {
-                        i = index - 1;
-                    }
-                    setIndex(i);
-                }
-
-                setIsTranslation(false);
-                setDisplayWord(words[i].basicWord);
-            }
-        } else {
-            if (isTranslation) {
-                if (!translationFirst) {
-                    if (words.length > index + 1) {
-                        i = index + 1;
-                    }
-                }
-                setIndex(i);
-                setIsTranslation(false);
-                setDisplayWord(words[i].basicWord);
-            } else {
-                if (translationFirst) {
-                    if (words.length > index + 1) {
-                        i = index + 1;
-                    }
-                }
-                setIndex(i);
-                setIsTranslation(true);
-                setDisplayWord(words[i].translation);
-            }
-        }
-    }
-
+    }, [index, isTranslation, words, translationFirst, updateDisplayWordBasedOnState]);
 
     return {
         index,
