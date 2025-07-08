@@ -1,37 +1,39 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback} from 'react';
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import SaveIcon from '@mui/icons-material/Save';
-import useLesson from "../hooks/useLesson";
 import {useNavigate, useParams} from "react-router";
 import LoadingPreloader from "../components/ui/LoadingPreloader";
 import Words from "../components/word/Words";
-import {updateLesson} from "../services/api/lessonApi";
 import CollapseSuccessAlert from "../components/ui/CollapseSuccessAlert";
 import WordsContext from "../services/context/WordsContext";
-import {getCategories} from "../services/api/wordApi";
 import KeyboardReturnIcon from "@mui/icons-material/KeyboardReturn";
 import IconButton from "@mui/material/IconButton";
 import {generatePath} from "../utils/path-utils";
 import {ROUTES} from "../constants/Routes";
-import {Lesson} from "../types/lesson.types";
+import {useLessonEditData} from "../hooks/lesson/useLessonEditData";
+import {useWordCategories} from "../hooks/word/useWordCategories";
+import {useSuccessAlert} from "../hooks/useSuccessAlert";;
 
 export default function LessonEdit(): React.ReactElement {
     const {id} = useParams();
-    const [initialLesson, isLoading, isError] = useLesson(id ? parseInt(id): 0);
-    const [editableLesson, setEditableLesson] = useState<Lesson | undefined>(undefined);
+    const lessonId = id ? parseInt(id) : 0;
 
-    const [isSaving, setIsSaving] = useState(false);
-    const [openSuccessAlert, setOpenSuccessAlert] = useState(false);
-    const [successAlertMessage, setSuccessAlertMessage] = useState('');
-    const [categories, setCategories] = useState<any[]>([]);
+    const { openSuccessAlert, successAlertMessage, showSuccessAlert, handleCloseSuccessAlert } = useSuccessAlert();
+
+    const {
+        editableLesson,
+        isLoading,
+        isSaving,
+        isError,
+        setEditableLesson,
+        saveLesson
+    } = useLessonEditData({lessonId, onSaveSuccess: () => showSuccessAlert('Lekcja została zaktualizowana.')});
+
+    const categories = useWordCategories();
+
+
     const navigate = useNavigate();
-
-    useEffect(() => {
-        if (initialLesson) {
-            setEditableLesson(initialLesson);
-        }
-    }, [initialLesson]);
 
     const handleSetLessonName = (name: string) => {
         if (editableLesson) {
@@ -39,34 +41,11 @@ export default function LessonEdit(): React.ReactElement {
         }
     };
 
-    const handleSaveLesson = () => {
-        setIsSaving(true);
-        if (editableLesson) {
-            updateLesson(editableLesson)
-                .then((result) => {
-                    setEditableLesson(result.data.lesson);
-                    showSuccessAlert('Lekcja została zaktualizowana.');
-                })
-                .catch((error) => console.error(error))
-                .finally(() => setIsSaving(false));
-        }
-    };
-
     const updateWords = useCallback((words: any) => {
         if (editableLesson) {
             setEditableLesson({ ...editableLesson, words: words });
         }
-    }, [editableLesson]);
-
-    const showSuccessAlert = useCallback((message: string) => {
-        setSuccessAlertMessage(message);
-        setOpenSuccessAlert(true);
-    }, []);
-
-    const handleCloseSuccessAlert = useCallback(() => {
-        setSuccessAlertMessage('');
-        setOpenSuccessAlert(false);
-    }, []);
+    }, [editableLesson, setEditableLesson]);
 
     const wordsContextValue = {
         words: editableLesson?.words || [],
@@ -78,12 +57,6 @@ export default function LessonEdit(): React.ReactElement {
         const path = generatePath(ROUTES.LESSON_PANEL);
         navigate(path);
     }
-
-    useEffect(() => {
-        getCategories().then((result) => {
-            setCategories(result.data);
-        });
-    },[])
 
     return (
         <div className="lesson-edit">
@@ -122,9 +95,11 @@ export default function LessonEdit(): React.ReactElement {
                 <Button
                     className="btn button-primary"
                     variant="contained"
-                    onClick={handleSaveLesson}
-                    endIcon={<SaveIcon />}>
-                    Zapisz
+                    onClick={saveLesson}
+                    endIcon={<SaveIcon />}
+                    disabled={isSaving}
+                >
+                    {isSaving ? 'Zapisywanie...' : 'Zapisz'}
                 </Button>
             </div>
         </div>

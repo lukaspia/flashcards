@@ -64,7 +64,7 @@ export default function LessonTest(): React.ReactElement {
         handleLessonList,
     });
 
-    const { slowRead, targetLanguage, handleReadText } = useTextToSpeech(); //TODO wykorzystać w edycji lekcji
+    const { slowRead, targetLanguage, handleReadText } = useTextToSpeech();
 
     return (<div className="lesson">
         <LessonHeader
