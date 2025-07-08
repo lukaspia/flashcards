@@ -9,47 +9,23 @@ import {Lesson} from '../types/lesson.types';
 import useLessons from "../hooks/useLessons";
 import CollapseSuccessAlert from "../components/ui/CollapseSuccessAlert";
 import LoadingPreloader from "../components/ui/LoadingPreloader";
+import { useDialog } from "../hooks/useDialog";
+import { useSuccessAlert } from "../hooks/useSuccessAlert";
 
 export default function LessonsList(): React.ReactElement {
-    const [openAddDialog, setOpenAddDialog] = useState(false);
-    const [openRemoveDialog, setOpenRemoveDialog] = useState(false);
-    const [lessonToRemove, setLessonToRemove] = useState<Lesson|null>(null);
-    const [openSuccessAlert, setOpenSuccessAlert] = useState(false);
-    const [successAlertMessage, setSuccessAlertMessage] = useState('');
-    const [lessons, currentPage, totalPages, isLoading, isError, setPage] = useLessons();
+    const { isOpen: openAddDialog, handleOpen: handleOpenAddDialog, handleClose: handleCloseAddDialog } = useDialog();
+    const { isOpen: openRemoveDialog, data: lessonToRemove, handleOpen: handleOpenRemoveDialog, handleClose: handleCloseRemoveDialog } = useDialog<Lesson>();
 
-    const handleOpenAddDialog = useCallback(() => {
-        setOpenAddDialog(true)
-    }, []);
+    const { openSuccessAlert, successAlertMessage, showSuccessAlert, handleCloseSuccessAlert } = useSuccessAlert();
 
-    const handleCloseAddDialog = useCallback(() => {
-        setOpenAddDialog(false)
-    }, []);
-
-    const handleOpenRemoveDialog = useCallback((lesson: Lesson) => {
-        setLessonToRemove(lesson);
-        setOpenRemoveDialog(true);
-    }, []);
-
-    const handleCloseRemoveDialog = useCallback(() => {
-        setOpenRemoveDialog(false)
-    }, []);
-
-    const showSuccessAlert = useCallback((message: string) => {
-        setSuccessAlertMessage(message);
-        setOpenSuccessAlert(true);
-    }, []);
-
-    const handleCloseSuccessAlert = useCallback(() => {
-        setSuccessAlertMessage('');
-        setOpenSuccessAlert(false);
-    }, []);
+    const [lessons, currentPage, totalPages, isLoading, isError, setPage, refresh] = useLessons();
 
     const handlePaginationChange = useCallback((event: React.ChangeEvent<unknown>, value: number) => {
         setPage(value);
     }, [setPage]);
 
     const refreshLessons = useCallback(() => {
+        refresh();
         setPage(1);
     }, [setPage]);
 
@@ -63,7 +39,7 @@ export default function LessonsList(): React.ReactElement {
                 <Button
                     className="btn button-primary"
                     variant="contained"
-                    onClick={handleOpenAddDialog}
+                    onClick={() => handleOpenAddDialog()}
                     endIcon={<AddIcon />}>
                     Dodaj lekcję
                 </Button>
@@ -77,7 +53,7 @@ export default function LessonsList(): React.ReactElement {
 
             <LessonsListRows
                 lessons={lessons}
-                handleRemoveClickOpen={handleOpenRemoveDialog}
+                handleRemoveClickOpen={(lesson: Lesson) => handleOpenRemoveDialog(lesson)}
             />
 
             <div className="pagination-container lesson-list-section">

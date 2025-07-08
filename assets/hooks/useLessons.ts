@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import {useEffect, useState, useCallback} from "react";
 import {Lesson} from "../types/lesson.types";
 import {getLessons} from "../services/api/lessonApi";
 import axios from 'axios';
@@ -9,7 +9,8 @@ type LessonApiResponse = [
     number,
     boolean,
     boolean,
-    (page: number) => void
+    (page: number) => void,
+    () => void
 ];
 
 export default function useLessons(initialPage = 1): LessonApiResponse {
@@ -18,6 +19,7 @@ export default function useLessons(initialPage = 1): LessonApiResponse {
     const [totalPages, setTotalPages] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
     const [isError, setIsError] = useState(false);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -47,7 +49,11 @@ export default function useLessons(initialPage = 1): LessonApiResponse {
         return () => {
             controller.abort();
         };
-    }, [currentPage]);
+    }, [currentPage, refreshTrigger]);
+
+    const refresh = useCallback(() => {
+        setRefreshTrigger(prev => prev + 1); // Zmień wartość, aby wywołać useEffect
+    }, []);
 
     return [
         lessons,
@@ -56,5 +62,6 @@ export default function useLessons(initialPage = 1): LessonApiResponse {
         isLoading,
         isError,
         setPage,
+        refresh
     ]
 }
