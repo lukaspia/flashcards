@@ -3,6 +3,9 @@ import { Word } from '../../types/word.types';
 import { Lesson } from '../../types/lesson.types';
 import { updateLesson, getLessonMessage } from '../../services/api/lessonApi';
 
+//TODO w pierwszej kolejnosci zając się branchem Git: Detached HEAD doesn't point any branch
+//TODO https://gemini.google.com/app/f03ce3b3f233e0f7
+
 interface UseLessonTestLogicProps {
     words: Word[];
     wordsError: Word[];
