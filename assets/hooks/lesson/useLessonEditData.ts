@@ -18,9 +18,9 @@ interface UseLessonDataResult {
 }
 
 export const useLessonEditData = ({
-                                      lessonId,
-                                      onSaveSuccess
-                                  }: UseLessonEditDataProps): UseLessonDataResult => {
+  lessonId,
+  onSaveSuccess
+}: UseLessonEditDataProps): UseLessonDataResult => {
     const [initialLesson, setInitialLesson] = useState<Lesson | undefined>(undefined);
     const [editableLesson, setEditableLesson] = useState<Lesson | undefined>(undefined);
     const [isLoading, setIsLoading] = useState(true);
