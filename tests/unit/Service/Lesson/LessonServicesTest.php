@@ -13,6 +13,7 @@ use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\Exception\InvalidArgumentException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
+use App\Service\Lesson\WordImageServiceInterface;
 
 class LessonServicesTest extends TestCase
 {
@@ -21,17 +22,20 @@ class LessonServicesTest extends TestCase
     private EventDispatcherInterface $eventDispatcher;
     private LessonService $lessonServices;
     private Lesson $lesson;
+    private WordImageServiceInterface $wordImageServices;
 
     protected function setUp(): void
     {
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->validator = $this->createMock(ValidatorInterface::class);
         $this->eventDispatcher = $this->createMock(EventDispatcherInterface::class);
+        $this->wordImageServices = $this->createMock(WordImageServiceInterface::class);
 
         $this->lessonServices = new LessonService(
             $this->entityManager,
             $this->validator,
-            $this->eventDispatcher
+            $this->eventDispatcher,
+            $this->wordImageServices
         );
 
         $this->lesson = new Lesson();

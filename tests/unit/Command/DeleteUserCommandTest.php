@@ -4,19 +4,19 @@ namespace App\Tests\Command;
 
 use App\Command\DeleteUserCommand;
 use App\DTO\OperationResponse;
-use App\Service\User\UserService;
+use App\Service\User\UserServiceInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
 class DeleteUserCommandTest extends TestCase
 {
-    private UserService $userService;
+    private UserServiceInterface $userService;
     private CommandTester $commandTester;
 
     protected function setUp(): void
     {
-        $this->userService = $this->createMock(UserService::class);
+        $this->userService = $this->createMock(UserServiceInterface::class);
 
         $command = new DeleteUserCommand($this->userService);
 
