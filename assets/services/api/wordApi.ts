@@ -7,5 +7,5 @@ export async function translateWord(promptData: object) {
 }
 
 export async function getCategories() {
-    return await axios.get(`${BASE_URL}/words/categories`).then(res => res.data);
+    return axios.get(`${BASE_URL}/words/categories`).then(res => res.data);
 }

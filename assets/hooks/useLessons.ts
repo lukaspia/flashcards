@@ -52,7 +52,7 @@ export default function useLessons(initialPage = 1): LessonApiResponse {
     }, [currentPage, refreshTrigger]);
 
     const refresh = useCallback(() => {
-        setRefreshTrigger(prev => prev + 1); // Zmień wartość, aby wywołać useEffect
+        setRefreshTrigger(prev => prev + 1);
     }, []);
 
     return [
