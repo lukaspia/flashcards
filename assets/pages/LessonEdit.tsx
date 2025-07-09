@@ -31,8 +31,6 @@ export default function LessonEdit(): React.ReactElement {
     } = useLessonEditData({lessonId, onSaveSuccess: () => showSuccessAlert('Lekcja została zaktualizowana.')});
 
     const categories = useWordCategories();
-
-
     const navigate = useNavigate();
 
     const handleSetLessonName = (name: string) => {
