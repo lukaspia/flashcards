@@ -224,7 +224,7 @@ class LessonController extends AbstractApiController
     public function getSuccessMessage(AIGeneratorInterface $aiGeneratorService): JsonResponse
     {
         try {
-            $prompt = 'Generate a short, encouraging message in Polish to congratulate someone on their successful foreign language vocabulary learning.';
+            $prompt = 'Generate one, short, encouraging message just in Polish (don\'t give me translation in English), to congratulate someone on their successful foreign language vocabulary learning.';
             $message = $aiGeneratorService->generateText($prompt);
 
             return $this->createResponse(
