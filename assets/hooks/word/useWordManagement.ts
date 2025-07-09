@@ -21,10 +21,8 @@ interface UseWordManagementReturn {
 }
 
 export const useWordManagement = ({ initialWord, keyId }: UseWordManagementProps): UseWordManagementReturn => {
-    const { words, updateWords, wordsCategories } = useContext(WordsContext);
+    const { words, updateWords, wordsCategories, sourceLanguage, targetLanguage } = useContext(WordsContext);
     const [wordState, setWordState] = useState<Word>(initialWord);
-    const [sourceLanguage] = useState('pl-PL');
-    const [targetLanguage] = useState('en-US');
 
     useEffect(() => {
         setWordState(initialWord);

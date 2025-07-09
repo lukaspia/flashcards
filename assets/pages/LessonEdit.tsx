@@ -49,6 +49,8 @@ export default function LessonEdit(): React.ReactElement {
         words: editableLesson?.words || [],
         updateWords: updateWords,
         wordsCategories: categories,
+        sourceLanguage: editableLesson?.sourceLanguage || '',
+        targetLanguage: editableLesson?.targetLanguage || ''
     };
 
     const handleLessonList = () => {

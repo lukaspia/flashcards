@@ -21,7 +21,7 @@ import {
 import WordsContext from "../../services/context/WordsContext";
 
 export default function Words(): React.ReactElement {
-    const {words, updateWords} = useContext(WordsContext);
+    const {words, updateWords, sourceLanguage, targetLanguage} = useContext(WordsContext);
 
     const createEmptyWord = (): Word => ({
         id: Date.now(),
@@ -92,12 +92,12 @@ export default function Words(): React.ReactElement {
             <Grid container spacing={2}>
                 <Grid size={{ xs: 6, md: 6 }}>
                     <div>
-                        <h6>Słowa PL</h6>
+                        <h6>Słowa {sourceLanguage}</h6>
                     </div>
                 </Grid>
                 <Grid size={{ xs: 6, md: 6 }}>
                     <div>
-                        <h6>Słowa EN</h6>
+                        <h6>Słowa {targetLanguage}</h6>
                     </div>
                 </Grid>
             </Grid>

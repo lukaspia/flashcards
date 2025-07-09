@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useEffect} from "react";
 import {useNavigate, useParams} from "react-router";
 import {generatePath} from "../utils/path-utils";
 import {ROUTES} from "../constants/Routes";
@@ -64,7 +64,11 @@ export default function LessonTest(): React.ReactElement {
         handleLessonList,
     });
 
-    const { slowRead, targetLanguage, handleReadText } = useTextToSpeech();
+    const { slowRead, targetLanguage, handleReadText, setTargetLanguage } = useTextToSpeech();
+
+    useEffect(() => {
+        setTargetLanguage(lesson?.targetLanguage || '');
+    }, [lesson, setTargetLanguage]);
 
     return (<div className="lesson">
         <LessonHeader
