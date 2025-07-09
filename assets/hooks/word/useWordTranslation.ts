@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { translateWord } from '../../services/api/wordApi';
 import { Word } from '../../types/word.types';
 

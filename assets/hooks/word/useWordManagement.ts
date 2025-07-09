@@ -15,7 +15,7 @@ interface UseWordManagementReturn {
     handleUpdateWord: (field: keyof Word, value: any) => void;
     handleRemoveWord: () => void;
     handleTranslateWord: (type: 'basicWord' | 'translation') => void;
-    handleUploadImage: (files: FileList | null) => Promise<void>; //TODO zająć sie tymi promise
+    handleUploadImage: (files: FileList | null) => Promise<void>;
     handleRemoveWordImage: () => Promise<void>;
     handleReadText: (text: string, type: string) => void;
 }
