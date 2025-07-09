@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import {Lesson} from '../../types/lesson.types';
 import { getLesson, updateLesson } from '../../services/api/lessonApi';
+import axios from 'axios';
 
 interface UseLessonEditDataProps {
     lessonId: number;
@@ -28,31 +29,48 @@ export const useLessonEditData = ({
     const [isError, setIsError] = useState(false);
 
     useEffect(() => {
-        if (lessonId) {
-            setIsLoading(true);
-            getLesson(lessonId)
-                .then((result) => {
-                    setInitialLesson(result.data.lesson);
-                    setEditableLesson(result.data.lesson);
-                })
-                .catch(() => setIsError(true))
-                .finally(() => setIsLoading(false));
+        if (!lessonId) {
+            setIsLoading(false);
+            return;
         }
+
+        setIsLoading(true);
+        const controller = new AbortController();
+
+        getLesson(lessonId, { signal: controller.signal })
+            .then((result) => {
+                setInitialLesson(result.data.lesson);
+                setEditableLesson(result.data.lesson);
+            })
+            .catch((error) => {
+                if (!axios.isCancel(error)) {
+                    console.error("Failed to fetch lesson:", error);
+                    setIsError(true);
+                }
+            })
+            .finally(() => setIsLoading(false));
+
+        return () => {
+            controller.abort();
+        };
     }, [lessonId]);
 
     const saveLesson = () => {
-        if (editableLesson) {
-            setIsSaving(true);
-            updateLesson(editableLesson)
-                .then((result) => {
-                    setEditableLesson(result.data.lesson);
-                    if (onSaveSuccess) {
-                        onSaveSuccess();
-                    }
-                })
-                .catch((error) => console.error(error))
-                .finally(() => setIsSaving(false));
+        if (!editableLesson) {
+            console.warn("No lesson to save.");
+            return;
         }
+
+        setIsSaving(true);
+        updateLesson(editableLesson)
+            .then((result) => {
+                setEditableLesson(result.data.lesson);
+                if (onSaveSuccess) {
+                    onSaveSuccess();
+                }
+            })
+            .catch((error) => console.error(error))
+            .finally(() => setIsSaving(false));
     };
 
     return { initialLesson, editableLesson, isLoading, isSaving, isError, setEditableLesson, saveLesson };
