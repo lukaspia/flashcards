@@ -27,6 +27,12 @@ class Lesson
     #[Groups('lesson:write')]
     private string $name;
 
+    #[ORM\Column(type: "string", length: 10)]
+    private string $sourceLanguage = 'pl-PL';
+
+    #[ORM\Column(type: "string", length: 10)]
+    private string $targetLanguage = 'en-US';
+
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(name: "user", referencedColumnName: "id", onDelete: "CASCADE")]
     private User $user;
@@ -73,6 +79,26 @@ class Lesson
         $this->name = $name;
     }
 
+    public function getSourceLanguage(): string
+    {
+        return $this->sourceLanguage;
+    }
+
+    public function setSourceLanguage(string $sourceLanguage): void
+    {
+        $this->sourceLanguage = $sourceLanguage;
+    }
+
+    public function getTargetLanguage(): string
+    {
+        return $this->targetLanguage;
+    }
+
+    public function setTargetLanguage(string $targetLanguage): void
+    {
+        $this->targetLanguage = $targetLanguage;
+    }
+
     public function getUser(): User
     {
         return $this->user;
@@ -112,6 +138,5 @@ class Lesson
             $word->setSequence($order);
             $order++;
         }
-        //throw new \Exception('SOMETHING WRONG ' . $word->getSequence());
     }
 }
