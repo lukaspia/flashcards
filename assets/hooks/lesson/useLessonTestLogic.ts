@@ -1,10 +1,28 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Word } from '../../types/word.types';
 import { Lesson } from '../../types/lesson.types';
-import { updateLesson, getLessonMessage } from '../../services/api/lessonApi';
+import {useLessonApiActions} from "./useLessonTestLogicApiActions";
 
-//TODO w pierwszej kolejnosci zając się branchem Git: Detached HEAD doesn't point any branch
-//TODO https://gemini.google.com/app/f03ce3b3f233e0f7
+const processAnswer = (
+    answer: boolean,
+    currentWord: Word,
+    nextRoundWords: Word[],
+    setNextRoundWords: React.Dispatch<React.SetStateAction<Word[]>>,
+    updateWordError: (wordId: number, increase: boolean) => void
+) => {
+    if (!answer) {
+        setNextRoundWords([...nextRoundWords, currentWord]);
+        updateWordError(currentWord.id, true);
+    } else {
+        updateWordError(currentWord.id, false);
+    }
+};
+
+const getUpdatedWordWithErrors = (word: Word, increase: boolean): Word => {
+    const currentErrors = word.errors || 0;
+    const newErrors = increase ? currentErrors + 1 : Math.max(0, currentErrors - 1);
+    return { ...word, errors: newErrors };
+};
 
 interface UseLessonTestLogicProps {
     words: Word[];
@@ -47,46 +65,32 @@ export const useLessonTestLogic = ({
     const [nextRoundWords, setNextRoundWords] = useState<Word[]>([]);
     const [round, setRound] = useState(1);
     const [showSummary, setShowSummary] = useState(false);
-    const [lessonMessage, setLessonMessage] = useState('Gratulacje!');
 
-
-    useEffect(() => {
-        getLessonMessage().then(response => {
-            if (response.data.message) {
-                setLessonMessage(response.data.message);
-            }
-        });
-    }, []);
+    const { lessonMessage, saveLesson } = useLessonApiActions(handleLessonList);
 
     const updateWordError = (wordId: number, increase: boolean = true) => {
-        const updatedWords = wordsError.map((word) => {
+        setWordsError(prevWordsError => prevWordsError.map(word => {
             if (word.id === wordId) {
-                if (increase) {
-                    return { ...word, errors: (word.errors || 0) + 1 };
-                } else if ((word.errors || 0) > 0) {
-                    return { ...word, errors: (word.errors || 0) - 1 };
-                }
+                return getUpdatedWordWithErrors(word, increase);
             }
             return word;
-        });
-        setWordsError(updatedWords);
+        }));
+    };
+
+    const isEndOfRound = (): boolean => {
+        const isLastWord = index >= (words.length - 1);
+        const isCorrectDirectionForEnd = translationFirst ? !isTranslation : isTranslation;
+        return isLastWord && isCorrectDirectionForEnd;
     };
 
     const handleAnswer = (answer: boolean) => {
-        if(!answer) {
-            setNextRoundWords([...nextRoundWords, words[index]]);
-            updateWordError(words[index].id);
-        } else {
-            updateWordError(words[index].id, false);
-        }
+        processAnswer(answer, words[index], nextRoundWords, setNextRoundWords, updateWordError);
 
-        if(index >= ((words.length ?? 0) - 1) && (translationFirst ? isTranslation === false : isTranslation === true)) {
+        if (isEndOfRound()) {
             setShowSummary(true);
         }
-
         handleShowWord('next');
-    }
-
+    };
 
     const nextRound = () => {
         setWords([...nextRoundWords]);
@@ -103,13 +107,7 @@ export const useLessonTestLogic = ({
             words: wordsError,
         } as Lesson;
 
-        updateLesson(newLesson)
-            .then(() => {
-                handleLessonList();
-            })
-            .catch((error) => {
-                console.error(error);
-            });
+        saveLesson(newLesson);
     };
 
     return {
