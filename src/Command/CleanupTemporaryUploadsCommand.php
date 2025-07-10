@@ -95,12 +95,15 @@ class CleanupTemporaryUploadsCommand extends Command
             return false;
         }
 
-        $targetTimestamp = strtotime($targetDateString);
-        if ($targetTimestamp === false) {
+        // Parse the target date string in UTC
+        $utc = new \DateTimeZone('UTC');
+        $targetDateTime = \DateTime::createFromFormat('Y-m-d H:i:s', $targetDateString, $utc);
+        if ($targetDateTime === false) {
             return false;
         }
+        $targetTimestamp = $targetDateTime->getTimestamp();
 
-        $fileCreationTime = filectime($filePath);
+        $fileCreationTime = filemtime($filePath);
 
         return $fileCreationTime < $targetTimestamp;
     }
