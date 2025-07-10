@@ -32,10 +32,6 @@ readonly class FileManager implements FileManagerInterface
                 $this->filesystem->mkdir($destinationDir);
             }
 
-            if (!is_writable($destinationDir)) {
-                throw new \RuntimeException(sprintf('Destination directory "%s" is not writable', $destinationDir));
-            }
-
             $this->filesystem->rename($sourcePath, $destinationPath, true);
             return true;
         } catch (IOExceptionInterface $exception) {
