@@ -12,8 +12,6 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
-//* ENTER POINT
-
 readonly class WordImageService implements WordImageServiceInterface
 {
     /**

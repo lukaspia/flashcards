@@ -12,4 +12,10 @@ interface FileManagerInterface
      * @return bool
      */
     public function moveFile(string $sourcePath, string $destinationPath): bool;
+
+    /**
+     * @param string $filePath
+     * @return bool
+     */
+    public function removeFile(string $filePath): bool;
 }
