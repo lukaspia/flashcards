@@ -177,7 +177,6 @@ class WordImageServiceTest extends TestCase
         $word2 = $this->createWordWithLesson('/temporary/old2.jpg');
         $words = new ArrayCollection([$word1, $word2]);
 
-        // Mock the parameter bag to return test directory paths
         $this->parameterBag->method('get')
             ->willReturnMap([
                 ['word_image_upload_dir_temp', '/tmp/'],
@@ -188,13 +187,11 @@ class WordImageServiceTest extends TestCase
         $this->fileManager->expects($this->exactly(2))
             ->method('moveFile')
             ->willReturnCallback(function ($source, $target) {
-                // Verify source and target paths are as expected
                 $this->assertStringContainsString('/tmp/old', $source);
                 $this->assertStringContainsString('/var/www/public/uploads/word_images/1/1/old', $target);
                 return true;
             });
 
-        // The persist should be called with the updated image path
         $this->entityManager->expects($this->exactly(2))
             ->method('persist')
             ->with($this->callback(function($word) {

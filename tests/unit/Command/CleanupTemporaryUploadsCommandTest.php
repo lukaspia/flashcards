@@ -16,8 +16,7 @@ class CleanupTemporaryUploadsCommandTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
-        // Set default timezone to UTC
+
         date_default_timezone_set('UTC');
         
         $this->parameterBagMock = $this->createMock(ParameterBagInterface::class);
@@ -100,36 +99,27 @@ class CleanupTemporaryUploadsCommandTest extends TestCase
 
     public function testIsFileCreatedBeforeDate()
     {
-        // Set default timezone to UTC for consistent date handling
         date_default_timezone_set('UTC');
 
         $command = new CleanupTemporaryUploadsCommand($this->createMock(ParameterBagInterface::class));
 
-        // Use reflection to access private method
         $reflection = new \ReflectionClass(CleanupTemporaryUploadsCommand::class);
         $method = $reflection->getMethod('isFileCreatedBeforeDate');
         $method->setAccessible(true);
 
-        // Create a temporary file
         $tempDir = sys_get_temp_dir() . '/flashcards_test_' . uniqid();
         mkdir($tempDir);
         $filePath = $tempDir . '/test_file.txt';
         touch($filePath);
 
-        // Use a threshold of '1970-01-01 00:00:00' (very old) for the first test
         $thresholdOld = '1970-01-01 00:00:00';
-        // All files will be after this threshold, so the method should return false
         $this->assertFalse($method->invokeArgs($command, [$filePath, $thresholdOld]), 'File should not be before '.$thresholdOld);
 
-        // Use a threshold of '2100-01-01 00:00:00' (very new) for the second test
         $thresholdNew = '2100-01-01 00:00:00';
-        // All files will be before this threshold, so the method should return true
         $this->assertTrue($method->invokeArgs($command, [$filePath, $thresholdNew]), 'File should be before '.$thresholdNew);
 
-        // Test nonexistent file
         $this->assertFalse($method->invokeArgs($command, ['/nonexistent/file', $thresholdOld]));
 
-        // Cleanup
         unlink($filePath);
         rmdir($tempDir);
     }

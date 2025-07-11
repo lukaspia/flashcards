@@ -13,10 +13,8 @@ class TranslationSchemaTest extends TestCase
 {
     public function testGetSchemaReturnsCorrectStructure(): void
     {
-        // When
         $schema = TranslationSchema::getSchema();
 
-        // Then
         $this->assertIsArray($schema);
         $this->assertArrayHasKey('translation', $schema);
         $this->assertArrayHasKey('example', $schema);

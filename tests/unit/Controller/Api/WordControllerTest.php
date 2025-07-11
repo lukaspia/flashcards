@@ -31,8 +31,7 @@ class WordControllerTest extends TestCase
             $this->entityManager,
             $this->aiGeneratorService
         );
-        
-        // Create a serializer mock
+
         $serializer = $this->createMock(SerializerInterface::class);
         $serializer->method('serialize')
             ->willReturnCallback(function ($data) {
@@ -42,8 +41,7 @@ class WordControllerTest extends TestCase
                     'message' => $data['message'] ?? []
                 ]);
             });
-            
-        // Create a container mock with serializer service
+
         $container = $this->createMock(ContainerInterface::class);
         $container->method('has')
             ->with('serializer')
@@ -61,7 +59,6 @@ class WordControllerTest extends TestCase
         $request = new Request([], [], [], [], [], [], json_encode([
             'word' => 'test',
             'sourceLanguage' => 'en'
-            // Missing targetLanguage
         ]));
         $request->headers->set('Content-Type', 'application/json');
 

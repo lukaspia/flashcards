@@ -19,15 +19,13 @@ class TempImageProcessorTest extends TestCase
     {
         $this->tempDir = sys_get_temp_dir() . '/word_images_test';
         $this->processor = new TempImageProcessor($this->tempDir, $this->relativeDir);
-        
-        // Create a mock UploadedFile
+
         $this->uploadedFile = $this->createMock(UploadedFile::class);
         $this->uploadedFile->method('getClientOriginalName')->willReturn('test.jpg');
     }
 
     protected function tearDown(): void
     {
-        // Clean up test directory
         if (is_dir($this->tempDir)) {
             array_map('unlink', glob("$this->tempDir/*"));
             rmdir($this->tempDir);
@@ -36,7 +34,6 @@ class TempImageProcessorTest extends TestCase
 
     public function testProcessSuccessfullyMovesFile(): void
     {
-        // Arrange
         $filename = 'test_' . uniqid() . '.jpg';
         $expectedPath = '/' . $this->relativeDir . 'temp/' . $filename;
         
@@ -44,16 +41,13 @@ class TempImageProcessorTest extends TestCase
             ->method('move')
             ->with($this->tempDir, $filename);
 
-        // Act
         $result = $this->processor->process($this->uploadedFile, $filename);
 
-        // Assert
         $this->assertSame($expectedPath, $result);
     }
 
     public function testProcessCreatesDirectoryIfNotExists(): void
     {
-        // Arrange
         $filename = 'test_' . uniqid() . '.jpg';
         $testDir = $this->tempDir . '_new';
         
@@ -63,14 +57,11 @@ class TempImageProcessorTest extends TestCase
             ->method('move')
             ->with($testDir, $filename);
 
-        // Act
         $result = $processor->process($this->uploadedFile, $filename);
 
-        // Assert
         $this->assertDirectoryExists($testDir);
         $this->assertSame('/' . $this->relativeDir . 'temp/' . $filename, $result);
-        
-        // Cleanup
+
         if (is_dir($testDir)) {
             rmdir($testDir);
         }
@@ -78,34 +69,28 @@ class TempImageProcessorTest extends TestCase
 
     public function testProcessThrowsExceptionOnMoveFailure(): void
     {
-        // Arrange
         $filename = 'test_' . uniqid() . '.jpg';
         $exceptionMessage = 'Move failed';
         
         $this->uploadedFile->method('move')
             ->willThrowException(new FileException($exceptionMessage));
 
-        // Assert
         $this->expectException(FileException::class);
         $this->expectExceptionMessage($exceptionMessage);
 
-        // Act
         $this->processor->process($this->uploadedFile, $filename);
     }
 
     public function testProcessThrowsExceptionOnDirectoryCreationFailure(): void
     {
-        // Arrange
         $filename = 'test_' . uniqid() . '.jpg';
         $nonWritableDir = '/non/existing/path';
         
         $processor = new TempImageProcessor($nonWritableDir, $this->relativeDir);
 
-        // Assert
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessageMatches('/Directory ".*" was not created/');
 
-        // Act
         $processor->process($this->uploadedFile, $filename);
     }
 }

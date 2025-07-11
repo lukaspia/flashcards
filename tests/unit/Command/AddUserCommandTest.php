@@ -51,12 +51,10 @@ class AddUserCommandTest extends TestCase
 
     public function testExecuteWithProvidedArguments(): void
     {
-        // Configure validator to return no errors for both username and password
         $this->validator->expects($this->exactly(2))
             ->method('validatePropertyValue')
             ->willReturn(new ConstraintViolationList());
 
-        // Configure user service to return success
         $successResponse = new OperationResponse(true, 'User test_user created successfully');
 
         $this->userService->expects($this->once())
@@ -64,10 +62,8 @@ class AddUserCommandTest extends TestCase
             ->with('test_user', 'test_password', false)
             ->willReturn($successResponse);
 
-        // Set up the command tester with the password confirmation
-        $this->commandTester->setInputs(['test_password']); // For password confirmation
+        $this->commandTester->setInputs(['test_password']);
 
-        // Execute with all required arguments
         $this->commandTester->execute([
                                           'username' => 'test_user',
                                           'password' => 'test_password',
@@ -102,7 +98,6 @@ class AddUserCommandTest extends TestCase
 
     public function testExecuteWithAdminOption(): void
     {
-        // Configure validator to return no errors for both username and password
         $this->validator->expects($this->exactly(2))
             ->method('validatePropertyValue')
             ->willReturn(new ConstraintViolationList());
@@ -114,8 +109,7 @@ class AddUserCommandTest extends TestCase
             ->with('admin_user', 'admin_password', true)
             ->willReturn($successResponse);
 
-        // Set up the command tester with the password confirmation
-        $this->commandTester->setInputs(['admin_password']); // For password confirmation
+        $this->commandTester->setInputs(['admin_password']);
 
         $this->commandTester->execute([
                                           'username' => 'admin_user',
@@ -153,17 +147,15 @@ class AddUserCommandTest extends TestCase
 
     public function testExecuteWithInvalidPassword(): void
     {
-        // Create a constraint violation for password
         $violation = $this->createMock(ConstraintViolation::class);
         $violation->method('getMessage')->willReturn('Password is too weak');
         $violationList = new ConstraintViolationList([$violation]);
 
-        // Configure validator with consecutive calls
         $this->validator->expects($this->exactly(2))
             ->method('validatePropertyValue')
             ->willReturnOnConsecutiveCalls(
-                new ConstraintViolationList(), // First call returns empty list (valid username)
-                $violationList                 // Second call returns violations (invalid password)
+                new ConstraintViolationList(),
+                $violationList
             );
 
         $this->userService->expects($this->never())->method('addUser');
@@ -179,12 +171,10 @@ class AddUserCommandTest extends TestCase
 
     public function testExecuteWithUserServiceFailure(): void
     {
-        // Configure validator to return no errors
-        $this->validator->expects($this->exactly(2)) // Expect 2 validations (username and password)
+        $this->validator->expects($this->exactly(2))
         ->method('validatePropertyValue')
             ->willReturn(new ConstraintViolationList());
 
-        // Configure user service to return failure
         $failureResponse = new OperationResponse(false, 'Username already exists');
 
         $this->userService->expects($this->once())
@@ -192,8 +182,7 @@ class AddUserCommandTest extends TestCase
             ->with('existing_user', 'test_password', false)
             ->willReturn($failureResponse);
 
-        // Set up the command tester with the password confirmation
-        $this->commandTester->setInputs(['test_password']); // For password confirmation
+        $this->commandTester->setInputs(['test_password']);
 
         $this->commandTester->execute([
                                           'username' => 'existing_user',

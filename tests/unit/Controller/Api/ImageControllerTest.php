@@ -62,7 +62,6 @@ class ImageControllerTest extends TestCase
         $this->controller->method('getUser')
             ->willReturn(null);
 
-        // Mock the createResponse method to return a proper response
         $this->controller->expects($this->once())
             ->method('createResponse')
             ->with(
@@ -86,10 +85,8 @@ class ImageControllerTest extends TestCase
         $form->method('isSubmitted')->willReturn(true);
         $form->method('isValid')->willReturn(false);
 
-        // Create a real FormError object
         $formError = new FormError('Error message');
 
-        // Create a FormErrorIterator with our error
         $formErrorIterator = new FormErrorIterator($form, [$formError]);
 
         $form->method('getErrors')
@@ -110,7 +107,6 @@ class ImageControllerTest extends TestCase
             ->method('warning')
             ->with('Image upload validation failed', $this->isType('array'));
 
-        // Update the expectation to match what the controller actually passes
         $this->controller->expects($this->once())
             ->method('createResponse')
             ->with(
@@ -188,13 +184,11 @@ class ImageControllerTest extends TestCase
     public function testDeleteImageUnauthenticated(): void
     {
         $word = new Word();
-        
-        // Mock getUser to return null (unauthenticated)
+
         $this->controller->expects($this->once())
             ->method('getUser')
             ->willReturn(null);
-            
-        // Mock createResponse to return a proper JsonResponse with the expected format
+
         $expectedResponse = new JsonResponse([
             'status' => 'error',
             'data' => null,
@@ -228,12 +222,10 @@ class ImageControllerTest extends TestCase
         $word = new Word();
         $word->setLesson($lesson);
 
-        // Mock getUser to return the current user
         $this->controller->expects($this->once())
             ->method('getUser')
             ->willReturn($user);
-            
-        // Mock createResponse to return a proper JsonResponse with 403 status
+
         $expectedResponse = new JsonResponse([
             'status' => 'error',
             'data' => null,
@@ -299,23 +291,19 @@ class ImageControllerTest extends TestCase
         $word = new Word();
         $word->setLesson($lesson);
 
-        // Mock getUser to return the current user
         $this->controller->expects($this->once())
             ->method('getUser')
             ->willReturn($user);
 
-        // Mock removeWordImage to return false (image not found)
         $this->wordServices->expects($this->once())
             ->method('removeWordImage')
             ->with($word)
             ->willReturn(false);
 
-        // Mock logger warning
         $this->logger->expects($this->once())
             ->method('warning')
             ->with('Image not found for deletion', $this->isType('array'));
-            
-        // Mock createResponse to return a proper JsonResponse with 404 status
+
         $expectedResponse = new JsonResponse([
             'status' => 'error',
             'data' => null,
@@ -346,24 +334,20 @@ class ImageControllerTest extends TestCase
         $word = new Word();
         $word->setLesson($lesson);
 
-        // Mock getUser to return the current user
         $this->controller->expects($this->once())
             ->method('getUser')
             ->willReturn($user);
 
-        // Mock removeWordImage to throw an exception
         $exception = new \RuntimeException('Error deleting file');
         $this->wordServices->expects($this->once())
             ->method('removeWordImage')
             ->with($word)
             ->willThrowException($exception);
 
-        // Mock logger error
         $this->logger->expects($this->once())
             ->method('error')
             ->with('Failed to delete image', $this->isType('array'));
-            
-        // Mock createResponse to return a proper JsonResponse with 500 status
+
         $expectedResponse = new JsonResponse([
             'status' => 'error',
             'data' => null,

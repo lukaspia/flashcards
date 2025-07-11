@@ -36,7 +36,6 @@ class LessonVoterTest extends TestCase
         $lesson = $this->createLesson($owner);
         $token = $this->createToken($owner);
 
-        // Test VIEW, EDIT, and DELETE attributes
         $this->assertSame(
             Voter::ACCESS_GRANTED,
             $voter->vote($token, $lesson, [LessonVoter::VIEW])
@@ -143,18 +142,15 @@ class LessonVoterTest extends TestCase
     public function testVoteWithNullOwner(): void
     {
         $voter = new LessonVoter();
-        
-        // Create a User object that will be treated as "no owner"
+
         $noOwnerUser = new class extends User {
             public function __construct() {
-                // Prevent parent constructor from running
             }
             public function getId(): ?int {
                 return null;
             }
         };
-        
-        // Create a lesson with the special no-owner user
+
         $lesson = $this->createMock(Lesson::class);
         $lesson->method('getUser')
             ->willReturn(new $noOwnerUser());

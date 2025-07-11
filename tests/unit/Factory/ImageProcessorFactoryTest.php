@@ -8,7 +8,6 @@ use App\Entity\Word;
 use App\Factory\ImageProcessorFactory;
 use App\ImageProcessing\Word\TempImageProcessor;
 use App\ImageProcessing\Word\WordImageProcessor;
-use App\ImageProcessing\Word\WordImageProcessorInterface;
 use App\Service\Lesson\WordImageServiceInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;

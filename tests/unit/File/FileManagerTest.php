@@ -38,7 +38,6 @@ class FileManagerTest extends TestCase
 
     public function testMoveFileMovesFileSuccessfully(): void
     {
-        // Use a real filesystem for this integration-style test to handle is_writable()
         $realFilesystem = new Filesystem();
         $fileManager = new FileManager($realFilesystem);
 
@@ -48,10 +47,8 @@ class FileManagerTest extends TestCase
         $sourcePath = $sourceDir . '/file.txt';
         $destinationPath = $destinationDir . '/file.txt';
 
-        // Cleanup before test
         $realFilesystem->remove([$baseTmpDir]);
 
-        // Setup test conditions
         $realFilesystem->mkdir([$sourceDir, $destinationDir]);
         $realFilesystem->touch($sourcePath);
 
@@ -59,13 +56,11 @@ class FileManagerTest extends TestCase
         $this->assertFileExists($destinationPath);
         $this->assertFileDoesNotExist($sourcePath);
 
-        // Cleanup after test
         $realFilesystem->remove([$baseTmpDir]);
     }
 
     public function testMoveFileCreatesDestinationDirectoryIfNeeded(): void
     {
-        // Use a real filesystem for this integration-style test to handle is_writable()
         $realFilesystem = new Filesystem();
         $fileManager = new FileManager($realFilesystem);
 
@@ -75,10 +70,8 @@ class FileManagerTest extends TestCase
         $sourcePath = $sourceDir . '/file.txt';
         $destinationPath = $destinationDir . '/file.txt';
 
-        // Cleanup before test
         $realFilesystem->remove([$baseTmpDir]);
 
-        // Setup test conditions
         $realFilesystem->mkdir($sourceDir);
         $realFilesystem->touch($sourcePath);
 
@@ -86,7 +79,6 @@ class FileManagerTest extends TestCase
         $this->assertFileExists($destinationPath);
         $this->assertFileDoesNotExist($sourcePath);
 
-        // Cleanup after test
         $realFilesystem->remove([$baseTmpDir]);
     }
 

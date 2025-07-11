@@ -19,17 +19,14 @@ class TestableGeminiService extends GeminiService
 
     public function __construct()
     {
-        // Bypass parent constructor to avoid final class issues
     }
 
     public function initializeForTest(string $apiKey = 'test-key'): void
     {
-        // First validate the API key like the parent would
         if (empty($apiKey)) {
             throw new \InvalidArgumentException('API key cannot be empty');
         }
 
-        // Initialize a dummy model that implements the required interface
         $this->model = new class() {
             public function generateContent($prompt) {
                 return (object)['text' => ''];
@@ -123,7 +120,6 @@ class GeminiServiceTest extends TestCase
         $testPrompt = 'Test prompt';
         $errorMessage = 'API error';
 
-        // Mock the generateText method to throw the exception directly
         $this->geminiService->setShouldThrow(
             'generateText',
             new \RuntimeException('Failed to generate text from Gemini: ' . $errorMessage)
@@ -155,7 +151,6 @@ class GeminiServiceTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Expected Schema instance');
 
-        // Create a testable service that implements the validation
         $service = new class() extends TestableGeminiService {
             public function validateSchema(array $answerProperties): void
             {

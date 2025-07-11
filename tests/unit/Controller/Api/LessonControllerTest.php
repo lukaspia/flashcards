@@ -19,8 +19,6 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 use App\Factory\LessonFactoryInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 
 class LessonControllerTest extends WebTestCase
 {
@@ -54,13 +52,6 @@ class LessonControllerTest extends WebTestCase
             ->with(Lesson::class)
             ->willReturn($this->lessonRepository);
 
-        /*$this->controller = new LessonController(
-            $this->entityManager,
-            $this->lessonServices,
-            $this->logger,
-            $this->lessonFactory
-        );*/
-
         $this->controller = $this->getMockBuilder(LessonController::class)
             ->setConstructorArgs([
                                      $this->entityManager,
@@ -71,7 +62,6 @@ class LessonControllerTest extends WebTestCase
             ->onlyMethods(['getUser', 'createResponse'])
             ->getMock();
 
-        // Set container with parameters
         $container = $this->createMock(\Symfony\Component\DependencyInjection\ContainerInterface::class);
         $container->method('getParameter')
             ->with('pagination_default_limit')
@@ -218,12 +208,10 @@ class LessonControllerTest extends WebTestCase
             ->onlyMethods(['getUser', 'createResponse'])
             ->getMock();
 
-        // Mock getUser to return null (not authenticated)
         $controller->method('getUser')->willReturn(null);
 
         $controller->setContainer($container);
 
-        // Mock the createResponse method to return a JsonResponse
         $controller->method('createResponse')
             ->willReturnCallback(function ($data, $messages, $status) {
                 return new JsonResponse([
@@ -242,7 +230,7 @@ class LessonControllerTest extends WebTestCase
 
     public function testAddLessonWithValidationErrors(): void
     {
-        $content = json_encode(['name' => '']); // Empty name to trigger validation error
+        $content = json_encode(['name' => '']);
         $request = Request::create(
             '/api/lessons',
             'POST',
@@ -278,7 +266,6 @@ class LessonControllerTest extends WebTestCase
 
         $controller->method('getUser')->willReturn($this->user);
 
-        // Expect createResponse to be called once with the validation error
         $controller->expects($this->once())
             ->method('createResponse')
             ->with(
@@ -324,12 +311,10 @@ class LessonControllerTest extends WebTestCase
             ->method('addLesson')
             ->with($lesson);
 
-        // Mock the getUser() method on the controller to return our test user
         $this->controller->expects($this->any())
             ->method('getUser')
             ->willReturn($this->user);
 
-        // Mock the createResponse() method
         $this->controller->expects($this->once())
             ->method('createResponse')
             ->with(
@@ -352,22 +337,18 @@ class LessonControllerTest extends WebTestCase
 
     public function testAddLessonException()
     {
-        // Create a request with POST data
         $request = new Request();
         $request->setMethod('POST');
         $request->request->set('title', 'Test Lesson');
 
-        // Create mocks for all required dependencies
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $lessonServices = $this->createMock(LessonServiceInterface::class);
         $logger = $this->createMock(LoggerInterface::class);
         $lessonFactory = $this->createMock(LessonFactoryInterface::class);
 
-        // Configure the factory to throw an exception
         $lessonFactory->method('createFromRequestData')
             ->willThrowException(new \RuntimeException('Test exception'));
 
-        // Create the controller with all required dependencies
         $controller = $this->getMockBuilder(LessonController::class)
             ->setConstructorArgs([
                                      $entityManager,
@@ -394,7 +375,6 @@ class LessonControllerTest extends WebTestCase
                              Response::HTTP_BAD_REQUEST
                          ));
 
-        // Set up the container with the parameter bag
         $parameterBag = $this->createMock(\Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface::class);
         $parameterBag->method('get')
             ->with('pagination_default_limit')

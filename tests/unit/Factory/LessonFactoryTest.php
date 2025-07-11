@@ -96,7 +96,6 @@ class LessonFactoryTest extends TestCase
             )
             ->willReturn($lesson);
 
-        // After denormalization, the lesson's name is updated
         $lesson->setName($data['name']);
 
         $validator->expects($this->once())

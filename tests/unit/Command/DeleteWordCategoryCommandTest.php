@@ -72,7 +72,6 @@ class DeleteWordCategoryCommandTest extends TestCase
         $this->entityManager->expects($this->once())
             ->method('flush');
 
-        // We don't provide the argument, so the command will ask
         $this->commandTester->setInputs([$categoryName]);
         $this->commandTester->execute([]);
 
