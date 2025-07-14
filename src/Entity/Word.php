@@ -32,7 +32,7 @@ class Word
     private Lesson $lesson;
 
     #[ORM\Column(type: "integer")]
-    private int $sequence;
+    private int $sequence = 1;
 
     #[ORM\Column(type: "integer")]
     private int $errors = 0;

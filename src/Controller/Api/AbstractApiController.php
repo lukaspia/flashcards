@@ -14,32 +14,28 @@ use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
 abstract class AbstractApiController extends AbstractController
 {
-    protected EntityManagerInterface $entityManager;
 
     /**
      * @param \Doctrine\ORM\EntityManagerInterface $entityManager
      */
-    public function __construct(EntityManagerInterface $entityManager)
+    public function __construct(protected readonly EntityManagerInterface $entityManager)
     {
-        $this->entityManager = $entityManager;
     }
 
     /**
      * @param mixed|null $data
      * @param array $messages
      * @param int $statusCode
+     * @param array $context
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     protected function createResponse(
         mixed $data = null,
         array $messages = [],
         int $statusCode = Response::HTTP_OK,
-        $context = []
+        array $context = []
     ): JsonResponse {
-        $status = 'error';
-        if ($statusCode >= 200 && $statusCode < 299) {
-            $status = 'success';
-        }
+        $status = ($statusCode >= 200 && $statusCode < 300) ? 'success' : 'error';
 
         $response = [
             'status' => $status,
@@ -48,7 +44,7 @@ abstract class AbstractApiController extends AbstractController
         ];
 
         $context = array_merge($context, [
-            ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER => function ($obj) {
+            ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER => function ($obj): mixed {
                 return $obj->getId();
             }
         ]);

@@ -4,7 +4,7 @@ import { Word } from '../../types/word.types';
 
 interface UseWordTranslationProps {
     wordState: Word;
-    handleUpdateWord: (updates: Partial<Word>) => void;
+    handleUpdateWord: (field: keyof Word, value: any) => void;
     sourceLanguage: string;
     targetLanguage: string;
 }
@@ -59,20 +59,16 @@ export const useWordTranslation = ({
             'word': word,
             'sourceLanguage': translateFrom,
             'targetLanguage': translateTo,
-        };
+        }
 
         translateWord(promptData).then(res => {
-            const updates: Partial<Word> = {
-                [translationField]: res.data.translation.translation,
-            };
+            handleUpdateWord(translationField, res.data.translation.translation);
 
-            if (translationField === 'translation') {
-                updates.example = res.data.translation.example;
+            if(translationField === 'translation') {
+                handleUpdateWord('example', res.data.translation.example);
             }
-
-            handleUpdateWord(updates);
         }).catch(err => console.error(err));
-    }, [handleUpdateWord]);
+    }, []);
 
     return {
         handleTranslateWord,

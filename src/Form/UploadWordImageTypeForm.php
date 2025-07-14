@@ -11,6 +11,11 @@ use Symfony\Component\Validator\Constraints\File;
 
 class UploadWordImageTypeForm extends AbstractType
 {
+    /**
+     * @param \Symfony\Component\Form\FormBuilderInterface $builder
+     * @param array $options
+     * @return void
+     */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -24,23 +29,29 @@ class UploadWordImageTypeForm extends AbstractType
                                      'image/png',
                                      'image/gif',
                                  ],
-                                 'mimeTypesMessage' => 'Please upload a valid PDF document',
+                                 'mimeTypesMessage' => 'Please upload a valid file',
                              ])
                 ],
             ])
             ->add('word', HiddenType::class, [
                 'mapped' => false
-            ])
-        ;
+            ]);
     }
 
+    /**
+     * @param \Symfony\Component\OptionsResolver\OptionsResolver $resolver
+     * @return void
+     */
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'csrf_protection' => false,
-        ]);
+                                   'csrf_protection' => false,
+                               ]);
     }
 
+    /**
+     * @return string
+     */
     public function getBlockPrefix(): string
     {
         return '';

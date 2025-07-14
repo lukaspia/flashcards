@@ -24,13 +24,9 @@ class HomeController extends AbstractController
             return $this->redirectToRoute('app_panel');
         }
 
-        $error = $authenticationUtils->getLastAuthenticationError();
-
-        $lastUsername = $authenticationUtils->getLastUsername();
-
         return $this->render('pages/home.html.twig', [
-            'last_username' => $lastUsername,
-            'error' => $error,
+            'last_username' => $authenticationUtils->getLastUsername() ?? '',
+            'error' => $authenticationUtils->getLastAuthenticationError(),
         ]);
     }
 }
