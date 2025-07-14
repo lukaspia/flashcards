@@ -14,17 +14,12 @@ use Symfony\Component\Serializer\SerializerInterface;
 class WordCategoryInputDataTransformer implements DenormalizerInterface, SerializerAwareInterface
 {
     /**
-     * @var \App\DataTransformer\EntityManagerInterface
-     */
-    private EntityManagerInterface $entityManager;
-    /**
      * @var \Symfony\Component\Serializer\SerializerInterface
      */
     private SerializerInterface $serializer;
 
-    public function __construct(EntityManagerInterface $entityManager)
+    public function __construct(private readonly EntityManagerInterface $entityManager)
     {
-        $this->entityManager = $entityManager;
     }
 
     /**
@@ -32,12 +27,9 @@ class WordCategoryInputDataTransformer implements DenormalizerInterface, Seriali
      */
     public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): mixed
     {
-        $categoryId = null;
-
         if (is_array($data) && isset($data['id'])) {
             $categoryId = $data['id'];
-        }
-        elseif (is_int($data)) {
+        } elseif (is_int($data)) {
             $categoryId = $data;
         } else {
             return $this->serializer->denormalize($data, $type, $format, $context);

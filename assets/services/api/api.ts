@@ -1,0 +1,11 @@
+import axios from "axios";
+
+const BASE_URL = "/api/v1";
+
+export async function uploadImage(formData: FormData) {
+    return axios.post(`${BASE_URL}/images/upload`, formData).then(res => res.data);
+}
+
+export async function removeWordImage(wordId: number) {
+    return axios.delete(`${BASE_URL}/images/` + wordId).then(res => res.data);
+}

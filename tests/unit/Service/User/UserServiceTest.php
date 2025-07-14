@@ -4,7 +4,6 @@ namespace App\Tests\Service\User;
 
 use App\Entity\User;
 use App\Event\AddUserEvent;
-use App\Service\Response\OperationResponse;
 use App\Service\User\UserService;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
@@ -87,7 +86,6 @@ class UserServiceTest extends TestCase
 
     public function testAddAdminUserSuccessfully(): void
     {
-        // Arrange
         $username = 'admin';
         $password = 'admin123';
         $hashedPassword = 'hashed_admin_password';
@@ -108,16 +106,13 @@ class UserServiceTest extends TestCase
                     in_array(User::ROLE_ADMIN, $user->getRoles());
             }));
 
-        // Act
         $response = $this->userService->addUser($username, $password, true);
 
-        // Assert
         $this->assertTrue($response->isSuccess());
     }
 
     public function testAddUserWithValidationErrors(): void
     {
-        // Arrange
         $username = 'invalid';
         $password = 'short';
         $errorMessage = 'Username is too short';
@@ -139,17 +134,14 @@ class UserServiceTest extends TestCase
         $this->eventDispatcher->expects($this->never())
             ->method('dispatch');
 
-        // Act
         $response = $this->userService->addUser($username, $password);
 
-        // Assert
         $this->assertFalse($response->isSuccess());
         $this->assertStringContainsString($errorMessage, $response->getMessage());
     }
 
     public function testDeleteUserSuccessfully(): void
     {
-        // Arrange
         $username = 'userToDelete';
         $user = new User();
         $user->setUsername($username);
@@ -166,17 +158,14 @@ class UserServiceTest extends TestCase
         $this->entityManager->expects($this->once())
             ->method('flush');
 
-        // Act
         $response = $this->userService->deleteUser($username);
 
-        // Assert
         $this->assertTrue($response->isSuccess());
         $this->assertEquals(sprintf('User %s successfully deleted.', $username), $response->getMessage());
     }
 
     public function testDeleteNonExistentUser(): void
     {
-        // Arrange
         $username = 'nonExistentUser';
 
         $this->userRepository->expects($this->once())
@@ -190,10 +179,8 @@ class UserServiceTest extends TestCase
         $this->entityManager->expects($this->never())
             ->method('flush');
 
-        // Act
         $response = $this->userService->deleteUser($username);
 
-        // Assert
         $this->assertFalse($response->isSuccess());
         $this->assertEquals(sprintf('User %s not found.', $username), $response->getMessage());
     }

@@ -1,6 +1,6 @@
 import React from "react";
 import LessonRow from "./LessonRow";
-import {Lesson} from "./Lesson";
+import {Lesson} from "../../types/lesson.types";
 
 interface LessonListRowsProps {
     lessons: Lesson[];

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Command;
 
 use App\Entity\WordCategory;
@@ -18,20 +20,11 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class AddWordCategoryCommand extends Command
 {
     /**
-     * @var \Doctrine\ORM\EntityManagerInterface
-     */
-    private EntityManagerInterface $entityManager;
-
-    /**
-     * @param \Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface $passwordHasher
      * @param \Doctrine\ORM\EntityManagerInterface $entityManager
-     * @param \Symfony\Component\Validator\Validator\ValidatorInterface $validator
      */
-    public function __construct(EntityManagerInterface $entityManager)
+    public function __construct(private readonly EntityManagerInterface $entityManager)
     {
         parent::__construct();
-
-        $this->entityManager = $entityManager;
     }
 
     /**
@@ -41,7 +34,11 @@ class AddWordCategoryCommand extends Command
     {
         $this
             ->setHelp('This command allows you to create a word category...')
-            ->addArgument('category_name', InputArgument::OPTIONAL, 'The name of the new word category');
+            ->addArgument(
+                'category_name',
+                InputArgument::OPTIONAL,
+                'The name of the new word category'
+            );
     }
 
     /**
@@ -52,17 +49,10 @@ class AddWordCategoryCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-
         $io->info($this->getHelp());
 
-        if (!($wordCategoryName = $input->getArgument('category_name'))) {
-            $wordCategoryName = $io->ask('Word category name');
-            $input->setArgument('category_name', $wordCategoryName);
-
-            if($wordCategoryName === '') {
-                $io->error(['Error creating word category. Name cannot be empty.']);
-                return Command::FAILURE;
-            }
+        if (!($wordCategoryName = $this->getCategoryName($input, $io))) {
+            return Command::FAILURE;
         }
 
         $wordCategory = new WordCategory();
@@ -73,5 +63,22 @@ class AddWordCategoryCommand extends Command
 
         $io->success('Category created successfully');
         return Command::SUCCESS;
+    }
+
+    private function getCategoryName(InputInterface $input, SymfonyStyle $io): ?string
+    {
+        $categoryName = trim((string)$input->getArgument('category_name') ?: '');
+
+        if (!$categoryName) {
+            $categoryName = trim((string)$io->ask('Word category name'));
+            $input->setArgument('category_name', $categoryName);
+
+            if ($categoryName === '') {
+                $io->error('Error: Category name cannot be empty.');
+                return null;
+            }
+        }
+
+        return $categoryName;
     }
 }
