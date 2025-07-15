@@ -2,6 +2,9 @@
 
 **Flashcards** is an intuitive application designed for **language learning** and reviewing vocabulary using digital flashcards. I created it to facilitate the efficient acquisition of new words and phrases.
 
+![GitHub Release](https://img.shields.io/github/v/release/lukaspia/flashcards)
+![GitHub License](https://img.shields.io/github/license/lukaspia/flashcards)
+
 ---
 
 ### Key Features
@@ -90,7 +93,11 @@ I plan to implement the following features in future versions:
 
 ### Live Application
 
-*(Leave this section for the link to your live application, e.g., "You can try the live application here: [Link to your live app]")*
+You can try the live application here: [https://flashcards.infy.uk/](https://flashcards.infy.uk/)
+
+Logina credentials:
+* User: **testuser**
+* Password: **testuser**
 
 ---
 
