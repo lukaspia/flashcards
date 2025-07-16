@@ -1,106 +1,96 @@
 # Flashcards
 
-**Flashcards** is an intuitive application designed for **language learning** and reviewing vocabulary using digital flashcards. I created it to facilitate the efficient acquisition of new words and phrases.
+**Flashcards** to intuicyjna aplikacja zaprojektowana do **nauki języków** i przeglądania słownictwa za pomocą cyfrowych fiszek. Stworzyłam ją, aby ułatwić efektywne przyswajanie nowych słów i zwrotów.
 
 ![GitHub Release](https://img.shields.io/github/v/release/lukaspia/flashcards)
 ![GitHub License](https://img.shields.io/github/license/lukaspia/flashcards)
 
 ---
 
-### Key Features
+### Kluczowe Funkcje
 
-* **Custom Flashcard Sets:** Create your own question-and-answer flashcards, grouped into **lessons**, to personalize your language learning material.
-* **AI-Powered Translations and Examples:** Added words are automatically translated by AI, and an example sentence demonstrating their usage is generated.
-* **Text-to-Speech:** Listen to words read aloud by a built-in lecturer for improved pronunciation and retention.
-* **Flexible Learning Modes:** Arrange words in sequence or randomly to enhance learning efficiency.
-* **Intuitive Interface:** Designed for simplicity and ease of use, focusing on the language learning experience.
+* **Własne zestawy fiszek:** Twórz własne fiszki z pytaniami i odpowiedziami, pogrupowane w **lekcje**, aby spersonalizować materiały do nauki języków.
+* **Tłumaczenia i przykłady wspierane przez AI:** Dodane słowa są automatycznie tłumaczone przez AI, a także generowane jest przykładowe zdanie demonstrujące ich użycie.
+* **Text-to-Speech:** Słuchaj słów czytanych na głos przez wbudowanego lektora, co poprawia wymowę i zapamiętywanie.
+* **Elastyczne tryby nauki:** Uporządkuj słowa sekwencyjnie lub losowo, aby zwiększyć efektywność nauki.
+* **Intuicyjny interfejs:** Zaprojektowany z myślą o prostocie i łatwości użytkowania, skupiający się na doświadczeniu nauki języków.
 
 ---
 
-### Technologies Used
+### Wykorzystane Technologie
 
-The application is built with the following technologies:
+Aplikacja została zbudowana z wykorzystaniem następujących technologii:
 
 * **Frontend:** React
 * **Backend:** Symfony, PHP
-* **Database:** MySQL
-* **Other:** JavaScript, TypeScript
+* **Baza danych:** MySQL
+* **Inne:** JavaScript, TypeScript
 
 ---
 
-### Local Setup
+### Lokalna konfiguracja
 
-To run the application locally, follow these steps:
+Aby uruchomić aplikację lokalnie, wykonaj następujące kroki:
 
-1.  Clone the repository:
+1.  Sklonuj repozytorium:
     ```bash
     git clone [https://github.com/lukaspia/flashcards.git](https://github.com/lukaspia/flashcards.git)
     ```
-2.  Navigate to the project directory:
+2.  Przejdź do katalogu projektu:
     ```bash
     cd flashcards
     ```
-3.  Install backend dependencies (PHP/Symfony):
+3.  Zainstaluj zależności backendu (PHP/Symfony):
     ```bash
     composer install
     ```
-4.  Configure your database connection in the `.env` (or `.env.local`) file.
-5.  Run database migrations:
+4.  Skonfiguruj połączenie z bazą danych w pliku `.env` (lub `.env.local`). **Dodatkowo, w pliku `.env` (lub `.env.local`) musisz dodać swój klucz API Gemini jako `GEMINI_API_KEY`.**
+5.  Uruchom migracje bazy danych:
     ```bash
     php bin/console doctrine:migrations:migrate
     ```
-6.  Install frontend dependencies (Node.js/React):
+6.  Zainstaluj zależności frontendowe (Node.js/React):
     ```bash
     npm install
-    # or
+    # lub
     yarn install
     ```
-7.  Build the frontend:
+7.  Zbuduj frontend:
     ```bash
     npm run build
-    # or
+    # lub
     yarn build
     ```
 
 ---
 
-### Console Commands
+### Komendy konsoli
 
-The application provides several console commands for administrative tasks:
+Aplikacja udostępnia kilka komend konsoli do zadań administracyjnych:
 
-* `app:add-user`: Add a new user to the system.
-* `app:add-word-category`: Create new categories for words.
-* `app:cleanup-temp`: Clean up temporary images (can be used as a cron job option for automation).
-* `app:delete-user`: Remove an existing user.
-* `app:delete-word-category`: Delete a word category.
-* `app:list-users`: List all registered users.
-
----
-
-### Future Development
-
-I plan to implement the following features in future versions:
-
-* Support for more languages.
-* User registration via a form.
-* Dark mode for improved user experience.
-* Overall UI/UX enhancements.
-* Option to change the lecturer's voice.
-* Automatic selection of a preview image for each word.
-* Ability to add word categories via a form directly in the application.
+* `app:add-user`: Dodaj nowego użytkownika do systemu.
+* `app:add-word-category`: Twórz nowe kategorie dla słów.
+* `app:cleanup-temp`: Wyczyść tymczasowe obrazy (może być użyte jako opcja zadania cron do automatyzacji).
+* `app:delete-user`: Usuń istniejącego użytkownika.
+* `app:delete-word-category`: Usuń kategorię słów.
+* `app:list-users`: Wyświetl listę wszystkich zarejestrowanych użytkowników.
 
 ---
 
-### Live Application
+### Przyszły rozwój
 
-You can try the live application here: [https://flashcards.infy.uk/](https://flashcards.infy.uk/)
+Planuję zaimplementować następujące funkcje w przyszłych wersjach:
 
-Logina credentials:
-* User: **testuser**
-* Password: **testuser**
+* Wsparcie dla większej liczby języków.
+* Rejestracja użytkowników za pomocą formularza.
+* Tryb ciemny dla lepszego doświadczenia użytkownika.
+* Ogólne ulepszenia UI/UX.
+* Opcja zmiany głosu lektora.
+* Automatyczny wybór obrazu podglądu dla każdego słowa.
+* Możliwość dodawania kategorii słów za pomocą formularza bezpośrednio w aplikacji.
 
 ---
 
-### Support and Contribution
+### Wsparcie i wkład
 
-If you have any questions, suggestions, or encounter issues, feel free to open an **Issue** in this repository.
+Jeśli masz jakieś pytania, sugestie lub napotkasz problemy, śmiało otwórz **Issue** w tym repozytorium.
