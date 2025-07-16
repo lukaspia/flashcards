@@ -9,15 +9,24 @@ namespace App\Controller;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
 class HomeController extends AbstractController
 {
     /**
+     * @param \Symfony\Component\Security\Http\Authentication\AuthenticationUtils $authenticationUtils
      * @return \Symfony\Component\HttpFoundation\Response
      */
     #[Route('/', name: 'app_home')]
-    public function home(): Response
+    public function home(AuthenticationUtils $authenticationUtils): Response
     {
-        return $this->render('pages/home.html.twig');
+        if ($this->getUser()) {
+            return $this->redirectToRoute('app_panel');
+        }
+
+        return $this->render('pages/home.html.twig', [
+            'last_username' => $authenticationUtils->getLastUsername() ?? '',
+            'error' => $authenticationUtils->getLastAuthenticationError(),
+        ]);
     }
 }

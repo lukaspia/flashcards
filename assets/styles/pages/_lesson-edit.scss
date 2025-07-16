@@ -1,0 +1,30 @@
+.lesson-edit {
+    .lesson-header {
+        margin-bottom: 20px;
+        .lesson-name-input {
+            margin-bottom: 10px;
+            margin-top: 10px;
+        }
+    }
+
+    .lesson-words {
+        .drag-handle {
+            background: none;
+            border: none;
+            cursor: grab;
+        }
+
+        .word-color {
+            border: none;
+            margin: 2px;
+        }
+    }
+
+    .lesson-footer {
+        margin-top: 20px;
+    }
+}
+
+.MuiFormControl-root {
+    margin: 3px !important;
+}
