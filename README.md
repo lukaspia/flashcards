@@ -44,18 +44,26 @@ Aby uruchomić aplikację lokalnie, wykonaj następujące kroki:
     ```bash
     composer install
     ```
-4.  Skonfiguruj połączenie z bazą danych w pliku `.env` (lub `.env.local`). **Dodatkowo, w pliku `.env` (lub `.env.local`) musisz dodać swój klucz API Gemini jako `GEMINI_API_KEY`.**
-5.  Uruchom migracje bazy danych:
+4.  Skonfiguruj zmienne środowiskowe. Skopiuj plik `.env.dist` do nowego pliku o nazwie `.env`:
+    ```bash
+    cp .env.dist .env
+    ```
+    *Możesz również utworzyć plik `.env.local`, aby nadpisać zmienne dla swojego środowiska lokalnego. Plik ten ma wyższy priorytet niż `.env` i jest ignorowany przez Git.*
+5.  Otwórz nowo utworzony plik `.env` (lub `.env.local`) i uzupełnij wymagane wartości:
+    *   `DATABASE_URL`: Pełny URL do Twojej bazy danych.
+    *   `APP_SECRET`: Unikalny sekret dla Twojej aplikacji Symfony.
+    *   `GEMINI_API_KEY`: Twój klucz API do usług Google Gemini.
+6.  Uruchom migracje bazy danych:
     ```bash
     php bin/console doctrine:migrations:migrate
     ```
-6.  Zainstaluj zależności frontendowe (Node.js/React):
+7.  Zainstaluj zależności frontendowe (Node.js/React):
     ```bash
     npm install
     # lub
     yarn install
     ```
-7.  Zbuduj frontend:
+8.  Zbuduj frontend:
     ```bash
     npm run build
     # lub
