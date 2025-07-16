@@ -12,7 +12,7 @@ interface UseWordManagementProps {
 
 interface UseWordManagementReturn {
     wordState: Word;
-    handleUpdateWord: (field: keyof Word, value: any) => void;
+    handleUpdateWord: (updates: Partial<Word>) => void;
     handleRemoveWord: () => void;
     handleTranslateWord: (type: 'basicWord' | 'translation') => void;
     handleUploadImage: (files: FileList | null) => Promise<void>;
@@ -28,15 +28,20 @@ export const useWordManagement = ({ initialWord, keyId }: UseWordManagementProps
         setWordState(initialWord);
     }, [initialWord]);
 
-    const handleUpdateWord = useCallback((field: keyof Word, value: any) => {
-        const newWords = [...words];
-        const wordIndex = newWords.findIndex(w => w.id === initialWord.id);
-        if (wordIndex !== -1 && field !== 'id') {
-            (newWords[wordIndex] as any)[field] = value;
+    const handleUpdateWord = useCallback((updates: Partial<Word>) => {
+        const wordIndex = words.findIndex(w => w.id === initialWord.id);
+
+        if (wordIndex !== -1) {
+            const newWords = words.map((word, index) => {
+                if (index === wordIndex) {
+                    return { ...word, ...updates };
+                }
+                return word;
+            });
             updateWords(newWords);
-            setWordState(prev => ({ ...prev, [field]: value }));
+            setWordState(prev => ({ ...prev, ...updates }));
         }
-    }, []);
+    }, [words, initialWord.id, updateWords]);
 
     const handleRemoveWord = useCallback(() => {
         const newWords = words.filter(w => w.id !== initialWord.id);
@@ -53,7 +58,7 @@ export const useWordManagement = ({ initialWord, keyId }: UseWordManagementProps
     const { handleUploadImage, handleRemoveWordImage } = useWordImage({
         wordId: initialWord.id,
         onImageUpdate: useCallback((imageUrl: string | null) => {
-            handleUpdateWord('image', imageUrl);
+            handleUpdateWord({ image: imageUrl ?? undefined });
         }, [handleUpdateWord]),
     });
 
@@ -63,10 +68,12 @@ export const useWordManagement = ({ initialWord, keyId }: UseWordManagementProps
     });
 
     useEffect(() => {
-        if (!wordState.wordCategory?.id && wordsCategories.length > 0) {
-            handleUpdateWord('wordCategory', wordsCategories[0].id);
+        const word = words.find(w => w.id === initialWord.id);
+
+        if (word && !word.wordCategory && wordsCategories.length > 0) {
+            handleUpdateWord({ wordCategory: wordsCategories[0] });
         }
-    }, [wordState.wordCategory, wordsCategories, handleUpdateWord]);
+    }, [words, wordsCategories, handleUpdateWord, initialWord.id]);
 
     return {
         wordState,

@@ -77,7 +77,7 @@ export default function WordRow({ index, keyId, word}: WordRowProps) {
                     <div>
                         <TextField id="standard-basic" label="Nazwa pl" variant="standard" value={wordState.basicWord}
                                    onBlur={e => handleTranslateWord('basicWord')}
-                                   onChange={e => handleUpdateWord('basicWord', e.target.value)}
+                                   onChange={e => handleUpdateWord({ basicWord: e.target.value })}
                         />
                     </div>
                 </Grid>
@@ -85,7 +85,7 @@ export default function WordRow({ index, keyId, word}: WordRowProps) {
                     <div>
                         <TextField id="standard-basic" label="Nazwa en" variant="standard" value={wordState.translation}
                                    onBlur={e => handleTranslateWord('translation')}
-                                   onChange={e => handleUpdateWord('translation', e.target.value)}
+                                   onChange={e => handleUpdateWord({ translation: e.target.value })}
                         />
                         <IconButton>
                             <VolumeUpIcon className="basic-icon" onClick={() => handleReadText(wordState.translation, 'translation')}/>
@@ -130,7 +130,7 @@ export default function WordRow({ index, keyId, word}: WordRowProps) {
                 </Grid>
                 <Grid size={5}>
                     <div>
-                        <input className="word-color" type="color" value={wordState.color && wordState.color.trim() !== '' ? wordState.color : '#000000'} onChange={e => handleUpdateWord('color', e.target.value)}/>
+                        <input className="word-color" type="color" value={wordState.color && wordState.color.trim() !== '' ? wordState.color : '#000000'} onChange={e => handleUpdateWord({ color: e.target.value })}/>
                     </div>
                     <div>
                         <FormControl variant="standard" sx={{ m: 1, minWidth: 120 }}>
@@ -138,7 +138,7 @@ export default function WordRow({ index, keyId, word}: WordRowProps) {
                             <Select
                                 id="word-category"
                                 value={wordState.wordCategory?.id ?? (wordsCategories[0]?.id ?? '')}
-                                onChange={e => handleUpdateWord('wordCategory', e.target.value)}
+                                onChange={e => handleUpdateWord({ wordCategory: wordsCategories.find(category => category.id === e.target.value) })}
                                 label="Kategoria"
                             >
                                 {
@@ -161,7 +161,7 @@ export default function WordRow({ index, keyId, word}: WordRowProps) {
                             variant="standard"
                             value={wordState.example}
                             onChange={(e) => {
-                                handleUpdateWord('example', e.target.value)
+                                handleUpdateWord({ example: e.target.value })
                             }}
                         />
                         <IconButton>
