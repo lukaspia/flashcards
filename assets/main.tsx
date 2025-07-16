@@ -39,4 +39,4 @@ function initApp() {
     );
 }
 
-document.addEventListener("DOMContentLoaded", initApp);
+document.addEventListener("turbo:load", initApp);
