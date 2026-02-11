@@ -37,5 +37,6 @@ services:
         arguments: ['%env(GEMINI_API_KEY)%']
 
     App\Service\AI\AIGeneratorInterface: '@App\Service\AI\GeminiService'
+    App\Service\Word\WordCategoryServiceInterface: '@App\Service\Word\WordCategoryService'
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

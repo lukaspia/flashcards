@@ -6,9 +6,9 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 
-use App\Entity\WordCategory;
 use App\Schema\TranslationSchema;
 use App\Service\AI\AIGeneratorInterface;
+use App\Service\Word\WordCategoryServiceInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,7 +19,8 @@ class WordController extends AbstractApiController
 {
     public function __construct(
         EntityManagerInterface $entityManager,
-        private readonly AIGeneratorInterface $aiGeneratorService
+        private readonly AIGeneratorInterface $aiGeneratorService,
+        private readonly WordCategoryServiceInterface $wordCategoryService
     ) {
         parent::__construct($entityManager);
     }
@@ -69,7 +70,7 @@ class WordController extends AbstractApiController
     #[Route('/words/categories', name: 'word_categories', methods: ['GET'])]
     public function getCategories(): JsonResponse
     {
-        $categories = $this->entityManager->getRepository(WordCategory::class)->findAll();
+        $categories = $this->wordCategoryService->getAllCategories();
 
         return $this->createResponse($categories, ['Categories fetched successfully'], Response::HTTP_OK);
     }
