@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace App\Service\Word;
 
-use App\Entity\WordCategory;
-
 interface WordCategoryServiceInterface
 {
     /**
-     * @return WordCategory[]
+     * @return array<int, array{id: int, name: string}>
      */
     public function getAllCategories(): array;
 }
