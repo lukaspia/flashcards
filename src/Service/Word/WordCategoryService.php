@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Service\Word;
 
-use App\Entity\WordCategory;
 use App\Repository\WordCategoryRepository;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\Cache\CacheInterface;

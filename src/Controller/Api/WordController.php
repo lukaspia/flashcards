@@ -6,9 +6,9 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 
-use App\Schema\TranslationSchema;
-use App\Service\AI\AIGeneratorInterface;
+use App\Service\Word\Exception\TranslationException;
 use App\Service\Word\WordCategoryServiceInterface;
+use App\Service\Word\WordTranslationServiceInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,7 +19,7 @@ class WordController extends AbstractApiController
 {
     public function __construct(
         EntityManagerInterface $entityManager,
-        private readonly AIGeneratorInterface $aiGeneratorService,
+        private readonly WordTranslationServiceInterface $wordTranslationService,
         private readonly WordCategoryServiceInterface $wordCategoryService
     ) {
         parent::__construct($entityManager);
@@ -40,26 +40,19 @@ class WordController extends AbstractApiController
                                          Response::HTTP_BAD_REQUEST);
         }
 
-        $word = trim($data['word']);
-        $sourceLanguage = trim($data['sourceLanguage']);
-        $targetLanguage = trim($data['targetLanguage']);
-
-        $prompt = sprintf(
-            'Translate the following from %s to %s: "%s" (use most popular translation) and respond set as "translation", then show example of using this translation in some sentence, and answer set as "example".',
-            $sourceLanguage,
-            $targetLanguage,
-            $word
-        );
-
         try {
-            $result = $this->aiGeneratorService->generateStructuredAnswer($prompt, TranslationSchema::getSchema());
-        } catch (\Exception $e) {
+            $word = trim($data['word']);
+            $sourceLanguage = trim($data['sourceLanguage']);
+            $targetLanguage = trim($data['targetLanguage']);
+
+            $result = $this->wordTranslationService->translate($word, $sourceLanguage, $targetLanguage);
+        } catch (TranslationException $e) {
             return $this->createResponse(['prompt_data' => $data],
                                          ['Something went wrong.' . $e->getMessage()],
                                          Response::HTTP_INTERNAL_SERVER_ERROR);
         }
 
-        return $this->createResponse(['translation' => reset($result), 'prompt_data' => $data],
+        return $this->createResponse(['translation' => $result['translation'], 'prompt_data' => $data],
                                      ['Translate successfully'],
                                      Response::HTTP_OK);
     }
