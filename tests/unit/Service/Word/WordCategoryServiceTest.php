@@ -8,6 +8,7 @@ use App\Entity\WordCategory;
 use App\Repository\WordCategoryRepository;
 use App\Service\Word\WordCategoryService;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
@@ -46,7 +47,18 @@ class WordCategoryServiceTest extends TestCase
                 return $cacheStore[$key];
             });
 
-        $service = new WordCategoryService($repository, $cache);
+        $serializer = $this->getMockBuilder(SerializerInterface::class)
+            ->addMethods(['normalize'])
+            ->getMockForAbstractClass();
+        $serializer->expects($this->once())
+            ->method('normalize')
+            ->with([$category1, $category2], null, ['groups' => 'category:read'])
+            ->willReturn([
+                ['id' => 1, 'name' => 'Testowa1'],
+                ['id' => 2, 'name' => 'Testowa2'],
+            ]);
+
+        $service = new WordCategoryService($repository, $cache, $serializer);
 
         $expected = [
             ['id' => 1, 'name' => 'Testowa1'],

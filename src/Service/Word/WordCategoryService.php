@@ -6,6 +6,7 @@ namespace App\Service\Word;
 
 use App\Entity\WordCategory;
 use App\Repository\WordCategoryRepository;
+use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
@@ -13,7 +14,8 @@ readonly class WordCategoryService implements WordCategoryServiceInterface
 {
     public function __construct(
         private WordCategoryRepository $wordCategoryRepository,
-        private CacheInterface $cache
+        private CacheInterface $cache,
+        private SerializerInterface $serializer
     ) {
     }
 
@@ -28,13 +30,7 @@ readonly class WordCategoryService implements WordCategoryServiceInterface
 
             $categories = $this->wordCategoryRepository->findAllOrderedByName();
 
-            return array_map(
-                static fn(WordCategory $category): array => [
-                    'id' => (int)$category->getId(),
-                    'name' => $category->getName(),
-                ],
-                $categories
-            );
+            return $this->serializer->normalize($categories, null, ['groups' => 'category:read']);
         });
     }
 }
