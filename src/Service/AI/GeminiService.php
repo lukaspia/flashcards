@@ -5,8 +5,6 @@ declare(strict_types=1);
 
 namespace App\Service\AI;
 
-use Gemini\Client;
-use Gemini\Resources\GenerativeModel;
 use Gemini\Data\GenerationConfig;
 use Gemini\Data\Schema;
 use Gemini\Enums\DataType;
@@ -21,25 +19,25 @@ readonly class GeminiService implements AIGeneratorInterface
     private const DEFAULT_MODEL = 'gemini-2.5-flash-lite';
 
     /**
-     * @var \Gemini\Resources\GenerativeModel
+     * @var \App\Service\AI\GeminiModelInterface
      */
-    private GenerativeModel $model;
+    private GeminiModelInterface $model;
     /**
      * @var \Psr\Log\LoggerInterface
      */
     private LoggerInterface $logger;
 
     /**
-     * @param \Gemini\Client $geminiClient
+     * @param \App\Service\AI\GeminiClientInterface $geminiClient
      * @param \Psr\Log\LoggerInterface $logger
      * @param string $modelName
      */
-    public function __construct(Client $geminiClient, LoggerInterface $logger, string $modelName = self::DEFAULT_MODEL)
+    public function __construct(GeminiClientInterface $geminiClient, LoggerInterface $logger, string $modelName = self::DEFAULT_MODEL)
     {
         $this->logger = $logger;
 
         try {
-            $this->model = $geminiClient->generativeModel(model: $modelName);
+            $this->model = $geminiClient->generativeModel($modelName);
         } catch (\Throwable $e) {
             $this->logger->error('Failed to initialize Gemini service', [
                 'exception' => $e,
@@ -109,9 +107,9 @@ readonly class GeminiService implements AIGeneratorInterface
 
     /**
      * @param array $answerProperties
-     * @return \Gemini\Resources\GenerativeModel
+     * @return \App\Service\AI\GeminiModelInterface
      */
-    private function createStructuredModel(array $answerProperties): GenerativeModel
+    private function createStructuredModel(array $answerProperties): GeminiModelInterface
     {
         $config = new GenerationConfig(
             responseMimeType: ResponseMimeType::APPLICATION_JSON,
@@ -125,6 +123,6 @@ readonly class GeminiService implements AIGeneratorInterface
                               )
         );
 
-        return $this->model->withGenerationConfig(generationConfig: $config);
+        return $this->model->withGenerationConfig($config);
     }
 }

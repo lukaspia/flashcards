@@ -38,9 +38,15 @@ services:
         arguments:
             - '%env(GEMINI_API_KEY)%'
 
+    App\Service\AI\GeminiSdkClient:
+      arguments:
+        $client: '@Gemini\Client'
+
+    App\Service\AI\GeminiClientInterface: '@App\Service\AI\GeminiSdkClient'
+
     App\Service\AI\GeminiService:
         arguments:
-            $geminiClient: '@Gemini\Client'
+            $geminiClient: '@App\Service\AI\GeminiClientInterface'
             $logger: '@logger'
             $modelName: 'gemini-2.5-flash-lite'
 
