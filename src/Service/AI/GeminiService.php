@@ -13,13 +13,27 @@ use Gemini\Enums\DataType;
 use Gemini\Enums\ResponseMimeType;
 use Psr\Log\LoggerInterface;
 
+/**
+ *
+ */
 readonly class GeminiService implements AIGeneratorInterface
 {
     private const DEFAULT_MODEL = 'gemini-2.5-flash-lite';
 
+    /**
+     * @var \Gemini\Resources\GenerativeModel
+     */
     private GenerativeModel $model;
+    /**
+     * @var \Psr\Log\LoggerInterface
+     */
     private LoggerInterface $logger;
 
+    /**
+     * @param \Gemini\Client $geminiClient
+     * @param \Psr\Log\LoggerInterface $logger
+     * @param string $modelName
+     */
     public function __construct(Client $geminiClient, LoggerInterface $logger, string $modelName = self::DEFAULT_MODEL)
     {
         $this->logger = $logger;
@@ -65,10 +79,12 @@ readonly class GeminiService implements AIGeneratorInterface
     {
         foreach ($answerProperties as $name => $answerProperty) {
             if (!($answerProperty instanceof Schema)) {
-                throw new \InvalidArgumentException(sprintf(
-                                                        'Expected Schema instance for answer property "%s"',
-                                                        (string) $name
-                                                    ));
+                throw new \InvalidArgumentException(
+                    sprintf(
+                        'Expected Schema instance for answer property "%s"',
+                        (string)$name
+                    )
+                );
             }
         }
 
@@ -91,6 +107,10 @@ readonly class GeminiService implements AIGeneratorInterface
         }
     }
 
+    /**
+     * @param array $answerProperties
+     * @return \Gemini\Resources\GenerativeModel
+     */
     private function createStructuredModel(array $answerProperties): GenerativeModel
     {
         $config = new GenerationConfig(
