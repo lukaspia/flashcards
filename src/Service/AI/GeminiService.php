@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 namespace App\Service\AI;
 
-
+use Gemini\Client;
 use Gemini\Resources\GenerativeModel;
 use Gemini\Data\GenerationConfig;
 use Gemini\Data\Schema;
@@ -18,15 +18,10 @@ readonly class GeminiService implements AIGeneratorInterface
 
     private GenerativeModel $model;
 
-    public function __construct(string $apiKey)
+    public function __construct(Client $geminiClient, string $modelName = self::DEFAULT_MODEL)
     {
-        if (empty($apiKey)) {
-            throw new \InvalidArgumentException('API key cannot be empty');
-        }
-
         try {
-            $geminiClient = \Gemini::client($apiKey);
-            $this->model = $geminiClient->generativeModel(model: self::DEFAULT_MODEL);
+            $this->model = $geminiClient->generativeModel(model: $modelName);
         } catch (\Throwable $e) {
             throw new \RuntimeException('Failed to initialize Gemini service', 0, $e);
         }
