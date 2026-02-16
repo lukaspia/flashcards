@@ -63,26 +63,17 @@ readonly class GeminiService implements AIGeneratorInterface
      */
     public function generateStructuredAnswer(string $prompt, array $answerProperties): array
     {
-        foreach ($answerProperties as $answerProperty) {
+        foreach ($answerProperties as $name => $answerProperty) {
             if (!($answerProperty instanceof Schema)) {
-                throw new \InvalidArgumentException('Expected Schema instance');
+                throw new \InvalidArgumentException(sprintf(
+                                                        'Expected Schema instance for answer property "%s"',
+                                                        (string) $name
+                                                    ));
             }
         }
 
         try {
-            $result = $this->model->withGenerationConfig(
-                generationConfig: new GenerationConfig(
-                                      responseMimeType: ResponseMimeType::APPLICATION_JSON,
-                                      responseSchema:   new Schema(
-                                                            type:  DataType::ARRAY,
-                                                            items: new Schema(
-                                                                       type:       DataType::OBJECT,
-                                                                       properties: $answerProperties,
-                                                                       required:   array_keys($answerProperties),
-                                                                   )
-                                                        )
-                                  )
-            )->generateContent($prompt);
+            $result = $this->createStructuredModel($answerProperties)->generateContent($prompt);
 
             return $result->json();
         } catch (\Throwable $e) {
@@ -98,5 +89,22 @@ readonly class GeminiService implements AIGeneratorInterface
                 $e
             );
         }
+    }
+
+    private function createStructuredModel(array $answerProperties): GenerativeModel
+    {
+        $config = new GenerationConfig(
+            responseMimeType: ResponseMimeType::APPLICATION_JSON,
+            responseSchema:   new Schema(
+                                  type:  DataType::ARRAY,
+                                  items: new Schema(
+                                             type:       DataType::OBJECT,
+                                             properties: $answerProperties,
+                                             required:   array_keys($answerProperties),
+                                         )
+                              )
+        );
+
+        return $this->model->withGenerationConfig(generationConfig: $config);
     }
 }
