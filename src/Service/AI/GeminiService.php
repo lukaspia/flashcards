@@ -59,7 +59,7 @@ readonly class GeminiService implements AIGeneratorInterface
     /**
      * @param string $prompt
      * @param array<string, Schema> $answerProperties
-     * @return array<mixed>
+     * @return array<int, array<string, mixed>>
      */
     public function generateStructuredAnswer(string $prompt, array $answerProperties): array
     {
