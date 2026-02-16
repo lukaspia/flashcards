@@ -22,20 +22,17 @@ readonly class GeminiService implements AIGeneratorInterface
      * @var \App\Service\AI\GeminiModelInterface
      */
     private GeminiModelInterface $model;
-    /**
-     * @var \Psr\Log\LoggerInterface
-     */
-    private LoggerInterface $logger;
 
     /**
      * @param \App\Service\AI\GeminiClientInterface $geminiClient
      * @param \Psr\Log\LoggerInterface $logger
      * @param string $modelName
      */
-    public function __construct(GeminiClientInterface $geminiClient, LoggerInterface $logger, string $modelName = self::DEFAULT_MODEL)
-    {
-        $this->logger = $logger;
-
+    public function __construct(
+        GeminiClientInterface $geminiClient,
+        private LoggerInterface $logger,
+        string $modelName = self::DEFAULT_MODEL
+    ) {
         try {
             $this->model = $geminiClient->generativeModel($modelName);
         } catch (\Throwable $e) {
