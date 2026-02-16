@@ -12,8 +12,10 @@ use Gemini\Data\Schema;
 use Gemini\Enums\DataType;
 use Gemini\Enums\ResponseMimeType;
 
-class GeminiService implements AIGeneratorInterface
+readonly class GeminiService implements AIGeneratorInterface
 {
+    private const DEFAULT_MODEL = 'gemini-2.5-flash-lite';
+
     private GenerativeModel $model;
 
     public function __construct(string $apiKey)
@@ -24,8 +26,8 @@ class GeminiService implements AIGeneratorInterface
 
         try {
             $geminiClient = \Gemini::client($apiKey);
-            $this->model = $geminiClient->generativeModel(model: 'gemini-2.0-flash');
-        } catch (\Exception $e) {
+            $this->model = $geminiClient->generativeModel(model: self::DEFAULT_MODEL);
+        } catch (\Throwable $e) {
             throw new \RuntimeException('Failed to initialize Gemini service', 0, $e);
         }
     }
@@ -38,16 +40,17 @@ class GeminiService implements AIGeneratorInterface
     {
         try {
             $result = $this->model->generateContent($prompt);
+
             return $result->text();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             throw new \RuntimeException('Failed to generate text from Gemini: ' . $e->getMessage(), 0, $e);
         }
     }
 
     /**
      * @param string $prompt
-     * @param array $answerProperties
-     * @return array
+     * @param array<string, Schema> $answerProperties
+     * @return array<mixed>
      */
     public function generateStructuredAnswer(string $prompt, array $answerProperties): array
     {
@@ -57,21 +60,28 @@ class GeminiService implements AIGeneratorInterface
             }
         }
 
-        $result = $this->model->withGenerationConfig(
-            generationConfig: new GenerationConfig(
-                                  responseMimeType: ResponseMimeType::APPLICATION_JSON,
-                                  responseSchema:   new Schema(
-                                                        type:  DataType::ARRAY,
-                                                        items: new Schema(
-                                                                   type:       DataType::OBJECT,
-                                                                   properties: $answerProperties,
-                                                                   required:   array_keys($answerProperties),
-                                                               )
-                                                    )
-                              )
-        )->generateContent($prompt);
+        try {
+            $result = $this->model->withGenerationConfig(
+                generationConfig: new GenerationConfig(
+                                      responseMimeType: ResponseMimeType::APPLICATION_JSON,
+                                      responseSchema:   new Schema(
+                                                            type:  DataType::ARRAY,
+                                                            items: new Schema(
+                                                                       type:       DataType::OBJECT,
+                                                                       properties: $answerProperties,
+                                                                       required:   array_keys($answerProperties),
+                                                                   )
+                                                        )
+                                  )
+            )->generateContent($prompt);
 
-        return $result->json();
+            return $result->json();
+        } catch (\Throwable $e) {
+            throw new \RuntimeException(
+                'Failed to generate structured answer from Gemini: ' . $e->getMessage(),
+                0,
+                $e
+            );
+        }
     }
-
 }
