@@ -11,18 +11,27 @@ use Gemini\Data\GenerationConfig;
 use Gemini\Data\Schema;
 use Gemini\Enums\DataType;
 use Gemini\Enums\ResponseMimeType;
+use Psr\Log\LoggerInterface;
 
 readonly class GeminiService implements AIGeneratorInterface
 {
     private const DEFAULT_MODEL = 'gemini-2.5-flash-lite';
 
     private GenerativeModel $model;
+    private LoggerInterface $logger;
 
-    public function __construct(Client $geminiClient, string $modelName = self::DEFAULT_MODEL)
+    public function __construct(Client $geminiClient, LoggerInterface $logger, string $modelName = self::DEFAULT_MODEL)
     {
+        $this->logger = $logger;
+
         try {
             $this->model = $geminiClient->generativeModel(model: $modelName);
         } catch (\Throwable $e) {
+            $this->logger->error('Failed to initialize Gemini service', [
+                'exception' => $e,
+                'model' => $modelName,
+            ]);
+
             throw new \RuntimeException('Failed to initialize Gemini service', 0, $e);
         }
     }
@@ -38,6 +47,11 @@ readonly class GeminiService implements AIGeneratorInterface
 
             return $result->text();
         } catch (\Throwable $e) {
+            $this->logger->error('Failed to generate text from Gemini', [
+                'exception' => $e,
+                'prompt' => mb_substr($prompt, 0, 500),
+            ]);
+
             throw new \RuntimeException('Failed to generate text from Gemini: ' . $e->getMessage(), 0, $e);
         }
     }
@@ -72,6 +86,12 @@ readonly class GeminiService implements AIGeneratorInterface
 
             return $result->json();
         } catch (\Throwable $e) {
+            $this->logger->error('Failed to generate structured answer from Gemini', [
+                'exception' => $e,
+                'prompt' => mb_substr($prompt, 0, 500),
+                'answer_properties_keys' => array_keys($answerProperties),
+            ]);
+
             throw new \RuntimeException(
                 'Failed to generate structured answer from Gemini: ' . $e->getMessage(),
                 0,
