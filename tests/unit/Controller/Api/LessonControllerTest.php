@@ -337,6 +337,9 @@ class LessonControllerTest extends WebTestCase
         $request = new Request();
         $request->setMethod('POST');
         $request->request->set('title', 'Test Lesson');
+        $request->request->set('name', 'Test Lesson');
+        $request->request->set('sourceLanguage', 'pl-PL');
+        $request->request->set('targetLanguage', 'en-US');
 
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $lessonServices = $this->createMock(LessonServiceInterface::class);
@@ -361,10 +364,7 @@ class LessonControllerTest extends WebTestCase
             ->method('createResponse')
             ->with(
                 null,
-                $this->callback(function ($messages) {
-                    return $messages[0] === 'Lesson not created' &&
-                        $messages[1]->getMessage() === 'Test exception';
-                }),
+                ['Unable to create lesson. Please check your data and try again.'],
                 Response::HTTP_BAD_REQUEST
             )
             ->willReturn(new \Symfony\Component\HttpFoundation\JsonResponse(

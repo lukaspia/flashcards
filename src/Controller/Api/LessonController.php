@@ -118,6 +118,9 @@ class LessonController extends AbstractApiController
     public function addLesson(Request $request): JsonResponse
     {
         if (!($user = $this->getUser())) {
+            $this->logger->warning('Unauthenticated user attempted to create lesson', [
+                'route' => 'add_lesson'
+            ]);
             return $this->createResponse(null, ['Authentication required.'], Response::HTTP_UNAUTHORIZED);
         }
 
@@ -131,10 +134,25 @@ class LessonController extends AbstractApiController
                 );
             }
 
+            $requiredFields = ['name', 'sourceLanguage', 'targetLanguage'];
+            $missingFields = array_diff($requiredFields, array_keys($data));
+
+            if (!empty($missingFields)) {
+                return $this->createResponse(
+                    null,
+                    ['Missing required fields: ' . implode(', ', $missingFields)],
+                    Response::HTTP_BAD_REQUEST
+                );
+            }
+
             $lesson = $this->lessonFactory->createFromRequestData($data, $user);
             $this->lessonServices->addLesson($lesson);
 
-            $this->logger->info('Lesson created successfully', ['lesson' => $lesson]);
+            $this->logger->info('Lesson created successfully', [
+                'lessonId' => $lesson->getId(),
+                'userId' => $user->getId(),
+                'lessonName' => $lesson->getName()
+            ]);
             return $this->createResponse(
                 ['lesson' => $lesson],
                 ['Lesson created successfully'],
@@ -142,8 +160,17 @@ class LessonController extends AbstractApiController
                 ['groups' => Lesson::LESSON_READ_GROUP]
             );
         } catch (\RuntimeException|InvalidArgumentException|\Exception $e) {
-            $this->logger->error('Lesson not created: ' . $e->getMessage());
-            return $this->createResponse(null, ['Lesson not created', $e], Response::HTTP_BAD_REQUEST);
+            $this->logger->error('Failed to create lesson for user {userId}: {message}', [
+                'userId' => $user->getId(),
+                'message' => $e->getMessage(),
+                'requestData' => $data,
+                'exception' => $e
+            ]);
+            return $this->createResponse(
+                null,
+                ['Unable to create lesson. Please check your data and try again.'],
+                Response::HTTP_BAD_REQUEST
+            );
         }
     }
 
