@@ -104,10 +104,10 @@ class LessonControllerTest extends WebTestCase
         $controller->method('getUser')->willReturn(null);
         $controller->setContainer($container);
 
-        $response = $controller->index($request);
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $this->expectExceptionMessage('Authentication required.');
 
-        $this->assertEquals(Response::HTTP_UNAUTHORIZED, $response->getStatusCode());
-        $this->assertStringContainsString('Authentication required', $response->getContent());
+        $controller->index($request);
     }
 
     public function testIndexWithAuthentication()
@@ -202,27 +202,17 @@ class LessonControllerTest extends WebTestCase
                                      $this->logger,
                                      $this->createMock(LessonFactoryInterface::class)
                                  ])
-            ->onlyMethods(['getUser', 'createResponse'])
+            ->onlyMethods(['getUser'])
             ->getMock();
 
         $controller->method('getUser')->willReturn(null);
 
         $controller->setContainer($container);
 
-        $controller->method('createResponse')
-            ->willReturnCallback(function ($data, $messages, $status) {
-                return new JsonResponse([
-                                            'status' => $status >= 200 && $status < 300 ? 'success' : 'error',
-                                            'data' => $data,
-                                            'message' => $messages
-                                        ], $status);
-            });
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $this->expectExceptionMessage('Authentication required.');
 
-        $response = $controller->addLesson($request, $this->validator);
-
-        $this->assertEquals(Response::HTTP_UNAUTHORIZED, $response->getStatusCode());
-        $responseData = json_decode($response->getContent(), true);
-        $this->assertEquals('Authentication required.', $responseData['message'][0]);
+        $controller->addLesson($request);
     }
 
     public function testAddLessonWithValidationErrors(): void

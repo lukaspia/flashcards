@@ -6,6 +6,7 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 
+use App\Controller\Traits\AuthenticationTrait;
 use App\Entity\Lesson;
 use App\Factory\LessonFactoryInterface;
 use App\Service\AI\AIGeneratorInterface;
@@ -15,15 +16,17 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Exception\InvalidArgumentException;
 
 class LessonController extends AbstractApiController
 {
+    use AuthenticationTrait;
     public function __construct(
         EntityManagerInterface $entityManager,
         private readonly LessonServiceInterface $lessonServices,
-        private readonly LoggerInterface $logger,
+        protected readonly LoggerInterface $logger,
         private readonly LessonFactoryInterface $lessonFactory,
     ) {
         parent::__construct($entityManager);
@@ -36,9 +39,7 @@ class LessonController extends AbstractApiController
     #[Route('/lessons', name: 'lessons', methods: ['GET'])]
     public function index(Request $request): JsonResponse
     {
-        if (!($user = $this->getUser())) {
-            return $this->createResponse(null, ['Authentication required.'], Response::HTTP_UNAUTHORIZED);
-        }
+        $user = $this->requireAuthenticatedUser();
 
         $page = $request->query->getInt('page', 1);
         $limit = $this->getParameter('pagination_default_limit');
@@ -82,13 +83,7 @@ class LessonController extends AbstractApiController
     #[Route('/lessons/{id}', name: 'get_lesson', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function getLesson(Lesson $lesson): JsonResponse
     {
-        if (!($this->getUser())) {
-            $this->logger->warning('Unauthenticated user attempted to access lesson', [
-                'lessonId' => $lesson->getId(),
-                'route' => 'get_lesson'
-            ]);
-            return $this->createResponse(null, ['Authentication required.'], Response::HTTP_UNAUTHORIZED);
-        }
+        $this->requireAuthenticatedUser();
 
         if (!$this->isGranted('LESSON_VIEW', $lesson)) {
             $this->logger->warning('User attempted to access lesson without permission', [
@@ -117,12 +112,7 @@ class LessonController extends AbstractApiController
     #[Route('/lessons', name: 'add_lesson', methods: ['POST'])]
     public function addLesson(Request $request): JsonResponse
     {
-        if (!($user = $this->getUser())) {
-            $this->logger->warning('Unauthenticated user attempted to create lesson', [
-                'route' => 'add_lesson'
-            ]);
-            return $this->createResponse(null, ['Authentication required.'], Response::HTTP_UNAUTHORIZED);
-        }
+        $user = $this->requireAuthenticatedUser();
 
         try {
             $data = $request->request->all();
