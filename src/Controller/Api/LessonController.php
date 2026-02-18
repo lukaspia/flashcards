@@ -83,10 +83,19 @@ class LessonController extends AbstractApiController
     public function getLesson(Lesson $lesson): JsonResponse
     {
         if (!($this->getUser())) {
+            $this->logger->warning('Unauthenticated user attempted to access lesson', [
+                'lessonId' => $lesson->getId(),
+                'route' => 'get_lesson'
+            ]);
             return $this->createResponse(null, ['Authentication required.'], Response::HTTP_UNAUTHORIZED);
         }
 
         if (!$this->isGranted('LESSON_VIEW', $lesson)) {
+            $this->logger->warning('User attempted to access lesson without permission', [
+                'userId' => $this->getUser()->getId(),
+                'lessonId' => $lesson->getId(),
+                'lessonOwnerId' => $lesson->getUser()->getId()
+            ]);
             return $this->createResponse(
                 null,
                 ['You are not authorized to view this lesson.'],
