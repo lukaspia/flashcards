@@ -18,10 +18,10 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Exception\InvalidArgumentException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\Routing\Annotation\Route;
 
 class LessonController extends AbstractApiController
 {
@@ -118,63 +118,52 @@ class LessonController extends AbstractApiController
     public function addLesson(Request $request): JsonResponse
     {
         $user = $this->requireAuthenticatedUser();
+        $data = $request->request->all();
 
         try {
-            $data = $request->request->all();
-            if (empty($data)) {
-                return $this->createResponse(
-                    null,
-                    ['No data provided'],
-                    Response::HTTP_BAD_REQUEST
-                );
-            }
-
             $dto = $this->serializer->denormalize($data, AddLessonDTO::class);
-            $errors = $this->validator->validate($dto);
 
+            $errors = $this->validator->validate($dto);
             if (count($errors) > 0) {
-                $errorMessages = [];
-                foreach ($errors as $error) {
-                    $errorMessages[] = $error->getMessage();
-                }
                 return $this->createResponse(
                     null,
-                    $errorMessages,
+                    $this->formatErrors($errors),
                     Response::HTTP_BAD_REQUEST
                 );
             }
 
-            $lessonData = [
-                'name' => $dto->name,
-                'sourceLanguage' => $dto->sourceLanguage,
-                'targetLanguage' => $dto->targetLanguage,
-            ];
-            $lesson = $this->lessonFactory->createFromRequestData($lessonData, $user);
+            $lesson = $this->lessonFactory->createFromDTO($dto, $user);
             $this->lessonServices->addLesson($lesson);
 
             $this->logger->info('Lesson created successfully', [
                 'lessonId' => $lesson->getId(),
-                'userId' => $user->getId(),
-                'lessonName' => $lesson->getName()
+                'userId' => $user->getId()
             ]);
+
             return $this->createResponse(
                 ['lesson' => $lesson],
                 ['Lesson created successfully'],
                 Response::HTTP_CREATED,
                 ['groups' => Lesson::LESSON_READ_GROUP]
             );
-        } catch (\RuntimeException|InvalidArgumentException|\Exception $e) {
-            $this->logger->error('Failed to create lesson for user {userId}: {message}', [
+
+        } catch (SerializerException $e) {
+            return $this->createResponse(
+                null,
+                ['Invalid data format provided.'],
+                Response::HTTP_BAD_REQUEST
+            );
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to create lesson: ' . $e->getMessage(), [
                 'userId' => $user->getId(),
-                'message' => $e->getMessage(),
                 'requestData' => $data,
-                'dto' => $dto ?? null,
                 'exception' => $e
             ]);
+
             return $this->createResponse(
                 null,
                 ['Unable to create lesson. Please check your data and try again.'],
-                Response::HTTP_BAD_REQUEST
+                Response::HTTP_INTERNAL_SERVER_ERROR
             );
         }
     }
@@ -321,5 +310,14 @@ class LessonController extends AbstractApiController
                 Response::HTTP_BAD_REQUEST
             );
         }
+    }
+
+    private function formatErrors($errors): array
+    {
+        $messages = [];
+        foreach ($errors as $error) {
+            $messages[] = $error->getMessage();
+        }
+        return $messages;
     }
 }

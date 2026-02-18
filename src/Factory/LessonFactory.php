@@ -6,6 +6,7 @@ declare(strict_types=1);
 namespace App\Factory;
 
 
+use App\DTO\AddLessonDTO;
 use App\Entity\Lesson;
 use App\Entity\Word;
 use App\Factory\LessonFactoryInterface;
@@ -25,22 +26,19 @@ readonly class LessonFactory implements LessonFactoryInterface
     }
 
     /**
-     * @param array $data
+     * @param \App\DTO\AddLessonDTO $dto
      * @param \Symfony\Component\Security\Core\User\UserInterface $user
      * @return \App\Entity\Lesson
      */
-    public function createFromRequestData(array $data, UserInterface $user): Lesson
+    public function createFromDTO(AddLessonDTO $dto, UserInterface $user): Lesson
     {
-        try {
-            $lesson = $this->serializer->denormalize($data, Lesson::class, 'json');
-            $lesson->setUser($user);
+        $lesson = new Lesson();
+        $lesson->setName($dto->name);
+        $lesson->setSourceLanguage($dto->sourceLanguage);
+        $lesson->setTargetLanguage($dto->targetLanguage);
+        $lesson->setUser($user);
 
-            $this->validateLesson($lesson);
-
-            return $lesson;
-        } catch (\Exception $e) {
-            throw new \RuntimeException('Failed to create lesson: ' . $e->getMessage());
-        }
+        return $lesson;
     }
 
     /**
