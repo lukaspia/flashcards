@@ -23,25 +23,84 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 class LessonControllerTest extends WebTestCase
 {
     private $entityManager;
-    private $denormalizer;
     private $lessonServices;
     private $logger;
     private $validator;
     private $lessonRepository;
     private $controller;
     private $user;
-    private $serializer;
+    private SerializerInterface $serializer;
     private $lessonFactory;
 
     protected function setUp(): void
     {
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
-        $this->denormalizer = $this->createMock(DenormalizerInterface::class);
         $this->lessonServices = $this->createMock(LessonServiceInterface::class);
         $this->logger = $this->createMock(LoggerInterface::class);
         $this->validator = $this->createMock(ValidatorInterface::class);
         $this->lessonRepository = $this->createMock(LessonRepository::class);
-        $this->serializer = $this->createMock(SerializerInterface::class);
+        // Prosta implementacja SerializerInterface na potrzeby testów –
+        // wystarczy nam obsługa denormalize() dla UpdateLessonDTO.
+        $this->serializer = new class implements SerializerInterface {
+            public function serialize($data, string $format, array $context = []): string
+            {
+                return '';
+            }
+
+            public function deserialize($data, string $type, string $format, array $context = []): mixed
+            {
+                return null;
+            }
+
+            public function denormalize($data, string $type, string $format = null, array $context = [])
+            {
+                if ($type === \App\DTO\UpdateLessonDTO::class && is_array($data)) {
+                    return new \App\DTO\UpdateLessonDTO(
+                        $data['id'] ?? null,
+                        $data['name'] ?? null,
+                        $data['sourceLanguage'] ?? null,
+                        $data['targetLanguage'] ?? null,
+                    );
+                }
+
+                return null;
+            }
+
+            public function normalize($object, string $format = null, array $context = []): array|string|int|float|bool
+            {
+                return [];
+            }
+
+            public function encode($data, string $format, array $context = []): string
+            {
+                return '';
+            }
+
+            public function decode(string $data, string $format, array $context = []): mixed
+            {
+                return null;
+            }
+
+            public function supportsEncoding(string $format): bool
+            {
+                return true;
+            }
+
+            public function supportsDecoding(string $format): bool
+            {
+                return true;
+            }
+
+            public function supportsDenormalization($data, string $type, string $format = null): bool
+            {
+                return true;
+            }
+
+            public function supportsNormalization($data, string $format = null): bool
+            {
+                return true;
+            }
+        };
         $this->lessonFactory = $this->createMock(LessonFactoryInterface::class);
 
         $this->user = new User();
@@ -58,6 +117,8 @@ class LessonControllerTest extends WebTestCase
                                      $this->lessonServices,
                                      $this->logger,
                                      $this->lessonFactory,
+                                     $this->validator,
+                                     $this->serializer,
                                  ])
             ->onlyMethods(['getUser', 'createResponse'])
             ->getMock();
@@ -96,7 +157,9 @@ class LessonControllerTest extends WebTestCase
                                      $this->entityManager,
                                      $this->lessonServices,
                                      $this->logger,
-                                     $this->createMock(LessonFactoryInterface::class)
+                                     $this->createMock(LessonFactoryInterface::class),
+                                     $this->validator,
+                                     $this->serializer,
                                  ])
             ->onlyMethods(['getUser'])
             ->getMock();
@@ -155,7 +218,9 @@ class LessonControllerTest extends WebTestCase
                                      $this->entityManager,
                                      $this->lessonServices,
                                      $this->logger,
-                                     $this->createMock(LessonFactoryInterface::class)
+                                     $this->createMock(LessonFactoryInterface::class),
+                                     $this->validator,
+                                     $this->serializer,
                                  ])
             ->onlyMethods(['getUser', 'createResponse'])
             ->getMock();
@@ -200,7 +265,9 @@ class LessonControllerTest extends WebTestCase
                                      $this->entityManager,
                                      $this->lessonServices,
                                      $this->logger,
-                                     $this->createMock(LessonFactoryInterface::class)
+                                     $this->createMock(LessonFactoryInterface::class),
+                                     $this->validator,
+                                     $this->serializer,
                                  ])
             ->onlyMethods(['getUser'])
             ->getMock();
@@ -246,7 +313,9 @@ class LessonControllerTest extends WebTestCase
                                      $this->entityManager,
                                      $this->lessonServices,
                                      $this->logger,
-                                     $this->createMock(LessonFactoryInterface::class)
+                                     $this->createMock(LessonFactoryInterface::class),
+                                     $this->validator,
+                                     $this->serializer,
                                  ])
             ->onlyMethods(['getUser', 'createResponse'])
             ->getMock();
@@ -344,7 +413,9 @@ class LessonControllerTest extends WebTestCase
                                      $entityManager,
                                      $lessonServices,
                                      $logger,
-                                     $lessonFactory
+                                     $lessonFactory,
+                                     $this->validator,
+                                     $this->serializer,
                                  ])
             ->onlyMethods(['getUser', 'createResponse'])
             ->getMock();
@@ -384,6 +455,346 @@ class LessonControllerTest extends WebTestCase
         $this->assertEquals(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
     }
 
+    public function testUpdateLessonWithoutAuthentication(): void
+    {
+        $content = json_encode(['id' => 1, 'name' => 'Updated Lesson', 'sourceLanguage' => 'pl-PL', 'targetLanguage' => 'en-US']);
+        $request = Request::create(
+            '/api/lessons',
+            'PUT',
+            [],
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            $content
+        );
+
+        $container = new \Symfony\Component\DependencyInjection\ContainerBuilder();
+        $container->set('serializer', $this->serializer);
+        $container->set('logger', $this->logger);
+
+        $controller = $this->getMockBuilder(LessonController::class)
+            ->setConstructorArgs([
+                                     $this->entityManager,
+                                     $this->lessonServices,
+                                     $this->logger,
+                                     $this->createMock(LessonFactoryInterface::class),
+                                     $this->validator,
+                                     $this->serializer,
+                                 ])
+            ->onlyMethods(['getUser'])
+            ->getMock();
+
+        $controller->method('getUser')->willReturn(null);
+
+        $controller->setContainer($container);
+
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $this->expectExceptionMessage('Authentication required.');
+
+        $controller->updateLesson($request);
+    }
+
+    public function testUpdateLessonWithValidationErrors(): void
+    {
+        $content = json_encode(['id' => 1, 'name' => '']); // Missing required fields
+        $request = Request::create(
+            '/api/lessons',
+            'PUT',
+            [],
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            $content
+        );
+
+        $container = new \Symfony\Component\DependencyInjection\ContainerBuilder();
+        $container->set('serializer', $this->serializer);
+        $container->set('logger', $this->logger);
+        $container->set('validator', $this->validator);
+
+        $controller = $this->getMockBuilder(LessonController::class)
+            ->setConstructorArgs([
+                                     $this->entityManager,
+                                     $this->lessonServices,
+                                     $this->logger,
+                                     $this->createMock(LessonFactoryInterface::class),
+                                     $this->validator,
+                                     $this->serializer,
+                                 ])
+            ->onlyMethods(['getUser', 'createResponse'])
+            ->addMethods(['get'])
+            ->getMock();
+
+        $controller->method('getUser')->willReturn($this->user);
+        $controller->method('get')
+            ->with('validator')
+            ->willReturn($this->validator);
+
+        // Set up validator to return errors for empty name
+        $violation1 = $this->createMock(\Symfony\Component\Validator\ConstraintViolation::class);
+        $violation1->method('getMessage')->willReturn('Name is required');
+
+        $violation2 = $this->createMock(\Symfony\Component\Validator\ConstraintViolation::class);
+        $violation2->method('getMessage')->willReturn('Source language is required');
+
+        $errors = new ConstraintViolationList([$violation1, $violation2]);
+        $this->validator->method('validate')
+            ->willReturn($errors);
+
+        $controller->expects($this->once())
+            ->method('createResponse')
+            ->with(
+                null,
+                $this->logicalAnd(
+                    $this->isType('array'),
+                    $this->callback(function($messages) {
+                        return is_array($messages) &&
+                               in_array('Name is required', $messages) &&
+                               in_array('Source language is required', $messages);
+                    })
+                ),
+                Response::HTTP_BAD_REQUEST
+            )
+            ->willReturnCallback(function ($data, $messages, $status) {
+                return new JsonResponse([
+                                            'status' => 'error',
+                                            'data' => $data,
+                                            'message' => $messages
+                                        ], $status);
+            });
+
+        $controller->setContainer($container);
+
+        $response = $controller->updateLesson($request);
+
+        $this->assertEquals(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+    }
+
+    public function testUpdateLessonUnauthorized(): void
+    {
+        $content = json_encode(['id' => 1, 'name' => 'Updated Lesson', 'sourceLanguage' => 'pl-PL', 'targetLanguage' => 'en-US']);
+        $request = Request::create(
+            '/api/lessons',
+            'PUT',
+            [],
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            $content
+        );
+
+        $existingLesson = new Lesson();
+        $existingLesson->setId(1);
+        $existingLesson->setUser($this->createMock(\App\Entity\User::class)); // Different user
+
+        $container = new \Symfony\Component\DependencyInjection\ContainerBuilder();
+        $container->set('serializer', $this->serializer);
+        $container->set('logger', $this->logger);
+
+        $controller = $this->getMockBuilder(LessonController::class)
+            ->setConstructorArgs([
+                                     $this->entityManager,
+                                     $this->lessonServices,
+                                     $this->logger,
+                                     $this->createMock(LessonFactoryInterface::class),
+                                     $this->validator,
+                                     $this->serializer,
+                                 ])
+            ->onlyMethods(['getUser', 'isGranted', 'createResponse'])
+            ->addMethods(['get'])
+            ->getMock();
+
+        $controller->method('getUser')->willReturn($this->user);
+        $controller->method('get')
+            ->with('validator')
+            ->willReturn($this->validator);
+        $controller->method('isGranted')
+            ->with('LESSON_EDIT', $existingLesson)
+            ->willReturn(false);
+
+        $this->entityManager->getRepository(Lesson::class)
+            ->method('find')
+            ->with(1)
+            ->willReturn($existingLesson);
+
+        $controller->expects($this->once())
+            ->method('createResponse')
+            ->with(
+                null,
+                ['You are not authorized to edit this lesson.'],
+                Response::HTTP_FORBIDDEN
+            )
+            ->willReturn(new \Symfony\Component\HttpFoundation\JsonResponse(['error' => 'Unauthorized'], Response::HTTP_FORBIDDEN));
+
+        $controller->setContainer($container);
+
+        $response = $controller->updateLesson($request);
+
+        $this->assertEquals(Response::HTTP_FORBIDDEN, $response->getStatusCode());
+    }
+
+    public function testUpdateLessonSuccess(): void
+    {
+        $content = json_encode(['id' => 1, 'name' => 'Updated Lesson', 'sourceLanguage' => 'pl-PL', 'targetLanguage' => 'en-US']);
+        $request = Request::create(
+            '/api/lessons',
+            'PUT',
+            [],
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            $content
+        );
+
+        $existingLesson = new Lesson();
+        $existingLesson->setId(1);
+        $existingLesson->setName('Original Lesson');
+        $existingLesson->setUser($this->user);
+
+        $updatedLesson = new Lesson();
+        $updatedLesson->setId(1);
+        $updatedLesson->setName('Updated Lesson');
+
+        $lessonFactory = $this->createMock(LessonFactoryInterface::class);
+        $lessonFactory->expects($this->once())
+            ->method('updateFromRequestData')
+            ->with($existingLesson, [
+                'name' => 'Updated Lesson',
+                'sourceLanguage' => 'pl-PL',
+                'targetLanguage' => 'en-US'
+            ])
+            ->willReturn($updatedLesson);
+
+        $this->lessonServices->expects($this->once())
+            ->method('updateLesson')
+            ->with($updatedLesson);
+
+        $container = new \Symfony\Component\DependencyInjection\ContainerBuilder();
+        $container->set('serializer', $this->serializer);
+        $container->set('logger', $this->logger);
+
+        $controller = $this->getMockBuilder(LessonController::class)
+            ->setConstructorArgs([
+                                     $this->entityManager,
+                                     $this->lessonServices,
+                                     $this->logger,
+                                     $lessonFactory,
+                                     $this->validator,
+                                     $this->serializer,
+                                 ])
+            ->onlyMethods(['getUser', 'isGranted', 'createResponse'])
+            ->addMethods(['get'])
+            ->getMock();
+
+        $controller->method('getUser')->willReturn($this->user);
+        $controller->method('get')
+            ->with('validator')
+            ->willReturn($this->validator);
+        $controller->method('isGranted')
+            ->with('LESSON_EDIT', $existingLesson)
+            ->willReturn(true);
+
+        $this->entityManager->getRepository(Lesson::class)
+            ->method('find')
+            ->with(1)
+            ->willReturn($existingLesson);
+
+        $controller->expects($this->once())
+            ->method('createResponse')
+            ->with(
+                ['lesson' => $updatedLesson],
+                ['Lesson updated successfully'],
+                Response::HTTP_OK,
+                ['groups' => Lesson::LESSON_READ_GROUP]
+            )
+            ->willReturn(new JsonResponse(
+                             ['lesson' => ['name' => 'Updated Lesson'], 'message' => ['Lesson updated successfully']],
+                             Response::HTTP_OK
+                         ));
+
+        $controller->setContainer($container);
+
+        $response = $controller->updateLesson($request);
+
+        $this->assertEquals(Response::HTTP_OK, $response->getStatusCode());
+    }
+
+    public function testUpdateLessonException(): void
+    {
+        $content = json_encode(['id' => 1, 'name' => 'Updated Lesson', 'sourceLanguage' => 'pl-PL', 'targetLanguage' => 'en-US']);
+        $request = Request::create(
+            '/api/lessons',
+            'PUT',
+            [],
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            $content
+        );
+
+        $existingLesson = new Lesson();
+        $existingLesson->setId(1);
+        $existingLesson->setUser($this->user);
+
+        $lessonFactory = $this->createMock(LessonFactoryInterface::class);
+        $lessonFactory->expects($this->once())
+            ->method('updateFromRequestData')
+            ->with($existingLesson, [
+                'name' => 'Updated Lesson',
+                'sourceLanguage' => 'pl-PL',
+                'targetLanguage' => 'en-US'
+            ])
+            ->willThrowException(new \RuntimeException('Test exception'));
+
+        $container = new \Symfony\Component\DependencyInjection\ContainerBuilder();
+        $container->set('serializer', $this->serializer);
+        $container->set('logger', $this->logger);
+
+        $controller = $this->getMockBuilder(LessonController::class)
+            ->setConstructorArgs([
+                                     $this->entityManager,
+                                     $this->lessonServices,
+                                     $this->logger,
+                                     $lessonFactory,
+                                     $this->validator,
+                                     $this->serializer,
+                                 ])
+            ->onlyMethods(['getUser', 'isGranted', 'createResponse'])
+            ->addMethods(['get'])
+            ->getMock();
+
+        $controller->method('getUser')->willReturn($this->user);
+        $controller->method('get')
+            ->with('validator')
+            ->willReturn($this->validator);
+        $controller->method('isGranted')
+            ->with('LESSON_EDIT', $existingLesson)
+            ->willReturn(true);
+
+        $this->entityManager->getRepository(Lesson::class)
+            ->method('find')
+            ->with(1)
+            ->willReturn($existingLesson);
+
+        $controller->expects($this->once())
+            ->method('createResponse')
+            ->with(
+                null,
+                ['Invalid data: Test exception'],
+                Response::HTTP_BAD_REQUEST
+            )
+            ->willReturn(new \Symfony\Component\HttpFoundation\JsonResponse(
+                             ['error' => 'Lesson not updated'],
+                             Response::HTTP_BAD_REQUEST
+                         ));
+
+        $controller->setContainer($container);
+
+        $response = $controller->updateLesson($request);
+
+        $this->assertEquals(Response::HTTP_BAD_REQUEST, $response->getStatusCode());
+    }
+
     public function testRemoveLessonUnauthorized()
     {
         $lesson = new Lesson();
@@ -411,7 +822,9 @@ class LessonControllerTest extends WebTestCase
                                      $this->entityManager,
                                      $this->lessonServices,
                                      $this->logger,
-                                     $this->createMock(LessonFactoryInterface::class)
+                                     $this->createMock(LessonFactoryInterface::class),
+                                     $this->validator,
+                                     $this->serializer,
                                  ])
             ->onlyMethods(['isGranted', 'createResponse'])
             ->getMock();
@@ -463,7 +876,9 @@ class LessonControllerTest extends WebTestCase
                                      $this->entityManager,
                                      $this->lessonServices,
                                      $this->logger,
-                                     $this->createMock(LessonFactoryInterface::class)
+                                     $this->createMock(LessonFactoryInterface::class),
+                                     $this->validator,
+                                     $this->serializer,
                                  ])
             ->onlyMethods(['isGranted', 'createResponse'])
             ->getMock();
@@ -524,7 +939,9 @@ class LessonControllerTest extends WebTestCase
                                      $this->entityManager,
                                      $this->lessonServices,
                                      $this->logger,
-                                     $this->createMock(LessonFactoryInterface::class)
+                                     $this->createMock(LessonFactoryInterface::class),
+                                     $this->validator,
+                                     $this->serializer,
                                  ])
             ->onlyMethods(['isGranted', 'createResponse'])
             ->getMock();
