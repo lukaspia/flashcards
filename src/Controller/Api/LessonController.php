@@ -175,84 +175,55 @@ class LessonController extends AbstractApiController
     #[Route('/lessons', name: 'update_lesson', methods: ['PUT'])]
     public function updateLesson(Request $request): JsonResponse
     {
-        $this->requireAuthenticatedUser();
-
+        $user = $this->requireAuthenticatedUser();
         $data = $request->toArray();
 
-        if (empty($data)) {
-            return $this->createResponse(
-                null,
-                ['No data provided'],
-                Response::HTTP_BAD_REQUEST
-            );
-        }
-
-        $dto = $this->serializer->denormalize($data, UpdateLessonDTO::class);
-        $errors = $this->validator->validate($dto);
-
-        if (count($errors) > 0) {
-            $errorMessages = [];
-            foreach ($errors as $error) {
-                $errorMessages[] = $error->getMessage();
-            }
-            return $this->createResponse(
-                null,
-                $errorMessages,
-                Response::HTTP_BAD_REQUEST
-            );
-        }
-
-        $existingLesson = $this->entityManager->getRepository(Lesson::class)->find($dto->id);
-
-        if (!$existingLesson) {
-            return $this->createResponse(null, ['Lesson not found'], Response::HTTP_NOT_FOUND);
-        }
-
-        if (!$this->isGranted('LESSON_EDIT', $existingLesson)) {
-            $this->logger->warning('User attempted to edit lesson without permission', [
-                'userId' => $this->getUser()->getId(),
-                'lessonId' => $existingLesson->getId(),
-                'lessonOwnerId' => $existingLesson->getUser()->getId()
-            ]);
-            return $this->createResponse(
-                null,
-                ['You are not authorized to edit this lesson.'],
-                Response::HTTP_FORBIDDEN
-            );
-        }
-
         try {
-            $lesson = $this->lessonFactory->updateFromRequestData($existingLesson, [
-                'name' => $dto->name,
-                'sourceLanguage' => $dto->sourceLanguage,
-                'targetLanguage' => $dto->targetLanguage,
-            ]);
+            $dto = $this->serializer->denormalize($data, UpdateLessonDTO::class);
+
+            $errors = $this->validator->validate($dto);
+            if (count($errors) > 0) {
+                return $this->createResponse(null, $this->formatErrors($errors), Response::HTTP_BAD_REQUEST);
+            }
+
+            $existingLesson = $this->entityManager->getRepository(Lesson::class)->find($dto->id);
+
+            if (!$existingLesson) {
+                return $this->createResponse(null, ['Lesson not found'], Response::HTTP_NOT_FOUND);
+            }
+
+            if (!$this->isGranted('LESSON_EDIT', $existingLesson)) {
+                $this->logger->warning('Unauthorized edit attempt', [
+                    'userId' => $user->getId(),
+                    'lessonId' => $existingLesson->getId()
+                ]);
+                return $this->createResponse(null, ['You are not authorized to edit this lesson.'], Response::HTTP_FORBIDDEN);
+            }
+
+            $lesson = $this->lessonFactory->updateFromDTO($existingLesson, $dto);
             $this->lessonServices->updateLesson($lesson);
 
             $this->logger->info('Lesson updated successfully', [
                 'lessonId' => $lesson->getId(),
-                'userId' => $this->getUser()->getId(),
-                'lessonName' => $lesson->getName()
+                'userId' => $user->getId()
             ]);
+
             return $this->createResponse(
-                ['lesson' => $lesson], ['Lesson updated successfully'],
+                ['lesson' => $lesson],
+                ['Lesson updated successfully'],
                 Response::HTTP_OK,
                 ['groups' => Lesson::LESSON_READ_GROUP]
             );
-        } catch (\RuntimeException|InvalidArgumentException|\Exception $e) {
-            $this->logger->error('Failed to update lesson for user {userId}: {message}', [
-                'userId' => $this->getUser()->getId(),
-                'lessonId' => $existingLesson->getId(),
-                'message' => $e->getMessage(),
-                'requestData' => [
-                    'id' => $dto->id,
-                    'name' => $dto->name,
-                    'sourceLanguage' => $dto->sourceLanguage,
-                    'targetLanguage' => $dto->targetLanguage,
-                ],
+
+        } catch (SerializerException $e) {
+            return $this->createResponse(null, ['Invalid data format'], Response::HTTP_BAD_REQUEST);
+        } catch (\Exception $e) {
+            $this->logger->error('Update failed: ' . $e->getMessage(), [
+                'userId' => $user->getId(),
                 'exception' => $e
             ]);
-            return $this->createResponse(null, ['Invalid data: ' . $e->getMessage()], Response::HTTP_BAD_REQUEST);
+
+            return $this->createResponse(null, ['Unable to update lesson.'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
