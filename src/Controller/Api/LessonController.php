@@ -7,6 +7,7 @@ namespace App\Controller\Api;
 
 
 use App\Controller\Traits\AuthenticationTrait;
+use App\DTO\AddLessonDTO;
 use App\DTO\UpdateLessonDTO;
 use App\Entity\Lesson;
 use App\Factory\LessonFactoryInterface;
@@ -128,18 +129,27 @@ class LessonController extends AbstractApiController
                 );
             }
 
-            $requiredFields = ['name', 'sourceLanguage', 'targetLanguage'];
-            $missingFields = array_diff($requiredFields, array_keys($data));
+            $dto = $this->serializer->denormalize($data, AddLessonDTO::class);
+            $errors = $this->validator->validate($dto);
 
-            if (!empty($missingFields)) {
+            if (count($errors) > 0) {
+                $errorMessages = [];
+                foreach ($errors as $error) {
+                    $errorMessages[] = $error->getMessage();
+                }
                 return $this->createResponse(
                     null,
-                    ['Missing required fields: ' . implode(', ', $missingFields)],
+                    $errorMessages,
                     Response::HTTP_BAD_REQUEST
                 );
             }
 
-            $lesson = $this->lessonFactory->createFromRequestData($data, $user);
+            $lessonData = [
+                'name' => $dto->name,
+                'sourceLanguage' => $dto->sourceLanguage,
+                'targetLanguage' => $dto->targetLanguage,
+            ];
+            $lesson = $this->lessonFactory->createFromRequestData($lessonData, $user);
             $this->lessonServices->addLesson($lesson);
 
             $this->logger->info('Lesson created successfully', [
@@ -158,6 +168,7 @@ class LessonController extends AbstractApiController
                 'userId' => $user->getId(),
                 'message' => $e->getMessage(),
                 'requestData' => $data,
+                'dto' => $dto ?? null,
                 'exception' => $e
             ]);
             return $this->createResponse(

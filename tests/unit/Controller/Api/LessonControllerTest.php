@@ -56,10 +56,17 @@ class LessonControllerTest extends WebTestCase
             {
                 if ($type === \App\DTO\UpdateLessonDTO::class && is_array($data)) {
                     return new \App\DTO\UpdateLessonDTO(
-                        $data['id'] ?? null,
-                        $data['name'] ?? null,
-                        $data['sourceLanguage'] ?? null,
-                        $data['targetLanguage'] ?? null,
+                        $data['id'] ?? 1,
+                        $data['name'] ?? 'Updated Lesson',
+                        $data['sourceLanguage'] ?? 'pl-PL',
+                        $data['targetLanguage'] ?? 'en-US'
+                    );
+                }
+                if ($type === \App\DTO\AddLessonDTO::class && is_array($data)) {
+                    return new \App\DTO\AddLessonDTO(
+                        $data['name'] ?? 'Test Lesson',
+                        $data['sourceLanguage'] ?? 'pl-PL',
+                        $data['targetLanguage'] ?? 'en-US'
                     );
                 }
 
