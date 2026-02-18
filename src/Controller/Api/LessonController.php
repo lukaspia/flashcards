@@ -42,34 +42,34 @@ class LessonController extends AbstractApiController
 
         $page = $request->query->getInt('page', 1);
         $limit = $this->getParameter('pagination_default_limit');
-        $criteria = ['user' => $user];
-        $order = ['id' => 'DESC'];
+
+        if ($page < 1) {
+            $page = 1;
+        }
+        if ($limit < 1 || $limit > 100) {
+            $limit = $this->getParameter('pagination_default_limit');
+        }
 
         try {
-            /** @var \App\Repository\LessonRepository $lessonRepository */
-            $lessonRepository = $this->entityManager->getRepository(Lesson::class);
-            $lessons = $lessonRepository->findPaginatedLessons($criteria, $order, $limit, $page);
-            $totalItems = $lessonRepository->countLessonsByCriteria($criteria);
-            $totalPages = ceil($totalItems / $limit);
-
-            $page = min($page, $totalPages);
+            $paginationData = $this->lessonServices->getUserLessonsWithPagination($user, $page, $limit);
 
             return $this->createResponse(
-                [
-                    'lessons' => $lessons,
-                    'page' => $page,
-                    'totalItems' => $totalItems,
-                    'totalPages' => $totalPages
-                ],
+                $paginationData,
                 [],
                 Response::HTTP_OK,
                 ['groups' => Lesson::LESSON_READ_GROUP]
             );
         } catch (\Exception $e) {
-            $this->logger->error('Error fetching lessons: ' . $e->getMessage(), ['exception' => $e]);
+            $this->logger->error('Error fetching lessons for user {userId}: {message}', [
+                'userId' => $user->getId(),
+                'message' => $e->getMessage(),
+                'page' => $page,
+                'limit' => $limit,
+                'exception' => $e
+            ]);
             return $this->createResponse(
                 null,
-                ['An error occurred while fetching lessons.'],
+                ['Unable to retrieve lessons. Please try again later.'],
                 Response::HTTP_INTERNAL_SERVER_ERROR
             );
         }

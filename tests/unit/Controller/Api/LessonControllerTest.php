@@ -120,15 +120,17 @@ class LessonControllerTest extends WebTestCase
             new Lesson(),
         ];
 
-        $this->lessonRepository->expects($this->once())
-            ->method('findPaginatedLessons')
-            ->with(['user' => $this->user], ['id' => 'DESC'], 10, 2)
-            ->willReturn($lessons);
+        $paginationData = [
+            'lessons' => $lessons,
+            'page' => 2,
+            'totalItems' => 25,
+            'totalPages' => 3
+        ];
 
-        $this->lessonRepository->expects($this->once())
-            ->method('countLessonsByCriteria')
-            ->with(['user' => $this->user])
-            ->willReturn(25);
+        $this->lessonServices->expects($this->once())
+            ->method('getUserLessonsWithPagination')
+            ->with($this->user, 2, 10)
+            ->willReturn($paginationData);
 
         $parameterBag = $this->createMock(\Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface::class);
         $parameterBag->method('get')
@@ -162,12 +164,7 @@ class LessonControllerTest extends WebTestCase
         $controller->expects($this->once())
             ->method('createResponse')
             ->with(
-                [
-                    'lessons' => $lessons,
-                    'page' => 2,
-                    'totalItems' => 25,
-                    'totalPages' => 3
-                ],
+                $paginationData,
                 [],
                 Response::HTTP_OK,
                 ['groups' => 'lesson:read']
