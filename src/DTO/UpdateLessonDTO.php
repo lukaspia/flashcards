@@ -23,12 +23,14 @@ readonly class UpdateLessonDTO
         public string $name,
 
         #[Assert\NotBlank(message: 'Source language is required')]
-        #[Assert\Language(message: 'Source language must be a valid ISO language code')]
+        #[Assert\Regex(pattern: '/^[a-z]{2}-[A-Z]{2}$/')]
         public string $sourceLanguage,
 
         #[Assert\NotBlank(message: 'Target language is required')]
-        #[Assert\Language(message: 'Target language must be a valid ISO language code')]
+        #[Assert\Regex(pattern: '/^[a-z]{2}-[A-Z]{2}$/')]
         public string $targetLanguage,
+
+        public ?array $words = null,
     ) {
     }
 }
