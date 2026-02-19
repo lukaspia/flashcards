@@ -9,9 +9,13 @@ namespace App\Controller\Api;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
+/**
+ *
+ */
 abstract class AbstractApiController extends AbstractController
 {
 
@@ -50,5 +54,19 @@ abstract class AbstractApiController extends AbstractController
         ]);
 
         return $this->json($response, $statusCode, [], $context);
+    }
+
+    /**
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @return array
+     */
+    protected function getPaginationParams(Request $request): array
+    {
+        $defaultLimit = (int) $this->getParameter('pagination_default_limit');
+
+        return [
+            'page' => max(1, $request->query->getInt('page', 1)),
+            'limit' => max(1, min(100, $request->query->getInt('limit', $defaultLimit))),
+        ];
     }
 }

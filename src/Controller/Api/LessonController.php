@@ -19,7 +19,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Validator\Exception\InvalidArgumentException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -46,39 +45,20 @@ class LessonController extends AbstractApiController
     {
         $user = $this->requireAuthenticatedUser();
 
-        $page = $request->query->getInt('page', 1);
-        $limit = $this->getParameter('pagination_default_limit');
+        $params = $this->getPaginationParams($request);
 
-        if ($page < 1) {
-            $page = 1;
-        }
-        if ($limit < 1 || $limit > 100) {
-            $limit = $this->getParameter('pagination_default_limit');
-        }
+        $paginationData = $this->lessonServices->getUserLessonsWithPagination(
+            $user,
+            $params['page'],
+            $params['limit']
+        );
 
-        try {
-            $paginationData = $this->lessonServices->getUserLessonsWithPagination($user, $page, $limit);
-
-            return $this->createResponse(
-                $paginationData,
-                [],
-                Response::HTTP_OK,
-                ['groups' => Lesson::LESSON_READ_GROUP]
-            );
-        } catch (\Exception $e) {
-            $this->logger->error('Error fetching lessons for user {userId}: {message}', [
-                'userId' => $user->getId(),
-                'message' => $e->getMessage(),
-                'page' => $page,
-                'limit' => $limit,
-                'exception' => $e
-            ]);
-            return $this->createResponse(
-                null,
-                ['Unable to retrieve lessons. Please try again later.'],
-                Response::HTTP_INTERNAL_SERVER_ERROR
-            );
-        }
+        return $this->createResponse(
+            $paginationData,
+            [],
+            Response::HTTP_OK,
+            ['groups' => Lesson::LESSON_READ_GROUP]
+        );
     }
 
     /**
