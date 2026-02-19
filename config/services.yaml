@@ -25,6 +25,12 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
+    App\EventListener\ApiExceptionListener:
+        arguments:
+          $environment: '%kernel.environment%'
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception }
+
     App\Factory\ImageProcessorFactory:
         arguments:
             $entityManager: '@doctrine.orm.entity_manager'
