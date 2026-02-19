@@ -10,6 +10,7 @@ use App\Controller\Traits\AuthenticationTrait;
 use App\DTO\AddLessonDTO;
 use App\DTO\UpdateLessonDTO;
 use App\Entity\Lesson;
+use App\Entity\User;
 use App\Factory\LessonFactoryInterface;
 use App\Service\AI\AIGeneratorInterface;
 use App\Service\Lesson\LessonServiceInterface;
@@ -18,6 +19,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Routing\Annotation\Route;
@@ -38,13 +40,13 @@ class LessonController extends AbstractApiController
 
     /**
      * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param \App\Entity\User $user
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     #[Route('/lessons', name: 'lessons', methods: ['GET'])]
-    public function index(Request $request): JsonResponse
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function index(Request $request, #[CurrentUser] User $user): JsonResponse
     {
-        $user = $this->requireAuthenticatedUser();
-
         $params = $this->getPaginationParams($request);
 
         $paginationData = $this->lessonServices->getUserLessonsWithPagination(
@@ -66,10 +68,9 @@ class LessonController extends AbstractApiController
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     #[Route('/lessons/{id}', name: 'get_lesson', requirements: ['id' => '\d+'], methods: ['GET'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function getLesson(Lesson $lesson): JsonResponse
     {
-        $this->requireAuthenticatedUser();
-
         $this->denyAccessUnlessGranted('LESSON_VIEW', $lesson);
 
         return $this->createResponse(
@@ -85,10 +86,9 @@ class LessonController extends AbstractApiController
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     #[Route('/lessons', name: 'add_lesson', methods: ['POST'])]
-    public function addLesson(Request $request): JsonResponse
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function addLesson(Request $request, #[CurrentUser] User $user): JsonResponse
     {
-        $user = $this->requireAuthenticatedUser();
-
         $dto = $this->serializer->denormalize($request->request->all(), AddLessonDTO::class);
 
         $this->validateDto($dto);
@@ -109,10 +109,9 @@ class LessonController extends AbstractApiController
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     #[Route('/lessons', name: 'update_lesson', methods: ['PUT'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function updateLesson(Request $request): JsonResponse
     {
-        $this->requireAuthenticatedUser();
-
         /** @var UpdateLessonDTO $dto */
         $dto = $this->serializer->denormalize($request->toArray(), UpdateLessonDTO::class);
         $this->validateDto($dto);

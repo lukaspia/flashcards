@@ -43,7 +43,7 @@ readonly class ApiExceptionListener
             ? $exception->getStatusCode()
             : Response::HTTP_INTERNAL_SERVER_ERROR;
 
-        $this->logError($exception, $request);
+        $this->logError($exception, $request, $statusCode);
 
         $responseData = [
             'data' => null,
@@ -77,8 +77,17 @@ readonly class ApiExceptionListener
      * @param $request
      * @return void
      */
-    private function logError(\Throwable $exception, $request): void
+    private function logError(\Throwable $exception, $request, $statusCode): void
     {
+        if ($statusCode === Response::HTTP_UNAUTHORIZED) {
+            $this->logger->warning('Unauthenticated access attempt', [
+                'path' => $request->getPathInfo(),
+                'method' => $request->getMethod(),
+                'ip' => $request->getClientIp(),
+            ]);
+            return;
+        }
+
         $this->logger->error('API Exception: ' . $exception->getMessage(), [
             'path' => $request->getPathInfo(),
             'exception' => $exception
