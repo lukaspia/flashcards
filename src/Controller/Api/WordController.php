@@ -7,7 +7,6 @@ namespace App\Controller\Api;
 
 
 use App\DTO\TranslateWordDTO;
-use App\Service\Word\Exception\TranslationException;
 use App\Service\Word\WordCategoryServiceInterface;
 use App\Service\Word\WordTranslationServiceInterface;
 use Doctrine\ORM\EntityManagerInterface;
