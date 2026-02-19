@@ -13,6 +13,7 @@ use App\Entity\Lesson;
 use App\Entity\User;
 use App\Factory\LessonFactoryInterface;
 use App\Service\AI\AIGeneratorInterface;
+use App\Service\Lesson\LessonMessageProviderInterface;
 use App\Service\Lesson\LessonServiceInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -156,24 +157,13 @@ class LessonController extends AbstractApiController
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     #[Route('/lessons/message', name: 'get_lesson_message', methods: ['GET'])]
-    public function getSuccessMessage(AIGeneratorInterface $aiGeneratorService): JsonResponse
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function getSuccessMessage(LessonMessageProviderInterface $messageProvider): JsonResponse
     {
-        try {
-            $prompt = 'Generate one, short, encouraging message just in Polish (don\'t give me translation in English), to congratulate someone on their successful foreign language vocabulary learning.';
-            $message = $aiGeneratorService->generateText($prompt);
-
-            return $this->createResponse(
-                ['message' => $message],
-                ['Lesson success message generated successfully'],
-                Response::HTTP_OK
-            );
-        } catch (\Exception $e) {
-            $this->logger->error('Lesson success message error: ' . $e->getMessage());
-            return $this->createResponse(
-                null,
-                ['Lesson success message error: ' . $e->getMessage()],
-                Response::HTTP_BAD_REQUEST
-            );
-        }
+        return $this->createResponse(
+            ['message' => $messageProvider->getCongratsMessage()],
+            ['Lesson success message generated successfully'],
+            Response::HTTP_OK
+        );
     }
 }
