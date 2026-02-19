@@ -11,7 +11,9 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Messenger\Exception\ValidationFailedException;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
  *
@@ -21,9 +23,12 @@ abstract class AbstractApiController extends AbstractController
 
     /**
      * @param \Doctrine\ORM\EntityManagerInterface $entityManager
+     * @param \Symfony\Component\Validator\Validator\ValidatorInterface $validator
      */
-    public function __construct(protected readonly EntityManagerInterface $entityManager)
-    {
+    public function __construct(
+        protected readonly EntityManagerInterface $entityManager,
+        private readonly ValidatorInterface $validator,
+    ) {
     }
 
     /**
@@ -62,11 +67,19 @@ abstract class AbstractApiController extends AbstractController
      */
     protected function getPaginationParams(Request $request): array
     {
-        $defaultLimit = (int) $this->getParameter('pagination_default_limit');
+        $defaultLimit = (int)$this->getParameter('pagination_default_limit');
 
         return [
             'page' => max(1, $request->query->getInt('page', 1)),
             'limit' => max(1, min(100, $request->query->getInt('limit', $defaultLimit))),
         ];
+    }
+
+    protected function validateDto(object $dto): void
+    {
+        $errors = $this->validator->validate($dto);
+        if (count($errors) > 0) {
+            throw new ValidationFailedException($errors);
+        }
     }
 }

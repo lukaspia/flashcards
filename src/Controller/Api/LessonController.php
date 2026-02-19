@@ -33,7 +33,7 @@ class LessonController extends AbstractApiController
         private readonly ValidatorInterface $validator,
         private readonly SerializerInterface $serializer,
     ) {
-        parent::__construct($entityManager);
+        parent::__construct($entityManager, $validator);
     }
 
     /**
@@ -88,54 +88,20 @@ class LessonController extends AbstractApiController
     public function addLesson(Request $request): JsonResponse
     {
         $user = $this->requireAuthenticatedUser();
-        $data = $request->request->all();
 
-        try {
-            $dto = $this->serializer->denormalize($data, AddLessonDTO::class);
+        $dto = $this->serializer->denormalize($request->request->all(), AddLessonDTO::class);
 
-            $errors = $this->validator->validate($dto);
-            if (count($errors) > 0) {
-                return $this->createResponse(
-                    null,
-                    $this->formatErrors($errors),
-                    Response::HTTP_BAD_REQUEST
-                );
-            }
+        $this->validateDto($dto);
 
-            $lesson = $this->lessonFactory->createFromDTO($dto, $user);
-            $this->lessonServices->addLesson($lesson);
+        $lesson = $this->lessonFactory->createFromDTO($dto, $user);
+        $this->lessonServices->addLesson($lesson);
 
-            $this->logger->info('Lesson created successfully', [
-                'lessonId' => $lesson->getId(),
-                'userId' => $user->getId()
-            ]);
-
-            return $this->createResponse(
-                ['lesson' => $lesson],
-                ['Lesson created successfully'],
-                Response::HTTP_CREATED,
-                ['groups' => Lesson::LESSON_READ_GROUP]
-            );
-
-        } catch (SerializerException $e) {
-            return $this->createResponse(
-                null,
-                ['Invalid data format provided.'],
-                Response::HTTP_BAD_REQUEST
-            );
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to create lesson: ' . $e->getMessage(), [
-                'userId' => $user->getId(),
-                'requestData' => $data,
-                'exception' => $e
-            ]);
-
-            return $this->createResponse(
-                null,
-                ['Unable to create lesson. Please check your data and try again.'],
-                Response::HTTP_INTERNAL_SERVER_ERROR
-            );
-        }
+        return $this->createResponse(
+            ['lesson' => $lesson],
+            ['Lesson created successfully'],
+            Response::HTTP_CREATED,
+            ['groups' => Lesson::LESSON_READ_GROUP]
+        );
     }
 
     /**
