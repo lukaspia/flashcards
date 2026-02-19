@@ -27,6 +27,7 @@ use Symfony\Component\Routing\Annotation\Route;
 class LessonController extends AbstractApiController
 {
     use AuthenticationTrait;
+
     public function __construct(
         EntityManagerInterface $entityManager,
         private readonly LessonServiceInterface $lessonServices,
@@ -140,29 +141,14 @@ class LessonController extends AbstractApiController
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     #[Route('/lessons/{id}', name: 'remove_lesson', methods: ['DELETE'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function removeLesson(Lesson $lesson): JsonResponse
     {
-        if (!$this->isGranted('LESSON_DELETE', $lesson)) {
-            return $this->createResponse(
-                null,
-                ['You are not authorized to delete this lesson.'],
-                Response::HTTP_FORBIDDEN
-            );
-        }
+        $this->denyAccessUnlessGranted('LESSON_DELETE', $lesson);
 
-        try {
-            $this->lessonServices->removeLesson($lesson);
+        $this->lessonServices->removeLesson($lesson);
 
-            $this->logger->info('Lesson removed successfully', ['lesson' => $lesson]);
-            return $this->createResponse(null, ['Lesson remove successfully'], Response::HTTP_NO_CONTENT);
-        } catch (\Exception $e) {
-            $this->logger->error('Lesson remove error: ' . $e->getMessage());
-            return $this->createResponse(
-                null,
-                ['Lesson remove error: ' . $e->getMessage()],
-                Response::HTTP_BAD_REQUEST
-            );
-        }
+        return $this->createResponse(null, ['Lesson removed successfully'], Response::HTTP_NO_CONTENT);
     }
 
     /**
@@ -189,14 +175,5 @@ class LessonController extends AbstractApiController
                 Response::HTTP_BAD_REQUEST
             );
         }
-    }
-
-    private function formatErrors($errors): array
-    {
-        $messages = [];
-        foreach ($errors as $error) {
-            $messages[] = $error->getMessage();
-        }
-        return $messages;
     }
 }
