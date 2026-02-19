@@ -113,12 +113,34 @@ class Lesson
 
     public function getWords(): ?Collection
     {
-        return $this->words;
+        return new ArrayCollection($this->words->getValues());
     }
 
     public function setWords(?Collection $words): void
     {
         $this->words = $words;
+    }
+
+    public function addWord(Word $word): self
+    {
+        if (!$this->words->contains($word)) {
+            $this->words->add($word);
+            $word->setLesson($this);
+        }
+
+        return $this;
+    }
+
+    public function removeWord(Word $word): self
+    {
+        /*if ($this->words->removeElement($word)) {
+            if ($word->getLesson() === $this) {
+                $word->setLesson(null);
+            }
+        }*/
+        $this->words->removeElement($word);
+
+        return $this;
     }
 
     #[ORM\PrePersist]
