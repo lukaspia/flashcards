@@ -10,17 +10,14 @@ use App\DTO\AddLessonDTO;
 use App\DTO\UpdateLessonDTO;
 use App\Entity\Lesson;
 use App\Entity\Word;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 readonly class LessonFactory implements LessonFactoryInterface
 {
     public function __construct(
-        private SerializerInterface $serializer,
-        private ValidatorInterface $validator,
-        private EntityManagerInterface $entityManager
+        private SerializerInterface $serializer
     ) {
     }
 
@@ -32,9 +29,12 @@ readonly class LessonFactory implements LessonFactoryInterface
     public function createFromDTO(AddLessonDTO $dto, UserInterface $user): Lesson
     {
         $lesson = new Lesson();
-        $lesson->setName($dto->name);
-        $lesson->setSourceLanguage($dto->sourceLanguage);
-        $lesson->setTargetLanguage($dto->targetLanguage);
+
+        $this->serializer->denormalize($dto, Lesson::class, null, [
+            AbstractNormalizer::OBJECT_TO_POPULATE => $lesson,
+            AbstractNormalizer::GROUPS => ['lesson:write']
+        ]);
+
         $lesson->setUser($user);
 
         return $lesson;
@@ -42,14 +42,15 @@ readonly class LessonFactory implements LessonFactoryInterface
 
     /**
      * @param \App\Entity\Lesson $lesson
-     * @param array $data
+     * @param \App\DTO\UpdateLessonDTO $dto
      * @return \App\Entity\Lesson
      */
     public function updateFromDTO(Lesson $lesson, UpdateLessonDTO $dto): Lesson
     {
-        $lesson->setName($dto->name);
-        $lesson->setSourceLanguage($dto->sourceLanguage);
-        $lesson->setTargetLanguage($dto->targetLanguage);
+        $this->serializer->denormalize($dto, Lesson::class, null, [
+            AbstractNormalizer::OBJECT_TO_POPULATE => $lesson,
+            AbstractNormalizer::GROUPS => ['lesson:write']
+        ]);
 
         if ($dto->words !== null) {
             $this->updateLessonWords($lesson, $dto->words);

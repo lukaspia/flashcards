@@ -28,9 +28,11 @@ class Lesson
     private string $name;
 
     #[ORM\Column(type: "string", length: 10)]
+    #[Groups('lesson:write')]
     private string $sourceLanguage = 'pl-PL';
 
     #[ORM\Column(type: "string", length: 10)]
+    #[Groups('lesson:write')]
     private string $targetLanguage = 'en-US';
 
     #[ORM\ManyToOne(targetEntity: User::class)]
