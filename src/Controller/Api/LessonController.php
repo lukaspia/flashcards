@@ -70,21 +70,11 @@ class LessonController extends AbstractApiController
     {
         $this->requireAuthenticatedUser();
 
-        if (!$this->isGranted('LESSON_VIEW', $lesson)) {
-            $this->logger->warning('User attempted to access lesson without permission', [
-                'userId' => $this->getUser()->getId(),
-                'lessonId' => $lesson->getId(),
-                'lessonOwnerId' => $lesson->getUser()->getId()
-            ]);
-            return $this->createResponse(
-                null,
-                ['You are not authorized to view this lesson.'],
-                Response::HTTP_FORBIDDEN
-            );
-        }
+        $this->denyAccessUnlessGranted('LESSON_VIEW', $lesson);
 
         return $this->createResponse(
-            ['lesson' => $lesson], [],
+            ['lesson' => $lesson],
+            [],
             Response::HTTP_OK,
             ['groups' => Lesson::LESSON_READ_GROUP]
         );
