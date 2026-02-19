@@ -12,7 +12,6 @@ use App\DTO\UpdateLessonDTO;
 use App\Entity\Lesson;
 use App\Entity\User;
 use App\Factory\LessonFactoryInterface;
-use App\Service\AI\AIGeneratorInterface;
 use App\Service\Lesson\LessonMessageProviderInterface;
 use App\Service\Lesson\LessonServiceInterface;
 use Doctrine\ORM\EntityManagerInterface;
@@ -27,8 +26,6 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class LessonController extends AbstractApiController
 {
-    use AuthenticationTrait;
-
     public function __construct(
         EntityManagerInterface $entityManager,
         private readonly LessonServiceInterface $lessonServices,
