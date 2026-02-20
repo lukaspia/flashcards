@@ -13,6 +13,7 @@ use App\Entity\Lesson;
 use App\Entity\User;
 use App\Factory\LessonFactoryInterface;
 use App\Repository\LessonRepository;
+use App\Security\Voter\LessonVoter;
 use App\Service\Lesson\LessonMessageProviderInterface;
 use App\Service\Lesson\LessonServiceInterface;
 use Psr\Log\LoggerInterface;
@@ -67,7 +68,7 @@ class LessonController extends AbstractApiController
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function getLesson(Lesson $lesson): JsonResponse
     {
-        $this->denyAccessUnlessGranted('LESSON_VIEW', $lesson);
+        $this->denyAccessUnlessGranted(LessonVoter::VIEW, $lesson);
 
         return $this->createResponse(
             ['lesson' => $lesson],
@@ -118,7 +119,7 @@ class LessonController extends AbstractApiController
             throw $this->createNotFoundException('Lesson not found');
         }
 
-        $this->denyAccessUnlessGranted('LESSON_EDIT', $existingLesson);
+        $this->denyAccessUnlessGranted(LessonVoter::EDIT, $existingLesson);
 
         $lesson = $this->lessonFactory->updateFromDTO($existingLesson, $dto);
         $this->lessonServices->updateLesson($lesson);
@@ -139,7 +140,7 @@ class LessonController extends AbstractApiController
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function removeLesson(Lesson $lesson): JsonResponse
     {
-        $this->denyAccessUnlessGranted('LESSON_DELETE', $lesson);
+        $this->denyAccessUnlessGranted(LessonVoter::DELETE, $lesson);
 
         $this->lessonServices->removeLesson($lesson);
 
