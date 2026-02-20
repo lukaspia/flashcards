@@ -11,9 +11,9 @@ use App\Entity\Word;
 use App\Factory\WordImageProcessorFactoryInterface;
 use App\File\FileNameGeneratorInterface;
 use App\Form\UploadWordImageTypeForm;
+use App\Security\Voter\WordVoter;
 use App\Service\Lesson\WordImageServiceInterface;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -63,50 +63,21 @@ class ImageController extends AbstractApiController
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     #[Route('/images/{id}', name: 'image_delete', methods: ['DELETE'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function deleteImage(Word $word): JsonResponse
     {
-        $user = $this->getUser();
-        if (!$user) {
+        $this->denyAccessUnlessGranted(WordVoter::DELETE_IMAGE, $word);
+
+        $result = $this->wordServices->removeWordImage($word);
+
+        if (!$result) {
             return $this->createResponse(
                 null,
-                ['Authentication required.'],
-                Response::HTTP_UNAUTHORIZED
+                ['Image not found or already removed'],
+                Response::HTTP_NOT_FOUND
             );
         }
 
-        if($word->getLesson()->getUser() !== $user) {
-            return $this->createResponse(
-                null,
-                ['You do not have permission to delete this image.'],
-                Response::HTTP_FORBIDDEN
-            );
-        }
-
-        try {
-            if ($this->wordServices->removeWordImage($word)) {
-                $this->logger->info('Image deleted successfully', [
-                    'wordId' => $word->getId(),
-                    'userId' => $user->getId()
-                ]);
-                return $this->createResponse(null, ['Image deleted successfully'], Response::HTTP_OK);
-            }
-
-            $this->logger->warning('Image not found for deletion', [
-                'wordId' => $word->getId(),
-                'userId' => $user->getId()
-            ]);
-            return $this->createResponse(null, ['Image not found or can\'t be remove'], Response::HTTP_NOT_FOUND);
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to delete image', [
-                'wordId' => $word->getId(),
-                'userId' => $user->getId(),
-                'error' => $e->getMessage()
-            ]);
-            return $this->createResponse(
-                null,
-                ['Failed to delete image'],
-                Response::HTTP_INTERNAL_SERVER_ERROR
-            );
-        }
+        return $this->createResponse(null, ['Image deleted successfully']);
     }
 }
