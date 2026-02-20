@@ -11,7 +11,6 @@ use App\Factory\WordImageProcessorFactoryInterface;
 use App\File\FileNameGeneratorInterface;
 use App\Form\UploadWordImageTypeForm;
 use App\Service\Lesson\WordImageServiceInterface;
-use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -22,13 +21,11 @@ use Symfony\Component\HttpFoundation\Response;
 class ImageController extends AbstractApiController
 {
     public function __construct(
-        EntityManagerInterface $entityManager,
         private readonly WordImageServiceInterface $wordServices,
         private readonly WordImageProcessorFactoryInterface $wordImageProcessorFactory,
         private readonly FileNameGeneratorInterface $fileNameGenerator,
         private readonly LoggerInterface $logger
     ) {
-        parent::__construct($entityManager);
     }
 
     /**
