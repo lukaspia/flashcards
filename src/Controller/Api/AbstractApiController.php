@@ -13,13 +13,14 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Messenger\Exception\ValidationFailedException;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Contracts\Service\Attribute\Required;
 
 /**
  *
  */
 abstract class AbstractApiController extends AbstractController
 {
-    protected readonly ValidatorInterface $validator;
+    protected ValidatorInterface $validator;
 
     #[Required]
     public function setValidator(ValidatorInterface $validator): void
@@ -50,7 +51,7 @@ abstract class AbstractApiController extends AbstractController
 
         $context = array_merge($context, [
             ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER => function ($obj): mixed {
-                return $obj->getId();
+                return method_exists($obj, 'getId') ? $obj->getId() : null;
             }
         ]);
 
