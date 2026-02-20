@@ -27,14 +27,14 @@ use Symfony\Component\Routing\Annotation\Route;
 class LessonController extends AbstractApiController
 {
     public function __construct(
-        EntityManagerInterface $entityManager,
+        private readonly EntityManagerInterface $entityManager,
         private readonly LessonServiceInterface $lessonServices,
         protected readonly LoggerInterface $logger,
         private readonly LessonFactoryInterface $lessonFactory,
         private readonly ValidatorInterface $validator,
         private readonly SerializerInterface $serializer,
     ) {
-        parent::__construct($entityManager, $validator);
+        parent::__construct($validator);
     }
 
     /**

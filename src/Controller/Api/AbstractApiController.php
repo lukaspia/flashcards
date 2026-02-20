@@ -6,7 +6,6 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,11 +21,9 @@ abstract class AbstractApiController extends AbstractController
 {
 
     /**
-     * @param \Doctrine\ORM\EntityManagerInterface $entityManager
      * @param \Symfony\Component\Validator\Validator\ValidatorInterface $validator
      */
     public function __construct(
-        protected readonly EntityManagerInterface $entityManager,
         private readonly ValidatorInterface $validator,
     ) {
     }

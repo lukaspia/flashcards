@@ -9,7 +9,6 @@ namespace App\Controller\Api;
 use App\DTO\TranslateWordDTO;
 use App\Service\Word\WordCategoryServiceInterface;
 use App\Service\Word\WordTranslationServiceInterface;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -20,13 +19,12 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 class WordController extends AbstractApiController
 {
     public function __construct(
-        EntityManagerInterface $entityManager,
         private readonly WordTranslationServiceInterface $wordTranslationService,
         private readonly WordCategoryServiceInterface $wordCategoryService,
         private readonly ValidatorInterface $validator,
         private readonly SerializerInterface $serializer
     ) {
-        parent::__construct($entityManager, $validator);
+        parent::__construct($validator);
     }
 
     /**
