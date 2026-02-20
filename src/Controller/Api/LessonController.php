@@ -21,7 +21,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
 class LessonController extends AbstractApiController
@@ -31,10 +30,8 @@ class LessonController extends AbstractApiController
         private readonly LessonServiceInterface $lessonServices,
         protected readonly LoggerInterface $logger,
         private readonly LessonFactoryInterface $lessonFactory,
-        private readonly ValidatorInterface $validator,
         private readonly SerializerInterface $serializer,
     ) {
-        parent::__construct($validator);
     }
 
     /**

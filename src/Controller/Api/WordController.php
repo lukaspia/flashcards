@@ -14,17 +14,14 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class WordController extends AbstractApiController
 {
     public function __construct(
         private readonly WordTranslationServiceInterface $wordTranslationService,
         private readonly WordCategoryServiceInterface $wordCategoryService,
-        private readonly ValidatorInterface $validator,
         private readonly SerializerInterface $serializer
     ) {
-        parent::__construct($validator);
     }
 
     /**

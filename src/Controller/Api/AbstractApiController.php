@@ -19,13 +19,12 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  */
 abstract class AbstractApiController extends AbstractController
 {
+    protected readonly ValidatorInterface $validator;
 
-    /**
-     * @param \Symfony\Component\Validator\Validator\ValidatorInterface $validator
-     */
-    public function __construct(
-        private readonly ValidatorInterface $validator,
-    ) {
+    #[Required]
+    public function setValidator(ValidatorInterface $validator): void
+    {
+        $this->validator = $validator;
     }
 
     /**
