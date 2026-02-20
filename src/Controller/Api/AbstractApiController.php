@@ -20,8 +20,15 @@ use Symfony\Contracts\Service\Attribute\Required;
  */
 abstract class AbstractApiController extends AbstractController
 {
+    /**
+     * @var \Symfony\Component\Validator\Validator\ValidatorInterface
+     */
     protected ValidatorInterface $validator;
 
+    /**
+     * @param \Symfony\Component\Validator\Validator\ValidatorInterface $validator
+     * @return void
+     */
     #[Required]
     public function setValidator(ValidatorInterface $validator): void
     {
@@ -72,11 +79,16 @@ abstract class AbstractApiController extends AbstractController
         ];
     }
 
+    /**
+     * @param object $dto
+     * @return void
+     */
     protected function validateDto(object $dto): void
     {
         $errors = $this->validator->validate($dto);
+
         if (count($errors) > 0) {
-            throw new ValidationFailedException($errors);
+            throw new ValidationFailedException($dto, $errors);
         }
     }
 }

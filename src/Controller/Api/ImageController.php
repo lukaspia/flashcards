@@ -6,6 +6,7 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 
+use App\DTO\UploadImageDTO;
 use App\Entity\Word;
 use App\Factory\WordImageProcessorFactoryInterface;
 use App\File\FileNameGeneratorInterface;
@@ -33,52 +34,28 @@ class ImageController extends AbstractApiController
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     #[Route('/images/upload', name: 'image_upload', methods: ['POST'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function uploadImage(Request $request): JsonResponse
     {
-        if (!($this->getUser())) {
-            return $this->createResponse(null, ['Authentication required.'], Response::HTTP_UNAUTHORIZED);
-        }
+        $dto = new UploadImageDTO(
+            $request->request->get('word'),
+            $request->files->get('image')
+        );
 
-        $form = $this->createForm(UploadWordImageTypeForm::class);
-        $form->handleRequest($request);
+        $this->validateDto($dto);
 
-        if(!$form->isSubmitted() || !$form->isValid()) {
-            $errors = $form->getErrors(true);
-            $this->logger->warning('Image upload validation failed', [
-                'errors' => $errors,
-                'user' => $this->getUser()->getId()
-            ]);
-            return $this->createResponse($errors, ['Image upload validation failed'], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
+        $newFilename = $this->fileNameGenerator->generate(
+            (string)$dto->wordId,
+            $dto->image->getClientOriginalName()
+        );
 
-        $imageFile = $form->get('image')->getData();
-        $wordId = $form->get('word')->getData();
+        $processor = $this->wordImageProcessorFactory->createProcessor((int)$dto->wordId);
+        $image = $processor->process($dto->image, $newFilename);
 
-        if (!$imageFile instanceof UploadedFile) {
-            return $this->createResponse(null, ['Please upload a file'], Response::HTTP_BAD_REQUEST);
-        }
-
-        try {
-            $newFilename = $this->fileNameGenerator->generate((string)$wordId, $imageFile->getClientOriginalName());
-            $processor = $this->wordImageProcessorFactory->createProcessor((int)$wordId);
-            $image = $processor->process($imageFile, $newFilename);
-
-            $this->logger->info('Image uploaded successfully', [
-                'wordId' => $wordId,
-                'filename' => $newFilename,
-                'userId' => $this->getUser()->getId()
-            ]);
-
-            return $this->createResponse(['image' => $image, 'url' => ''],
-                                         ['Image uploaded successfully'],
-                                         Response::HTTP_OK);
-        } catch (FileException $e) {
-            return $this->createResponse(
-                null,
-                ['Upload image error: ' . $e->getMessage()],
-                Response::HTTP_INTERNAL_SERVER_ERROR
-            );
-        }
+        return $this->createResponse(
+            ['image' => $image, 'url' => ''],
+            ['Image uploaded successfully']
+        );
     }
 
     /**

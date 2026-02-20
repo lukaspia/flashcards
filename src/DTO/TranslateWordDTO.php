@@ -7,7 +7,7 @@ namespace App\DTO;
 
 use Symfony\Component\Validator\Constraints as Assert;
 
-class TranslateWordDTO
+readonly class TranslateWordDTO
 {
     public function __construct(
         #[Assert\NotBlank(message: 'Word is required')]
