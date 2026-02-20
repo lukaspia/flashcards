@@ -46,7 +46,7 @@ class WordController extends AbstractApiController
         return $this->createResponse(
             [
                 'translation' => $result['translation'],
-                'prompt_data' => (array) $dto
+                'prompt_data' => (array)$dto
             ],
             ['Translated successfully'],
             Response::HTTP_OK
