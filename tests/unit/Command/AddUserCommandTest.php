@@ -3,7 +3,7 @@
 namespace App\Tests\Command;
 
 use App\Command\AddUserCommand;
-use App\DTO\OperationResponse;
+use App\DTO\OperationResponseDTO;
 use App\Entity\User;
 use App\Service\User\UserServiceInterface;
 use PHPUnit\Framework\TestCase;
@@ -55,7 +55,7 @@ class AddUserCommandTest extends TestCase
             ->method('validatePropertyValue')
             ->willReturn(new ConstraintViolationList());
 
-        $successResponse = new OperationResponse(true, 'User test_user created successfully');
+        $successResponse = new OperationResponseDTO(true, 'User test_user created successfully');
 
         $this->userService->expects($this->once())
             ->method('addUser')
@@ -80,7 +80,7 @@ class AddUserCommandTest extends TestCase
             ->method('validatePropertyValue')
             ->willReturn(new ConstraintViolationList());
 
-        $successResponse = new OperationResponse(true, 'User interactive_user created successfully');
+        $successResponse = new OperationResponseDTO(true, 'User interactive_user created successfully');
 
         $this->userService->expects($this->once())
             ->method('addUser')
@@ -102,7 +102,7 @@ class AddUserCommandTest extends TestCase
             ->method('validatePropertyValue')
             ->willReturn(new ConstraintViolationList());
 
-        $successResponse = new OperationResponse(true, 'Admin user admin_user created successfully');
+        $successResponse = new OperationResponseDTO(true, 'Admin user admin_user created successfully');
 
         $this->userService->expects($this->once())
             ->method('addUser')
@@ -175,7 +175,7 @@ class AddUserCommandTest extends TestCase
         ->method('validatePropertyValue')
             ->willReturn(new ConstraintViolationList());
 
-        $failureResponse = new OperationResponse(false, 'Username already exists');
+        $failureResponse = new OperationResponseDTO(false, 'Username already exists');
 
         $this->userService->expects($this->once())
             ->method('addUser')

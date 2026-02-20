@@ -6,7 +6,7 @@ declare(strict_types=1);
 namespace App\Service\User;
 
 
-use App\DTO\OperationResponse;
+use App\DTO\OperationResponseDTO;
 use App\Entity\User;
 use App\Event\AddUserEvent;
 use App\Event\RemoveUserEvent;
@@ -29,16 +29,16 @@ readonly class UserService implements UserServiceInterface
      * @param string $username
      * @param string $password
      * @param bool $isAdmin
-     * @return \App\DTO\OperationResponse
+     * @return \App\DTO\OperationResponseDTO
      */
     public function addUser(
         string $username,
         string $password,
         bool $isAdmin = false
-    ): OperationResponse {
+    ): OperationResponseDTO {
         $existingUser = $this->entityManager->getRepository(User::class)->findOneBy(['username' => $username]);
         if ($existingUser) {
-            return new OperationResponse(false, sprintf('Username "%s" is already in use', $username));
+            return new OperationResponseDTO(false, sprintf('Username "%s" is already in use', $username));
         }
 
         $user = new User();
@@ -51,7 +51,7 @@ readonly class UserService implements UserServiceInterface
         $errors = $this->validator->validate($user);
 
         if (count($errors) > 0) {
-            return new OperationResponse(false, (string)$errors);
+            return new OperationResponseDTO(false, (string)$errors);
         }
 
         $this->entityManager->persist($user);
@@ -62,19 +62,19 @@ readonly class UserService implements UserServiceInterface
             AddUserEvent::NAME
         );
 
-        return new OperationResponse(true, sprintf('New %s user successfully created.', $username));
+        return new OperationResponseDTO(true, sprintf('New %s user successfully created.', $username));
     }
 
     /**
      * @param string $username
-     * @return \App\DTO\OperationResponse
+     * @return \App\DTO\OperationResponseDTO
      */
-    public function deleteUser(string $username): OperationResponse
+    public function deleteUser(string $username): OperationResponseDTO
     {
         $user = $this->entityManager->getRepository(User::class)->findOneBy(['username' => $username]);
 
         if (!$user) {
-            return new OperationResponse(false, sprintf('User %s not found.', $username));
+            return new OperationResponseDTO(false, sprintf('User %s not found.', $username));
         }
 
         $this->entityManager->remove($user);
@@ -85,6 +85,6 @@ readonly class UserService implements UserServiceInterface
             RemoveUserEvent::NAME
         );
 
-        return new OperationResponse(true, sprintf('User %s successfully deleted.', $username));
+        return new OperationResponseDTO(true, sprintf('User %s successfully deleted.', $username));
     }
 }

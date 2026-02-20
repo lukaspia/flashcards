@@ -3,7 +3,7 @@
 namespace App\Tests\Command;
 
 use App\Command\DeleteUserCommand;
-use App\DTO\OperationResponse;
+use App\DTO\OperationResponseDTO;
 use App\Service\User\UserServiceInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Application;
@@ -42,7 +42,7 @@ class DeleteUserCommandTest extends TestCase
     {
         $username = 'test_user';
 
-        $successResponse = new OperationResponse(true, 'User deleted successfully');
+        $successResponse = new OperationResponseDTO(true, 'User deleted successfully');
 
         $this->userService
             ->expects($this->once())
@@ -63,7 +63,7 @@ class DeleteUserCommandTest extends TestCase
     {
         $username = 'nonexistent_user';
 
-        $failureResponse = new OperationResponse(false, 'User not found');
+        $failureResponse = new OperationResponseDTO(false, 'User not found');
 
         $this->userService
             ->expects($this->once())
@@ -85,7 +85,7 @@ class DeleteUserCommandTest extends TestCase
     {
         $username = 'interactive_user';
 
-        $successResponse = new OperationResponse(true, 'User deleted successfully');
+        $successResponse = new OperationResponseDTO(true, 'User deleted successfully');
 
         $this->userService
             ->expects($this->once())
