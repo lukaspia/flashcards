@@ -12,9 +12,9 @@ use App\DTO\UpdateLessonDTO;
 use App\Entity\Lesson;
 use App\Entity\User;
 use App\Factory\LessonFactoryInterface;
+use App\Repository\LessonRepository;
 use App\Service\Lesson\LessonMessageProviderInterface;
 use App\Service\Lesson\LessonServiceInterface;
-use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -26,7 +26,7 @@ use Symfony\Component\Routing\Annotation\Route;
 class LessonController extends AbstractApiController
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly LessonRepository $lessonRepository,
         private readonly LessonServiceInterface $lessonServices,
         protected readonly LoggerInterface $logger,
         private readonly LessonFactoryInterface $lessonFactory,
@@ -112,7 +112,7 @@ class LessonController extends AbstractApiController
         $dto = $this->serializer->denormalize($request->toArray(), UpdateLessonDTO::class);
         $this->validateDto($dto);
 
-        $existingLesson = $this->entityManager->getRepository(Lesson::class)->find($dto->id);
+        $existingLesson = $this->lessonRepository->find($dto->id);
 
         if (!$existingLesson) {
             throw $this->createNotFoundException('Lesson not found');
