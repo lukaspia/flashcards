@@ -12,5 +12,5 @@ interface WordImageProcessorInterface
      * @param string $newFilename
      * @return string
      */
-    public function process(UploadedFile $imageFile, string $newFilename): string;
+    public function process(UploadedFile $imageFile): string;
 }

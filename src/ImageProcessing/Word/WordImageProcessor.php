@@ -7,6 +7,7 @@ namespace App\ImageProcessing\Word;
 
 
 use App\Entity\Word;
+use App\File\FileNameGeneratorInterface;
 use App\ImageProcessing\Word\WordImageProcessorInterface;
 use App\Service\Lesson\WordImageServiceInterface;
 use Doctrine\ORM\EntityManagerInterface;
@@ -17,6 +18,7 @@ readonly class WordImageProcessor implements WordImageProcessorInterface
     public function __construct(
         private EntityManagerInterface $entityManager,
         private WordImageServiceInterface $wordServices,
+        private FileNameGeneratorInterface $fileNameGenerator,
         private string $wordImageUploadDir,
         private string $wordImageUploadDirRelative,
         private Word $word
@@ -26,12 +28,17 @@ readonly class WordImageProcessor implements WordImageProcessorInterface
     /**
      * @inheritDoc
      */
-    public function process(UploadedFile $imageFile, string $newFilename): string
+    public function process(UploadedFile $imageFile): string
     {
         try {
             if ($this->word->getImage()) {
                 $this->wordServices->removeWordImageFile($this->word);
             }
+
+            $newFilename = $this->fileNameGenerator->generate(
+                (string)$this->word->getId(),
+                $imageFile->getClientOriginalName()
+            );
 
             $targetDirectory = $this->wordImageUploadDir . $this->word->getImageRelativePath();
 

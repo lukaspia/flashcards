@@ -8,6 +8,7 @@ namespace App\Factory;
 
 use App\Entity\Word;
 use App\Factory\WordImageProcessorFactoryInterface;
+use App\File\FileNameGeneratorInterface;
 use App\ImageProcessing\Word\TempImageProcessor;
 use App\ImageProcessing\Word\WordImageProcessor;
 use App\ImageProcessing\Word\WordImageProcessorInterface;
@@ -19,6 +20,7 @@ readonly class ImageProcessorFactory implements WordImageProcessorFactoryInterfa
     public function __construct(
         private EntityManagerInterface $entityManager,
         private WordImageServiceInterface $wordServices,
+        private FileNameGeneratorInterface $fileNameGenerator,
         private string $wordImageUploadDir,
         private string $wordImageUploadDirRelative,
         private string $wordImageUploadDirTemp
@@ -40,6 +42,7 @@ readonly class ImageProcessorFactory implements WordImageProcessorFactoryInterfa
         return new WordImageProcessor(
             $this->entityManager,
             $this->wordServices,
+            $this->fileNameGenerator,
             $this->wordImageUploadDir,
             $this->wordImageUploadDirRelative,
             $word

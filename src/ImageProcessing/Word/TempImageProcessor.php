@@ -20,8 +20,10 @@ readonly class TempImageProcessor implements WordImageProcessorInterface
     /**
      * @inheritDoc
      */
-    public function process(UploadedFile $imageFile, string $newFilename): string
+    public function process(UploadedFile $imageFile): string
     {
+        $newFilename = uniqid('temp_', true) . '.' . $imageFile->guessExtension();
+
         try {
             if (!is_dir($this->wordImageUploadDirTemp)) {
                 if (!@mkdir($this->wordImageUploadDirTemp, 0775, true) && !is_dir($this->wordImageUploadDirTemp)) {

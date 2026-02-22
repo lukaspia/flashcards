@@ -55,13 +55,8 @@ class ImageController extends AbstractApiController
             $this->denyAccessUnlessGranted(WordVoter::UPLOAD_IMAGE, $word);
         }
 
-        $newFilename = $this->fileNameGenerator->generate(
-            (string)$dto->wordId,
-            $dto->image->getClientOriginalName()
-        );
-
         $processor = $this->wordImageProcessorFactory->createProcessor($word);
-        $image = $processor->process($dto->image, $newFilename);
+        $image = $processor->process($dto->image);
 
         return $this->createResponse(
             ['image' => $image, 'url' => ''],
