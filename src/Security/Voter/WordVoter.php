@@ -15,9 +15,8 @@ use Symfony\Component\Security\Core\User\UserInterface;
  */
 final class WordVoter extends Voter
 {
-    /**
-     *
-     */
+    public const UPLOAD_IMAGE = 'UPLOAD_IMAGE';
+
     public const DELETE_IMAGE = 'DELETE_IMAGE';
 
     /**
@@ -27,7 +26,7 @@ final class WordVoter extends Voter
      */
     protected function supports(string $attribute, mixed $subject): bool
     {
-        return in_array($attribute, [self::DELETE_IMAGE])
+        return in_array($attribute, [self::UPLOAD_IMAGE, self::DELETE_IMAGE])
             && $subject instanceof Word;
     }
 

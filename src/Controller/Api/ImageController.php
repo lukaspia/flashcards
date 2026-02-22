@@ -11,6 +11,7 @@ use App\Entity\Word;
 use App\Factory\WordImageProcessorFactoryInterface;
 use App\File\FileNameGeneratorInterface;
 use App\Form\UploadWordImageTypeForm;
+use App\Repository\WordRepository;
 use App\Security\Voter\WordVoter;
 use App\Service\Lesson\WordImageServiceInterface;
 use Psr\Log\LoggerInterface;
@@ -35,7 +36,7 @@ class ImageController extends AbstractApiController
      */
     #[Route('/images/upload', name: 'image_upload', methods: ['POST'])]
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
-    public function uploadImage(Request $request): JsonResponse
+    public function uploadImage(Request $request, WordRepository $wordRepository): JsonResponse
     {
         $dto = new UploadImageDTO(
             $request->request->get('word'),
@@ -44,12 +45,22 @@ class ImageController extends AbstractApiController
 
         $this->validateDto($dto);
 
+        $word = $dto->wordId > 0 ? $wordRepository->find($dto->wordId) : null;
+
+        if ($dto->wordId > 0) {
+            if (!$word) {
+                throw $this->createNotFoundException('Word with ID ' . $dto->wordId . ' could not be found.');
+            }
+
+            $this->denyAccessUnlessGranted(WordVoter::UPLOAD_IMAGE, $word);
+        }
+
         $newFilename = $this->fileNameGenerator->generate(
             (string)$dto->wordId,
             $dto->image->getClientOriginalName()
         );
 
-        $processor = $this->wordImageProcessorFactory->createProcessor((int)$dto->wordId);
+        $processor = $this->wordImageProcessorFactory->createProcessor($word);
         $image = $processor->process($dto->image, $newFilename);
 
         return $this->createResponse(

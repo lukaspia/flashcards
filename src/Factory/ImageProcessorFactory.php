@@ -28,23 +28,21 @@ readonly class ImageProcessorFactory implements WordImageProcessorFactoryInterfa
     /**
      * @inheritDoc
      */
-    public function createProcessor(int $wordId): WordImageProcessorInterface
+    public function createProcessor(?Word $word): WordImageProcessorInterface
     {
-        $word = $this->entityManager->getRepository(Word::class)->find($wordId);
-
-        if ($word) {
-            return new WordImageProcessor(
-                $this->entityManager,
-                $this->wordServices,
-                $this->wordImageUploadDir,
-                $this->wordImageUploadDirRelative,
-                $word
+        if (!$word) {
+            return new TempImageProcessor(
+                $this->wordImageUploadDirTemp,
+                $this->wordImageUploadDirRelative
             );
         }
 
-        return new TempImageProcessor(
-            $this->wordImageUploadDirTemp,
-            $this->wordImageUploadDirRelative
+        return new WordImageProcessor(
+            $this->entityManager,
+            $this->wordServices,
+            $this->wordImageUploadDir,
+            $this->wordImageUploadDirRelative,
+            $word
         );
     }
 }
