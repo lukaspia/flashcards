@@ -8,9 +8,9 @@ namespace App\Controller\Api;
 
 use App\DTO\UploadImageDTO;
 use App\Entity\Word;
-use App\Factory\WordImageProcessorFactoryInterface;
 use App\File\FileNameGeneratorInterface;
 use App\Form\UploadWordImageTypeForm;
+use App\ImageProcessing\Word\WordImageProcessorInterface;
 use App\Repository\WordRepository;
 use App\Security\Voter\WordVoter;
 use App\Service\Lesson\WordImageServiceInterface;
@@ -24,7 +24,7 @@ class ImageController extends AbstractApiController
 {
     public function __construct(
         private readonly WordImageServiceInterface $wordServices,
-        private readonly WordImageProcessorFactoryInterface $wordImageProcessorFactory,
+        private readonly WordImageProcessorInterface $wordImageProcessor,
         private readonly FileNameGeneratorInterface $fileNameGenerator,
         private readonly LoggerInterface $logger
     ) {
@@ -55,8 +55,7 @@ class ImageController extends AbstractApiController
             $this->denyAccessUnlessGranted(WordVoter::UPLOAD_IMAGE, $word);
         }
 
-        $processor = $this->wordImageProcessorFactory->createProcessor($word);
-        $image = $processor->process($dto->image);
+        $image = $this->wordImageProcessor->process($dto->image, $word);
 
         return $this->createResponse(
             ['image' => $image, 'url' => ''],

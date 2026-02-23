@@ -31,10 +31,8 @@ services:
         tags:
             - { name: kernel.event_listener, event: kernel.exception }
 
-    App\Factory\ImageProcessorFactory:
+    App\ImageProcessing\Word\WordImageProcessor:
         arguments:
-            $entityManager: '@doctrine.orm.entity_manager'
-            $wordServices: '@App\Service\Lesson\WordImageServiceInterface'
             $wordImageUploadDir: '%word_image_upload_dir%'
             $wordImageUploadDirRelative: '%word_image_upload_dir_relative%'
             $wordImageUploadDirTemp: '%word_image_upload_dir_temp%'

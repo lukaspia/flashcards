@@ -22,37 +22,51 @@ readonly class WordImageProcessor implements WordImageProcessorInterface
         private FileNameGeneratorInterface $fileNameGenerator,
         private FileManagerInterface $fileManager,
         private string $wordImageUploadDir,
-        private string $wordImageUploadDirRelative,
-        private Word $word
-    ) {
-    }
+        private string $wordImageUploadDirTemp,
+        private string $wordImageUploadDirRelative
+    ) {}
 
-    /**
-     * @inheritDoc
-     */
-    public function process(UploadedFile $imageFile): string
+    public function process(UploadedFile $imageFile, ?Word $word = null): string
     {
-        if ($this->word->getImage()) {
-            $this->wordServices->removeWordImageFile($this->word);
+        if ($word === null) {
+            return $this->processTemporary($imageFile);
         }
 
-        $newFilename = $this->fileNameGenerator->generate(
-            (string)$this->word->getId(),
-            $imageFile->getClientOriginalName()
-        );
+        return $this->processPermanent($imageFile, $word);
+    }
 
-        $imageSubPath = ltrim($this->word->getImageRelativePath(), '/');
+    private function processTemporary(UploadedFile $imageFile): string
+    {
+        $extension = $imageFile->guessExtension() ?? $imageFile->getClientOriginalExtension();
+        $newFilename = uniqid('temp_', true) . '.' . $extension;
+
+        $this->fileManager->upload($imageFile, $this->wordImageUploadDirTemp, $newFilename);
+
+        return sprintf('/%s/temp/%s', trim($this->wordImageUploadDirRelative, '/'), $newFilename);
+    }
+
+    private function processPermanent(UploadedFile $imageFile, Word $word): string
+    {
+        if ($word->getImage()) {
+            $this->wordServices->removeWordImageFile($word);
+        }
+
+        $newFilename = $this->fileNameGenerator->generate((string)$word->getId(), $imageFile->getClientOriginalName());
+        $imageSubPath = ltrim($word->getImageRelativePath(), '/');
         $targetDirectory = rtrim($this->wordImageUploadDir, '/') . '/' . $imageSubPath;
 
         $this->fileManager->upload($imageFile, $targetDirectory, $newFilename);
 
-        $publicBasePath = '/' . trim($this->wordImageUploadDirRelative, '/');
-        $fullRelativePath = $publicBasePath . '/' . $imageSubPath . $newFilename;
+        $fullRelativePath = sprintf('/%s/%s%s',
+                                    trim($this->wordImageUploadDirRelative, '/'),
+                                    $imageSubPath,
+                                    $newFilename
+        );
 
-        $this->word->setImage($fullRelativePath);
-        $this->entityManager->persist($this->word);
+        $word->setImage($fullRelativePath);
+        $this->entityManager->persist($word);
         $this->entityManager->flush();
 
-        return $this->word->getImage();
+        return $word->getImage();
     }
 }
