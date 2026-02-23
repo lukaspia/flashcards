@@ -14,8 +14,20 @@ use App\Service\Lesson\WordImageServiceInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
+/**
+ *
+ */
 readonly class WordImageProcessor implements WordImageProcessorInterface
 {
+    /**
+     * @param \Doctrine\ORM\EntityManagerInterface $entityManager
+     * @param \App\Service\Lesson\WordImageServiceInterface $wordServices
+     * @param \App\File\FileNameGeneratorInterface $fileNameGenerator
+     * @param \App\File\FileManagerInterface $fileManager
+     * @param string $wordImageUploadDir
+     * @param string $wordImageUploadDirTemp
+     * @param string $wordImageUploadDirRelative
+     */
     public function __construct(
         private EntityManagerInterface $entityManager,
         private WordImageServiceInterface $wordServices,
@@ -26,15 +38,23 @@ readonly class WordImageProcessor implements WordImageProcessorInterface
         private string $wordImageUploadDirRelative
     ) {}
 
+    /**
+     * @param \Symfony\Component\HttpFoundation\File\UploadedFile $imageFile
+     * @param \App\Entity\Word|null $word
+     * @return string
+     */
     public function process(UploadedFile $imageFile, ?Word $word = null): string
     {
-        if ($word === null) {
-            return $this->processTemporary($imageFile);
-        }
-
-        return $this->processPermanent($imageFile, $word);
+        return match (null === $word) {
+            true => $this->processTemporary($imageFile),
+            false => $this->processPermanent($imageFile, $word),
+        };
     }
 
+    /**
+     * @param \Symfony\Component\HttpFoundation\File\UploadedFile $imageFile
+     * @return string
+     */
     private function processTemporary(UploadedFile $imageFile): string
     {
         $extension = $imageFile->guessExtension() ?? $imageFile->getClientOriginalExtension();
@@ -42,18 +62,28 @@ readonly class WordImageProcessor implements WordImageProcessorInterface
 
         $this->fileManager->upload($imageFile, $this->wordImageUploadDirTemp, $newFilename);
 
-        return sprintf('/%s/temp/%s', trim($this->wordImageUploadDirRelative, '/'), $newFilename);
+        $base = trim($this->wordImageUploadDirRelative, '/');
+        return sprintf('/%s/temp/%s', $base, $newFilename);
     }
 
+    /**
+     * @param \Symfony\Component\HttpFoundation\File\UploadedFile $imageFile
+     * @param \App\Entity\Word $word
+     * @return string
+     */
     private function processPermanent(UploadedFile $imageFile, Word $word): string
     {
         if ($word->getImage()) {
             $this->wordServices->removeWordImageFile($word);
         }
 
-        $newFilename = $this->fileNameGenerator->generate((string)$word->getId(), $imageFile->getClientOriginalName());
+        $newFilename = $this->fileNameGenerator->generate(
+            (string)$word->getId(),
+            $imageFile->getClientOriginalName()
+        );
+
         $imageSubPath = ltrim($word->getImageRelativePath(), '/');
-        $targetDirectory = rtrim($this->wordImageUploadDir, '/') . '/' . $imageSubPath;
+        $targetDirectory = sprintf('%s/%s', rtrim($this->wordImageUploadDir, '/'), $imageSubPath);
 
         $this->fileManager->upload($imageFile, $targetDirectory, $newFilename);
 
@@ -64,6 +94,7 @@ readonly class WordImageProcessor implements WordImageProcessorInterface
         );
 
         $word->setImage($fullRelativePath);
+
         $this->entityManager->persist($word);
         $this->entityManager->flush();
 
