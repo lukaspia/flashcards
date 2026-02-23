@@ -14,6 +14,7 @@ use App\ImageProcessing\Word\WordImageProcessorInterface;
 use App\Repository\WordRepository;
 use App\Security\Voter\WordVoter;
 use App\Service\Lesson\WordImageServiceInterface;
+use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -23,6 +24,7 @@ use Symfony\Component\HttpFoundation\Response;
 class ImageController extends AbstractApiController
 {
     public function __construct(
+        private EntityManagerInterface $entityManager,
         private readonly WordImageServiceInterface $wordServices,
         private readonly WordImageProcessorInterface $wordImageProcessor,
         private readonly FileNameGeneratorInterface $fileNameGenerator,
@@ -56,6 +58,10 @@ class ImageController extends AbstractApiController
         }
 
         $image = $this->wordImageProcessor->process($dto->image, $word);
+
+        if ($word) {
+            $this->entityManager->flush();
+        }
 
         return $this->createResponse(
             ['image' => $image, 'url' => ''],

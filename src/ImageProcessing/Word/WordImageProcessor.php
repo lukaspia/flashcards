@@ -11,7 +11,6 @@ use App\File\FileManagerInterface;
 use App\File\FileNameGeneratorInterface;
 use App\ImageProcessing\Word\WordImageProcessorInterface;
 use App\Service\Lesson\WordImageServiceInterface;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
@@ -20,7 +19,6 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 readonly class WordImageProcessor implements WordImageProcessorInterface
 {
     /**
-     * @param \Doctrine\ORM\EntityManagerInterface $entityManager
      * @param \App\Service\Lesson\WordImageServiceInterface $wordServices
      * @param \App\File\FileNameGeneratorInterface $fileNameGenerator
      * @param \App\File\FileManagerInterface $fileManager
@@ -29,7 +27,6 @@ readonly class WordImageProcessor implements WordImageProcessorInterface
      * @param string $wordImageUploadDirRelative
      */
     public function __construct(
-        private EntityManagerInterface $entityManager,
         private WordImageServiceInterface $wordServices,
         private FileNameGeneratorInterface $fileNameGenerator,
         private FileManagerInterface $fileManager,
@@ -94,9 +91,6 @@ readonly class WordImageProcessor implements WordImageProcessorInterface
         );
 
         $word->setImage($fullRelativePath);
-
-        $this->entityManager->persist($word);
-        $this->entityManager->flush();
 
         return $word->getImage();
     }
