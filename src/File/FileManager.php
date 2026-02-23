@@ -7,12 +7,32 @@ namespace App\File;
 
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 
 readonly class FileManager implements FileManagerInterface
 {
     public function __construct(private Filesystem $filesystem)
     {
+    }
+
+    /**
+     * @param \Symfony\Component\HttpFoundation\File\UploadedFile $file
+     * @param string $targetDirectory
+     * @param string $fileName
+     * @return void
+     */
+    public function upload(UploadedFile $file, string $targetDirectory, string $fileName): void
+    {
+        try {
+            if (!$this->filesystem->exists($targetDirectory)) {
+                $this->filesystem->mkdir($targetDirectory, 0775);
+            }
+
+            $file->move($targetDirectory, $fileName);
+        } catch (FileException | IOExceptionInterface $e) {
+            throw new \RuntimeException(sprintf('Failed to upload file: %s', $e->getMessage()), 0, $e);
+        }
     }
 
     /**

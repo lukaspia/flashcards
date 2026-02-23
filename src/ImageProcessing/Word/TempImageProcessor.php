@@ -22,23 +22,12 @@ readonly class TempImageProcessor implements WordImageProcessorInterface
      */
     public function process(UploadedFile $imageFile): string
     {
-        $newFilename = uniqid('temp_', true) . '.' . $imageFile->guessExtension();
+        $extension = $imageFile->guessExtension() ?? $imageFile->getClientOriginalExtension();
+        $newFilename = uniqid('temp_', true) . '.' . $extension;
 
-        try {
-            if (!is_dir($this->wordImageUploadDirTemp)) {
-                if (!@mkdir($this->wordImageUploadDirTemp, 0775, true) && !is_dir($this->wordImageUploadDirTemp)) {
-                    throw new \RuntimeException(sprintf('Directory "%s" was not created', $this->wordImageUploadDirTemp));
-                }
-            }
+        $this->fileManager->upload($imageFile, $this->wordImageUploadDirTemp, $newFilename);
 
-            $imageFile->move(
-                $this->wordImageUploadDirTemp,
-                $newFilename
-            );
-
-            return '/' . $this->wordImageUploadDirRelative . 'temp/' . $newFilename;
-        } catch (FileException $e) {
-            throw new FileException(sprintf('Could not move the file "%s"', $imageFile->getClientOriginalName()), 0, $e);
-        }
+        $basePath = '/' . ltrim($this->wordImageUploadDirRelative, '/');
+        return rtrim($basePath, '/') . '/temp/' . $newFilename;
     }
 }
