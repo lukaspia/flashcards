@@ -8,12 +8,14 @@ use App\Repository\WordCategoryRepository;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 readonly class WordCategoryService implements WordCategoryServiceInterface
 {
     public function __construct(
         private WordCategoryRepository $wordCategoryRepository,
-        private CacheInterface $cache,
+        #[Target('word_category_cache')]
+        private TagAwareCacheInterface $cache,
         private SerializerInterface $serializer
     ) {
     }
