@@ -95,17 +95,21 @@ readonly class LessonService implements LessonServiceInterface
     {
         /** @var \App\Repository\LessonRepository $lessonRepository */
         $lessonRepository = $this->entityManager->getRepository(Lesson::class);
-        $criteria = ['user' => $user];
-        $order = ['id' => 'DESC'];
 
-        $lessons = $lessonRepository->findPaginatedLessons($criteria, $order, $limit, $page);
-        $totalItems = $lessonRepository->countLessonsByCriteria($criteria);
-        $totalPages = ceil($totalItems / $limit);
+        $paginator = $lessonRepository->getPaginatedLessons(
+            ['user' => $user],
+            ['id' => 'DESC'],
+            $limit,
+            $page
+        );
 
-        $page = min($page, $totalPages);
+        $totalItems = count($paginator);
+        $totalPages = (int) ceil($totalItems / $limit);
+
+        $page = $totalPages > 0 ? max(1, min($page, $totalPages)) : 1;
 
         return [
-            'lessons' => $lessons,
+            'lessons' => iterator_to_array($paginator),
             'page' => $page,
             'totalItems' => $totalItems,
             'totalPages' => $totalPages
