@@ -12,6 +12,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Contracts\Cache\CacheInterface;
 
 #[AsCommand(
     name: 'app:add-word-category',
@@ -22,7 +23,7 @@ class AddWordCategoryCommand extends Command
     /**
      * @param \Doctrine\ORM\EntityManagerInterface $entityManager
      */
-    public function __construct(private readonly EntityManagerInterface $entityManager)
+    public function __construct(private readonly EntityManagerInterface $entityManager, private CacheInterface $cache)
     {
         parent::__construct();
     }
@@ -60,6 +61,8 @@ class AddWordCategoryCommand extends Command
 
         $this->entityManager->persist($wordCategory);
         $this->entityManager->flush();
+
+        $this->cache->invalidateTags(['word_categories']);
 
         $io->success('Category created successfully');
         return Command::SUCCESS;

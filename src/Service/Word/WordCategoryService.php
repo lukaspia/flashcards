@@ -25,6 +25,7 @@ readonly class WordCategoryService implements WordCategoryServiceInterface
     public function getAllCategories(): array
     {
         return $this->cache->get('word_categories_all', function (ItemInterface $item): array {
+            $item->tag(['word_categories']);
             $item->expiresAfter(3600);
 
             $categories = $this->wordCategoryRepository->findAllOrderedByName();
