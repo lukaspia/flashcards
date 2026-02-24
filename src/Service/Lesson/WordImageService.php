@@ -87,7 +87,8 @@ readonly class WordImageService implements WordImageServiceInterface
             }
 
             $imageName = basename($word->getImage());
-            $relativeDestination = $word->getImageRelativePath() . $imageName;
+            $relativeDir = $this->generateRelativePath($word);
+            $relativeDestination = $relativeDir . $imageName;
 
             $sourcePath = rtrim($this->uploadDirTemp, '/') . '/' . ltrim($imageName, '/');
             $destinationPath = rtrim($this->uploadDir, '/') . '/' . ltrim($relativeDestination, '/');
@@ -105,11 +106,36 @@ readonly class WordImageService implements WordImageServiceInterface
 
     /**
      * @param \App\Entity\Word $word
+     * @return string
+     */
+    public function generateRelativePath(Word $word): string
+    {
+        $lesson = $word->getLesson();
+        if (!$lesson) {
+            throw new \RuntimeException(sprintf('Word ID %s has no lesson assigned.', $word->getId()));
+        }
+
+        $user = $lesson->getUser();
+        if (!$user) {
+            throw new \RuntimeException(sprintf('Lesson ID %s has no user assigned.', $lesson->getId()));
+        }
+
+        return sprintf('%d/%d/', $user->getId(), $lesson->getId());
+    }
+
+    /**
+     * @param \App\Entity\Word $word
      * @return bool
      */
     private function shouldProcessWordImage(Word $word): bool
     {
         $image = $word->getImage();
-        return !empty($image) && !str_contains($image, $this->uploadDirRelative);
+        if (empty($image)) {
+            return false;
+        }
+
+        $targetPrefix = '/' . ltrim($this->uploadDirRelative, '/');
+
+        return !str_starts_with($image, $targetPrefix);
     }
 }

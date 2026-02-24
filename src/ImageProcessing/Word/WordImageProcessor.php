@@ -79,14 +79,15 @@ readonly class WordImageProcessor implements WordImageProcessorInterface
             $imageFile->getClientOriginalName()
         );
 
-        $imageSubPath = ltrim($word->getImageRelativePath(), '/');
-        $targetDirectory = sprintf('%s/%s', rtrim($this->wordImageUploadDir, '/'), $imageSubPath);
+        $imageSubPath = $this->wordServices->generateRelativePath($word);
+
+        $targetDirectory = rtrim($this->wordImageUploadDir, '/') . '/' . ltrim($imageSubPath, '/');
 
         $this->fileManager->upload($imageFile, $targetDirectory, $newFilename);
 
         $fullRelativePath = sprintf('/%s/%s%s',
                                     trim($this->wordImageUploadDirRelative, '/'),
-                                    $imageSubPath,
+                                    ltrim($imageSubPath, '/'),
                                     $newFilename
         );
 

@@ -109,11 +109,6 @@ class Word
         $this->sequence = $sequence;
     }
 
-    public function getImageRelativePath(): ?string
-    {
-        return $this->getLesson()->getUser()->getId() . '/' . $this->getLesson()->getId() . '/';
-    }
-
     public function getErrors(): int
     {
         return $this->errors;
