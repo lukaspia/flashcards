@@ -25,6 +25,10 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
+    App\Command\CleanupTemporaryUploadsCommand:
+        arguments:
+          $uploadDirTemp: '%word_image_upload_dir_temp%'
+
     App\EventListener\ApiExceptionListener:
         arguments:
           $environment: '%kernel.environment%'

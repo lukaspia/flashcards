@@ -18,6 +18,12 @@ readonly class FileManager implements FileManagerInterface
     {
     }
 
+    /**
+     * @param \Symfony\Component\HttpFoundation\File\UploadedFile $file
+     * @param string $targetDirectory
+     * @param string $fileName
+     * @return void
+     */
     public function upload(UploadedFile $file, string $targetDirectory, string $fileName): void
     {
         $this->createDirIfNotExists($targetDirectory);
@@ -29,6 +35,11 @@ readonly class FileManager implements FileManagerInterface
         }
     }
 
+    /**
+     * @param string $sourcePath
+     * @param string $destinationPath
+     * @return bool
+     */
     public function moveFile(string $sourcePath, string $destinationPath): bool
     {
         if (!$this->filesystem->exists($sourcePath)) {
@@ -45,6 +56,10 @@ readonly class FileManager implements FileManagerInterface
         }
     }
 
+    /**
+     * @param string $filePath
+     * @return bool
+     */
     public function removeFile(string $filePath): bool
     {
         try {
@@ -55,6 +70,33 @@ readonly class FileManager implements FileManagerInterface
         }
     }
 
+    /**
+     * @param string $directory
+     * @param int $hoursThreshold
+     * @return int
+     */
+    public function cleanupOldFiles(string $directory, int $hoursThreshold): int
+    {
+        if (!is_dir($directory)) {
+            return 0;
+        }
+
+        $finder = new Finder();
+        $finder->files()->in($directory)->date('before ' . $hoursThreshold . ' hours ago');
+
+        $count = 0;
+        foreach ($finder as $file) {
+            $this->filesystem->remove($file->getRealPath());
+            $count++;
+        }
+
+        return $count;
+    }
+
+    /**
+     * @param string $directory
+     * @return void
+     */
     private function createDirIfNotExists(string $directory): void
     {
         if (!$this->filesystem->exists($directory)) {
