@@ -6,7 +6,6 @@ declare(strict_types=1);
 namespace App\Service\User;
 
 
-use App\DTO\OperationResponseDTO;
 use App\Entity\User;
 use App\Event\AddUserEvent;
 use App\Event\RemoveUserEvent;

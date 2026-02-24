@@ -4,15 +4,23 @@ declare(strict_types=1);
 
 namespace App\Service\Word;
 
+use App\Entity\WordCategory;
 use App\Repository\WordCategoryRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 readonly class WordCategoryService implements WordCategoryServiceInterface
 {
+    /**
+     * @param \Doctrine\ORM\EntityManagerInterface $entityManager
+     * @param \App\Repository\WordCategoryRepository $wordCategoryRepository
+     * @param \Symfony\Contracts\Cache\TagAwareCacheInterface $cache
+     * @param \Symfony\Component\Serializer\SerializerInterface $serializer
+     */
     public function __construct(
+        private EntityManagerInterface $entityManager,
         private WordCategoryRepository $wordCategoryRepository,
         #[Target('word_category_cache')]
         private TagAwareCacheInterface $cache,
@@ -34,5 +42,46 @@ readonly class WordCategoryService implements WordCategoryServiceInterface
 
             return $this->serializer->normalize($categories, null, ['groups' => 'category:read']);
         });
+    }
+
+    /**
+     * @param string $name
+     * @return \App\Entity\WordCategory
+     * @throws \Psr\Cache\InvalidArgumentException
+     */
+    public function createCategory(string $name): WordCategory
+    {
+        if (empty(trim($name))) {
+            throw new \InvalidArgumentException('Category name cannot be empty.');
+        }
+
+        $category = new WordCategory();
+        $category->setName($name);
+
+        $this->entityManager->persist($category);
+        $this->entityManager->flush();
+
+        $this->cache->invalidateTags(['word_categories']);
+
+        return $category;
+    }
+
+    /**
+     * @param string $name
+     * @return void
+     * @throws \Psr\Cache\InvalidArgumentException
+     */
+    public function deleteCategory(string $name): void
+    {
+        $category = $this->entityManager->getRepository(WordCategory::class)->findOneBy(['name' => $name]);
+
+        if (!$category) {
+            throw new \InvalidArgumentException(sprintf('Category "%s" not found.', $name));
+        }
+
+        $this->entityManager->remove($category);
+        $this->entityManager->flush();
+
+        $this->cache->invalidateTags(['word_categories']);
     }
 }
