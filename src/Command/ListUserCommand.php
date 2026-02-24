@@ -3,8 +3,7 @@
 namespace App\Command;
 
 use App\Entity\User;
-use App\Service\UserService;
-use Doctrine\ORM\EntityManagerInterface as EntityManagerInterfaceAlias;
+use App\Repository\UserRepository;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -18,11 +17,9 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 )]
 class ListUserCommand extends Command
 {
-    /**
-     * @param \Doctrine\ORM\EntityManagerInterface $entityManager
-     */
-    public function __construct(private readonly EntityManagerInterfaceAlias $entityManager)
-    {
+    public function __construct(
+        private readonly UserRepository $userRepository
+    ) {
         parent::__construct();
     }
 
@@ -31,8 +28,7 @@ class ListUserCommand extends Command
      */
     protected function configure(): void
     {
-        $this
-            ->setHelp('User list:');
+        $this->setHelp('This command displays a table with all registered users.');
     }
 
     /**
@@ -43,26 +39,27 @@ class ListUserCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
+        $io->title('User List');
 
-        $io->info($this->getHelp());
+        $users = $this->userRepository->findAll();
 
-        $users = $this->entityManager->getRepository(User::class)->findAll();
-
-        $usersTable = [];
-        if (!empty($users)) {
-            foreach ($users as $user) {
-                $usersTable[] = [
-                    $user->getId(),
-                    $user->getUsername(),
-                    implode(', ', $user->getRoles()),
-                ];
-            }
+        if (empty($users)) {
+            $io->warning('No users found in the database.');
+            return Command::SUCCESS;
         }
+
+        $rows = array_map(fn(User $user) => [
+            $user->getId(),
+            $user->getUsername(),
+            implode(', ', $user->getRoles()),
+        ], $users);
 
         $io->table(
             ['ID', 'Username', 'Roles'],
-            $usersTable
+            $rows
         );
+
+        $io->note(sprintf('Total users: %d', count($users)));
 
         return Command::SUCCESS;
     }

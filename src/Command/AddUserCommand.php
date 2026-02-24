@@ -22,10 +22,6 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 )]
 class AddUserCommand extends Command
 {
-    /**
-     * @param \App\Service\User\UserService $userService
-     * @param \Symfony\Component\Validator\Validator\ValidatorInterface $validator
-     */
     public function __construct(
         private readonly UserServiceInterface $userService,
         private readonly ValidatorInterface $validator
@@ -40,22 +36,9 @@ class AddUserCommand extends Command
     {
         $this
             ->setHelp('This command allows you to create a user...')
-            ->addArgument(
-                'username',
-                InputArgument::OPTIONAL,
-                'The username of the new user'
-            )
-            ->addArgument(
-                'password',
-                InputArgument::OPTIONAL,
-                'The plain password of the new user'
-            )
-            ->addOption(
-                'admin',
-                null,
-                InputOption::VALUE_NONE,
-                'If set, the user is created as an administrator'
-            );
+            ->addArgument('username', InputArgument::OPTIONAL, 'The username of the new user')
+            ->addArgument('password', InputArgument::OPTIONAL, 'The plain password of the new user')
+            ->addOption('admin', null, InputOption::VALUE_NONE, 'If set, the user is created as an administrator');
     }
 
     /**
@@ -78,31 +61,32 @@ class AddUserCommand extends Command
             return Command::FAILURE;
         }
 
-        $isAdmin = $input->getOption('admin');
+        $isAdmin = (bool)$input->getOption('admin');
 
         try {
-            $response = $this->userService->addUser($username, $password, (bool)$isAdmin);
+            $user = $this->userService->addUser($username, $password, $isAdmin);
 
-            if ($response->isSuccess()) {
-                $io->success($response->getMessage());
-                return Command::SUCCESS;
-            }
+            $io->success(sprintf('New %s user successfully created (ID: %d).', $user->getUsername(), $user->getId()));
 
-            $io->error(['Error creating user.', $response->getMessage()]);
-            return Command::FAILURE;
-        } catch (\Throwable $e) {
+            return Command::SUCCESS;
+        } catch (\Exception $e) {
             $io->error(['Error creating user.', $e->getMessage()]);
+
             return Command::FAILURE;
         }
     }
 
+    /**
+     * @param \Symfony\Component\Console\Input\InputInterface $input
+     * @param \Symfony\Component\Console\Style\SymfonyStyle $io
+     * @return string|null
+     */
     private function getUsername(InputInterface $input, SymfonyStyle $io): ?string
     {
         $username = trim((string)$input->getArgument('username') ?: '');
 
         while (empty($username)) {
             $username = trim((string)$io->ask('Please enter the username'));
-
             if (empty($username)) {
                 $io->warning('Username cannot be empty');
             }
@@ -110,20 +94,26 @@ class AddUserCommand extends Command
 
         $errors = $this->validator->validatePropertyValue(User::class, 'username', $username);
         if (count($errors) > 0) {
-            $io->error(['Error creating user.', $errors]);
+            foreach ($errors as $error) {
+                $io->error($error->getMessage());
+            }
             return null;
         }
 
         return $username;
     }
 
+    /**
+     * @param \Symfony\Component\Console\Input\InputInterface $input
+     * @param \Symfony\Component\Console\Style\SymfonyStyle $io
+     * @return string|null
+     */
     private function getPassword(InputInterface $input, SymfonyStyle $io): ?string
     {
         $password = $input->getArgument('password');
 
         if (empty($password)) {
             $password = $io->askHidden('Password (your input will be hidden)');
-
             if ($password === null) {
                 return null;
             }
@@ -138,7 +128,9 @@ class AddUserCommand extends Command
 
         $errors = $this->validator->validatePropertyValue(User::class, 'password', $password);
         if (count($errors) > 0) {
-            $io->error(['Error creating user.', $errors]);
+            foreach ($errors as $error) {
+                $io->error($error->getMessage());
+            }
             return null;
         }
 
