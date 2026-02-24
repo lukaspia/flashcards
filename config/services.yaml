@@ -37,6 +37,13 @@ services:
             $wordImageUploadDirRelative: '%word_image_upload_dir_relative%'
             $wordImageUploadDirTemp: '%word_image_upload_dir_temp%'
 
+    App\Service\Lesson\WordImageService:
+        arguments:
+            $publicDir: '%public_dir%'
+            $uploadDirTemp: '%word_image_upload_dir_temp%'
+            $uploadDir: '%word_image_upload_dir%'
+            $uploadDirRelative: '%word_image_upload_dir_relative%'
+
     Gemini\Client:
         factory: ['Gemini', 'client']
         arguments:
