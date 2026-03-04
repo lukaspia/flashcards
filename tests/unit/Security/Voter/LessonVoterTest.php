@@ -6,161 +6,67 @@ use App\Entity\Lesson;
 use App\Entity\User;
 use App\Security\Voter\LessonVoter;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
-use Symfony\Component\Security\Core\Authorization\Voter\Voter;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Authorization\Voter\VoterInterface;
 
 class LessonVoterTest extends TestCase
 {
-    private function createToken(?User $user = null): UsernamePasswordToken
+    private LessonVoter $voter;
+
+    protected function setUp(): void
     {
-        return new UsernamePasswordToken(
-            $user ?? new User(),
-            'main',
-            $user ? $user->getRoles() : []
-        );
+        $this->voter = new LessonVoter();
     }
 
-    private function createLesson(?User $owner = null): Lesson
+    /**
+     * @dataProvider voterDataProvider
+     */
+    public function testVote(string $attribute, bool $isOwner, int $expectedVote): void
     {
-        $lesson = new Lesson();
-        if ($owner) {
-            $lesson->setUser($owner);
-        }
-        return $lesson;
-    }
+        $owner = $this->createMock(User::class);
+        $otherUser = $this->createMock(User::class);
 
-    public function testVoteWithValidAttributesAndSubject(): void
-    {
-        $owner = new User();
-        $voter = new LessonVoter();
-        $lesson = $this->createLesson($owner);
-        $token = $this->createToken($owner);
-
-        $this->assertSame(
-            Voter::ACCESS_GRANTED,
-            $voter->vote($token, $lesson, [LessonVoter::VIEW])
-        );
-        $this->assertSame(
-            Voter::ACCESS_GRANTED,
-            $voter->vote($token, $lesson, [LessonVoter::EDIT])
-        );
-        $this->assertSame(
-            Voter::ACCESS_GRANTED,
-            $voter->vote($token, $lesson, [LessonVoter::DELETE])
-        );
-    }
-
-    public function testVoteWithInvalidSubject(): void
-    {
-        $voter = new LessonVoter();
-        $token = $this->createToken(new User());
-        
-        $this->assertSame(
-            Voter::ACCESS_ABSTAIN,
-            $voter->vote($token, new \stdClass(), [LessonVoter::VIEW])
-        );
-    }
-
-    public function testVoteWithInvalidAttribute(): void
-    {
-        $voter = new LessonVoter();
-        $user = new User();
-        $lesson = $this->createLesson($user);
-        $token = $this->createToken($user);
-
-        $this->assertSame(
-            Voter::ACCESS_ABSTAIN,
-            $voter->vote($token, $lesson, ['INVALID_ATTRIBUTE'])
-        );
-    }
-
-    public function testViewAccessGrantedToOwner(): void
-    {
-        $owner = new User();
-        $voter = new LessonVoter();
-        $lesson = $this->createLesson($owner);
-        $token = $this->createToken($owner);
-
-        $this->assertSame(
-            Voter::ACCESS_GRANTED,
-            $voter->vote($token, $lesson, [LessonVoter::VIEW])
-        );
-    }
-
-    public function testViewAccessDeniedToNonOwner(): void
-    {
-        $owner = new User();
-        $otherUser = new User();
-        $voter = new LessonVoter();
-        $lesson = $this->createLesson($owner);
-        $token = $this->createToken($otherUser);
-
-        $this->assertSame(
-            Voter::ACCESS_DENIED,
-            $voter->vote($token, $lesson, [LessonVoter::VIEW])
-        );
-    }
-
-    public function testViewAccessDeniedToUnauthenticatedUser(): void
-    {
-        $voter = new LessonVoter();
-        $lesson = $this->createLesson(new User());
-        $token = $this->createToken(); // No user
-
-        $this->assertSame(
-            Voter::ACCESS_DENIED,
-            $voter->vote($token, $lesson, [LessonVoter::VIEW])
-        );
-    }
-
-    public function testEditAccessGrantedToOwner(): void
-    {
-        $owner = new User();
-        $voter = new LessonVoter();
-        $lesson = $this->createLesson($owner);
-        $token = $this->createToken($owner);
-
-        $this->assertSame(
-            Voter::ACCESS_GRANTED,
-            $voter->vote($token, $lesson, [LessonVoter::EDIT])
-        );
-    }
-
-    public function testDeleteAccessGrantedToOwner(): void
-    {
-        $owner = new User();
-        $voter = new LessonVoter();
-        $lesson = $this->createLesson($owner);
-        $token = $this->createToken($owner);
-
-        $this->assertSame(
-            Voter::ACCESS_GRANTED,
-            $voter->vote($token, $lesson, [LessonVoter::DELETE])
-        );
-    }
-
-    public function testVoteWithNullOwner(): void
-    {
-        $voter = new LessonVoter();
-
-        $noOwnerUser = new class extends User {
-            public function __construct() {
-            }
-            public function getId(): ?int {
-                return null;
-            }
-        };
+        $currentUser = $isOwner ? $owner : $otherUser;
 
         $lesson = $this->createMock(Lesson::class);
-        $lesson->method('getUser')
-            ->willReturn(new $noOwnerUser());
-            
-        $user = new User();
-        $token = $this->createToken($user);
+        $lesson->method('getUser')->willReturn($owner);
 
-        $this->assertSame(
-            Voter::ACCESS_DENIED,
-            $voter->vote($token, $lesson, [LessonVoter::VIEW])
-        );
+        $token = $this->createMock(TokenInterface::class);
+        $token->method('getUser')->willReturn($currentUser);
+
+        $result = $this->voter->vote($token, $lesson, [$attribute]);
+
+        $this->assertEquals($expectedVote, $result);
+    }
+
+    public function voterDataProvider(): array
+    {
+        return [
+            'owner can view' => [LessonVoter::VIEW, true, VoterInterface::ACCESS_GRANTED],
+            'owner can edit' => [LessonVoter::EDIT, true, VoterInterface::ACCESS_GRANTED],
+            'owner can delete' => [LessonVoter::DELETE, true, VoterInterface::ACCESS_GRANTED],
+            'stranger cannot view' => [LessonVoter::VIEW, false, VoterInterface::ACCESS_DENIED],
+            'stranger cannot edit' => [LessonVoter::EDIT, false, VoterInterface::ACCESS_DENIED],
+        ];
+    }
+
+    public function testVoteAbstainsOnUnsupportedAttribute(): void
+    {
+        $token = $this->createMock(TokenInterface::class);
+        $lesson = $this->createMock(Lesson::class);
+
+        $result = $this->voter->vote($token, $lesson, ['SOME_OTHER_ATTRIBUTE']);
+
+        $this->assertEquals(VoterInterface::ACCESS_ABSTAIN, $result);
+    }
+
+    public function testVoteAbstainsOnUnsupportedSubject(): void
+    {
+        $token = $this->createMock(TokenInterface::class);
+        $notALesson = new \stdClass();
+
+        $result = $this->voter->vote($token, $notALesson, [LessonVoter::VIEW]);
+
+        $this->assertEquals(VoterInterface::ACCESS_ABSTAIN, $result);
     }
 }

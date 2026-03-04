@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Tests\Schema;
 
 use App\Schema\TranslationSchema;
@@ -15,7 +13,6 @@ class TranslationSchemaTest extends TestCase
     {
         $schema = TranslationSchema::getSchema();
 
-        $this->assertIsArray($schema);
         $this->assertArrayHasKey('translation', $schema);
         $this->assertArrayHasKey('example', $schema);
 
@@ -24,5 +21,11 @@ class TranslationSchemaTest extends TestCase
 
         $this->assertEquals(DataType::STRING, $schema['translation']->type);
         $this->assertEquals(DataType::STRING, $schema['example']->type);
+    }
+
+    public function testGetSchemaCount(): void
+    {
+        $schema = TranslationSchema::getSchema();
+        $this->assertCount(2, $schema, 'Schema should contain exactly 2 fields.');
     }
 }

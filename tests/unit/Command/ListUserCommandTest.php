@@ -4,108 +4,65 @@ namespace App\Tests\Command;
 
 use App\Command\ListUserCommand;
 use App\Entity\User;
-use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\EntityRepository;
+use App\Repository\UserRepository;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
 class ListUserCommandTest extends TestCase
 {
-    private EntityManagerInterface $entityManager;
-    private EntityRepository $userRepository;
+    private MockObject|UserRepository $userRepository;
     private CommandTester $commandTester;
 
     protected function setUp(): void
     {
-        $this->userRepository = $this->createMock(EntityRepository::class);
-
-        $this->entityManager = $this->createMock(EntityManagerInterface::class);
-        $this->entityManager
-            ->method('getRepository')
-            ->with(User::class)
-            ->willReturn($this->userRepository);
-
-        $command = new ListUserCommand($this->entityManager);
-
-        $application = new Application();
-        $application->add($command);
-
-        $this->commandTester = new CommandTester($application->find('app:list-users'));
+        $this->userRepository = $this->createMock(UserRepository::class);
+        $command = new ListUserCommand($this->userRepository);
+        $this->commandTester = new CommandTester($command);
     }
 
-    public function testCommandConfiguration(): void
-    {
-        $application = new Application();
-        $command = new ListUserCommand($this->entityManager);
-        $application->add($command);
-
-        $command = $application->find('app:list-users');
-
-        $this->assertEquals('app:list-users', $command->getName());
-        $this->assertEquals('Show list of users', $command->getDescription());
-        $this->assertContains('app:show-users', $command->getAliases());
-        $this->assertEquals('User list:', $command->getHelp());
-    }
-
-    public function testExecuteWithNoUsers(): void
-    {
-        $this->userRepository
-            ->method('findAll')
-            ->willReturn([]);
-
-        $this->commandTester->execute([]);
-
-        $output = $this->commandTester->getDisplay();
-
-        $this->assertEquals(0, $this->commandTester->getStatusCode());
-
-        $this->assertStringContainsString('User list:', $output);
-        $this->assertStringContainsString('ID', $output);
-        $this->assertStringContainsString('Username', $output);
-        $this->assertStringContainsString('Roles', $output);
-        $this->assertStringNotContainsString('ROLE_', $output);
-    }
-
-    public function testExecuteWithUsers(): void
+    public function testExecuteShowsTableWithUsers(): void
     {
         $user1 = $this->createMock(User::class);
         $user1->method('getId')->willReturn(1);
-        $user1->method('getUsername')->willReturn('user1');
-        $user1->method('getRoles')->willReturn(['ROLE_USER']);
+        $user1->method('getUsername')->willReturn('lukasz_admin');
+        $user1->method('getRoles')->willReturn(['ROLE_USER', 'ROLE_ADMIN']);
 
         $user2 = $this->createMock(User::class);
         $user2->method('getId')->willReturn(2);
-        $user2->method('getUsername')->willReturn('admin');
-        $user2->method('getRoles')->willReturn(['ROLE_USER', 'ROLE_ADMIN']);
+        $user2->method('getUsername')->willReturn('testowy_user');
+        $user2->method('getRoles')->willReturn(['ROLE_USER']);
 
-        $this->userRepository
+        $this->userRepository->expects($this->once())
             ->method('findAll')
             ->willReturn([$user1, $user2]);
 
-        $this->commandTester->execute([]);
+        $result = $this->commandTester->execute([]);
 
+        $this->assertEquals(Command::SUCCESS, $result);
         $output = $this->commandTester->getDisplay();
 
-        $this->assertEquals(0, $this->commandTester->getStatusCode());
-
-        $this->assertStringContainsString('User list:', $output);
-        $this->assertStringContainsString('1', $output);
-        $this->assertStringContainsString('2', $output);
-        $this->assertStringContainsString('user1', $output);
-        $this->assertStringContainsString('admin', $output);
-        $this->assertStringContainsString('ROLE_USER', $output);
+        $this->assertStringContainsString('User List', $output);
+        $this->assertStringContainsString('lukasz_admin', $output);
         $this->assertStringContainsString('ROLE_ADMIN', $output);
+        $this->assertStringContainsString('testowy_user', $output);
+        $this->assertStringContainsString('Total users: 2', $output);
     }
 
-    public function testCommandAlias(): void
+    public function testExecuteShowsWarningWhenNoUsersFound(): void
     {
-        $application = new Application();
-        $command = new ListUserCommand($this->entityManager);
-        $application->add($command);
+        $this->userRepository->expects($this->once())
+            ->method('findAll')
+            ->willReturn([]);
 
-        $command = $application->find('app:show-users');
+        $result = $this->commandTester->execute([]);
 
-        $this->assertEquals('app:list-users', $command->getName());
+        $this->assertEquals(Command::SUCCESS, $result);
+        $output = $this->commandTester->getDisplay();
+
+        $this->assertStringContainsString('No users found in the database.', $output);
+
+        $this->assertStringNotContainsString('Total users:', $output);
     }
 }

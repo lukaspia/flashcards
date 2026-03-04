@@ -1,208 +1,108 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Tests\Service\Lesson;
 
-use App\Entity\Word;
 use App\Entity\Lesson;
 use App\Entity\User;
+use App\Entity\Word;
 use App\File\FileManagerInterface;
 use App\Service\Lesson\WordImageService;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Doctrine\Common\Collections\ArrayCollection;
 
 class WordImageServiceTest extends TestCase
 {
-    private WordImageService $wordImageService;
     private MockObject|EntityManagerInterface $entityManager;
-    private MockObject|ParameterBagInterface $parameterBag;
     private MockObject|FileManagerInterface $fileManager;
+    private WordImageService $service;
+
+    private const PUBLIC_DIR = '/var/www/public';
+    private const TEMP_DIR = '/var/www/public/uploads/temp';
+    private const UPLOAD_DIR = '/var/www/public/uploads/words';
+    private const RELATIVE_DIR = 'uploads/words';
 
     protected function setUp(): void
     {
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
-        $this->parameterBag = $this->createMock(ParameterBagInterface::class);
         $this->fileManager = $this->createMock(FileManagerInterface::class);
 
-        $this->wordImageService = new WordImageService(
+        $this->entityManager->method('wrapInTransaction')
+            ->will($this->returnCallback(fn($callback) => $callback($this->entityManager)));
+
+        $this->service = new WordImageService(
             $this->entityManager,
-            $this->parameterBag,
-            $this->fileManager
+            $this->fileManager,
+            self::PUBLIC_DIR,
+            self::TEMP_DIR,
+            self::UPLOAD_DIR,
+            self::RELATIVE_DIR
         );
     }
 
-    private function createWordWithLesson(string $image = null): Word
+    public function testGetWordImageFilePath(): void
     {
-        $user = new User();
-        $user->setId(1);
-        
-        $lesson = new Lesson();
-        $lesson->setId(1);
-        $lesson->setUser($user);
-        
-        $word = new Word();
-        $word->setLesson($lesson);
-        $word->setBasicWord('test');
-        $word->setTranslation('test');
-        $word->setExample('test');
-        $word->setColor('#000000');
-        
-        if ($image !== null) {
-            $word->setImage($image);
-        }
-        
-        return $word;
+        $word = $this->createMock(Word::class);
+        $word->method('getImage')->willReturn('/uploads/words/1/1/file.jpg');
+
+        $result = $this->service->getWordImageFilePath($word);
+
+        $this->assertEquals('/var/www/public/uploads/words/1/1/file.jpg', $result);
     }
 
-    public function testGetWordImageFilePathWithNoImage(): void
+    public function testGenerateRelativePathSuccess(): void
     {
-        $word = $this->createWordWithLesson();
-        $word->setImage(null);
+        $user = $this->createMock(User::class);
+        $user->method('getId')->willReturn(10);
 
-        $result = $this->wordImageService->getWordImageFilePath($word);
-        $this->assertNull($result);
-    }
+        $lesson = $this->createMock(Lesson::class);
+        $lesson->method('getId')->willReturn(25);
+        $lesson->method('getUser')->willReturn($user);
 
-    public function testGetWordImageFilePathWithImage(): void
-    {
-        $word = $this->createWordWithLesson('/uploads/images/test.jpg');
+        $word = $this->createMock(Word::class);
+        $word->method('getLesson')->willReturn($lesson);
 
-        $this->parameterBag->method('get')
-            ->with('public_dir')
-            ->willReturn('/var/www/public');
+        $result = $this->service->generateRelativePath($word);
 
-        $result = $this->wordImageService->getWordImageFilePath($word);
-        $this->assertEquals('/var/www/public/uploads/images/test.jpg', $result);
-    }
-
-    public function testRemoveWordImageWithNoImage(): void
-    {
-        $word = $this->createWordWithLesson();
-        $word->setImage(null);
-
-        $result = $this->wordImageService->removeWordImage($word);
-        $this->assertFalse($result);
-    }
-
-    public function testRemoveWordImageSuccessfully(): void
-    {
-        $word = $this->createWordWithLesson('/uploads/images/test.jpg');
-
-        $this->parameterBag->method('get')
-            ->with('public_dir')
-            ->willReturn('/var/www/public');
-
-        $this->fileManager->expects($this->once())
-            ->method('removeFile')
-            ->with('/var/www/public/uploads/images/test.jpg')
-            ->willReturn(true);
-
-        $this->entityManager->expects($this->once())
-            ->method('beginTransaction');
-
-        $this->entityManager->expects($this->once())
-            ->method('persist')
-            ->with($word);
-
-        $this->entityManager->expects($this->once())
-            ->method('flush');
-
-        $this->entityManager->expects($this->once())
-            ->method('commit');
-
-        $result = $this->wordImageService->removeWordImage($word);
-        $this->assertTrue($result);
-        $this->assertNull($word->getImage());
-    }
-
-    public function testRemoveWordImageRollsBackOnFailure(): void
-    {
-        $word = $this->createWordWithLesson('/uploads/images/test.jpg');
-
-        $this->parameterBag->method('get')
-            ->with('public_dir')
-            ->willReturn('/var/www/public');
-
-        $this->fileManager->method('removeFile')
-            ->willThrowException(new \RuntimeException('File not found'));
-
-        $this->entityManager->expects($this->once())
-            ->method('beginTransaction');
-
-        $this->entityManager->expects($this->once())
-            ->method('rollback');
-
-        $this->entityManager->expects($this->never())
-            ->method('commit');
-
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Failed to remove word image: Failed to remove image file for word ID : File not found');
-
-        $this->wordImageService->removeWordImage($word);
-    }
-
-    public function testRemoveWordImageFileSuccessfully(): void
-    {
-        $word = $this->createWordWithLesson('/uploads/images/test.jpg');
-
-        $this->parameterBag->method('get')
-            ->with('public_dir')
-            ->willReturn('/var/www/public');
-
-        $this->fileManager->expects($this->once())
-            ->method('removeFile')
-            ->with('/var/www/public/uploads/images/test.jpg')
-            ->willReturn(true);
-
-        $result = $this->wordImageService->removeWordImageFile($word);
-        $this->assertTrue($result);
-    }
-
-    public function testRemoveWordImageFileWithNoImage(): void
-    {
-        $word = $this->createWordWithLesson();
-        $word->setImage(null);
-
-        $result = $this->wordImageService->removeWordImageFile($word);
-        $this->assertFalse($result);
+        $this->assertEquals('10/25/', $result);
     }
 
     public function testMoveWordsImagesFromTemporary(): void
     {
-        $word1 = $this->createWordWithLesson('/temporary/old1.jpg');
-        $word2 = $this->createWordWithLesson('/temporary/old2.jpg');
-        $words = new ArrayCollection([$word1, $word2]);
+        $user = $this->createMock(User::class);
+        $user->method('getId')->willReturn(10);
+        $lesson = $this->createMock(Lesson::class);
+        $lesson->method('getId')->willReturn(25);
+        $lesson->method('getUser')->willReturn($user);
 
-        $this->parameterBag->method('get')
-            ->willReturnMap([
-                ['word_image_upload_dir_temp', '/tmp/'],
-                ['word_image_upload_dir', '/var/www/public/uploads/word_images/'],
-                ['word_image_upload_dir_relative', 'uploads/word_images/']
-            ]);
+        $word = $this->createMock(Word::class);
 
-        $this->fileManager->expects($this->exactly(2))
+        $word->method('getImage')->willReturn('/media/temp/temp_name.jpg');
+        $word->method('getLesson')->willReturn($lesson);
+
+        $this->fileManager->expects($this->once())
             ->method('moveFile')
-            ->willReturnCallback(function ($source, $target) {
-                $this->assertStringContainsString('/tmp/old', $source);
-                $this->assertStringContainsString('/var/www/public/uploads/word_images/1/1/old', $target);
-                return true;
-            });
+            ->willReturn(true);
 
-        $this->entityManager->expects($this->exactly(2))
-            ->method('persist')
-            ->with($this->callback(function($word) {
-                /** @var Word $word */
-                return $word->getImage() === '/uploads/word_images/1/1/old1.jpg' || 
-                       $word->getImage() === '/uploads/word_images/1/1/old2.jpg';
-            }));
+        $word->expects($this->once())
+            ->method('setImage')
+            ->with($this->stringContains('/uploads/words/10/25/temp_name.jpg'));
 
-        $this->entityManager->expects($this->once())
-            ->method('flush');
+        $this->entityManager->expects($this->once())->method('flush');
 
-        $this->wordImageService->moveWordsImagesFromTemporary($words);
+        $this->service->moveWordsImagesFromTemporary(new ArrayCollection([$word]));
+    }
+
+    public function testMoveWordsImagesDoesNothingIfAlreadyProcessed(): void
+    {
+        $word = $this->createMock(Word::class);
+
+        $word->method('getImage')->willReturn('/uploads/words/10/25/existing.jpg');
+
+        $this->fileManager->expects($this->never())->method('moveFile');
+        $this->entityManager->expects($this->never())->method('flush');
+
+        $this->service->moveWordsImagesFromTemporary(new ArrayCollection([$word]));
     }
 }

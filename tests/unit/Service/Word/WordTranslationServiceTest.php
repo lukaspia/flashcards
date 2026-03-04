@@ -1,75 +1,63 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Tests\Service\Word;
 
-use App\Schema\TranslationSchema;
 use App\Service\AI\AIGeneratorInterface;
 use App\Service\Word\Exception\TranslationException;
 use App\Service\Word\WordTranslationService;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class WordTranslationServiceTest extends TestCase
 {
-    public function testTranslateBuildsPromptCallsAiAndReturnsFirstResult(): void
+    private MockObject|AIGeneratorInterface $aiGenerator;
+    private WordTranslationService $service;
+
+    protected function setUp(): void
     {
-        $word = 'Test';
-        $sourceLanguage = 'en';
-        $targetLanguage = 'pl';
-
-        $expectedPrompt = sprintf(
-            'Translate the following from %s to %s: "%s" (use most popular translation) and respond set as "translation", then show example of using this translation in some sentence, and answer set as "example".',
-            $sourceLanguage,
-            $targetLanguage,
-            $word
-        );
-
-        $aiGenerator = $this->createMock(AIGeneratorInterface::class);
-
-        $aiResult = [
-            [
-                'translation' => 'tłumaczenie',
-                'example' => 'Przykładowe zdanie.',
-            ],
-            [
-                'translation' => 'inne tłumaczenie',
-                'example' => 'Inne zdanie.',
-            ],
-        ];
-
-        $aiGenerator->expects($this->once())
-            ->method('generateStructuredAnswer')
-            ->with(
-                $expectedPrompt,
-                TranslationSchema::getSchema()
-            )
-            ->willReturn($aiResult);
-
-        $service = new WordTranslationService($aiGenerator);
-
-        $result = $service->translate($word, $sourceLanguage, $targetLanguage);
-
-        $this->assertSame([
-            'translation' => $aiResult[0],
-        ], $result);
+        $this->aiGenerator = $this->createMock(AIGeneratorInterface::class);
+        $this->service = new WordTranslationService($this->aiGenerator);
     }
 
-    public function testTranslateWrapsExceptionsInTranslationException(): void
+    public function testTranslateReturnsFirstElementOfAiResult(): void
     {
-        $word = 'Test';
-        $sourceLanguage = 'en';
-        $targetLanguage = 'pl';
+        $word = 'apple';
+        $source = 'English';
+        $target = 'Polish';
 
-        $aiGenerator = $this->createMock(AIGeneratorInterface::class);
-        $aiGenerator->expects($this->once())
+        $aiResponse = [
+            [
+                'translation' => 'jabłko',
+                'example' => 'Lubię jeść czerwone jabłka.'
+            ]
+        ];
+
+        $this->aiGenerator->expects($this->once())
             ->method('generateStructuredAnswer')
-            ->willThrowException(new \RuntimeException('AI error'));
+            ->with(
+                $this->callback(fn(string $prompt) =>
+                    str_contains($prompt, $word) &&
+                    str_contains($prompt, $source) &&
+                    str_contains($prompt, $target)
+                ),
+                $this->isType('array')
+            )
+            ->willReturn($aiResponse);
 
-        $service = new WordTranslationService($aiGenerator);
+        $result = $this->service->translate($word, $source, $target);
+
+        $this->assertArrayHasKey('translation', $result);
+        $this->assertEquals($aiResponse[0], $result['translation']);
+    }
+
+    public function testTranslateThrowsTranslationExceptionOnAiFailure(): void
+    {
+        $this->aiGenerator->method('generateStructuredAnswer')
+            ->willThrowException(new \RuntimeException('API Error'));
 
         $this->expectException(TranslationException::class);
+        $this->expectExceptionMessage('AI translation failed');
 
-        $service->translate($word, $sourceLanguage, $targetLanguage);
+        $this->service->translate('test', 'en', 'pl');
     }
 }

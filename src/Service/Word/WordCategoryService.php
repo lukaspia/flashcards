@@ -7,24 +7,19 @@ namespace App\Service\Word;
 use App\Entity\WordCategory;
 use App\Repository\WordCategoryRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Target;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 readonly class WordCategoryService implements WordCategoryServiceInterface
 {
-    /**
-     * @param \Doctrine\ORM\EntityManagerInterface $entityManager
-     * @param \App\Repository\WordCategoryRepository $wordCategoryRepository
-     * @param \Symfony\Contracts\Cache\TagAwareCacheInterface $cache
-     * @param \Symfony\Component\Serializer\SerializerInterface $serializer
-     */
     public function __construct(
         private EntityManagerInterface $entityManager,
         private WordCategoryRepository $wordCategoryRepository,
         #[Target('word_category_cache')]
         private TagAwareCacheInterface $cache,
-        private SerializerInterface $serializer
+        private NormalizerInterface $normalizer
     ) {
     }
 
@@ -40,7 +35,7 @@ readonly class WordCategoryService implements WordCategoryServiceInterface
 
             $categories = $this->wordCategoryRepository->findAllOrderedByName();
 
-            return $this->serializer->normalize($categories, null, ['groups' => 'category:read']);
+            return (array) $this->normalizer->normalize($categories, null, ['groups' => 'category:read']);
         });
     }
 
@@ -73,7 +68,7 @@ readonly class WordCategoryService implements WordCategoryServiceInterface
      */
     public function deleteCategory(string $name): void
     {
-        $category = $this->entityManager->getRepository(WordCategory::class)->findOneBy(['name' => $name]);
+        $category = $this->wordCategoryRepository->findOneBy(['name' => $name]);
 
         if (!$category) {
             throw new \InvalidArgumentException(sprintf('Category "%s" not found.', $name));

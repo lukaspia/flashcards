@@ -18,4 +18,10 @@ interface WordCategoryServiceInterface
      * @return \App\Entity\WordCategory
      */
     public function createCategory(string $name): WordCategory;
+
+    /**
+     * @param string $name
+     * @return void
+     */
+    public function deleteCategory(string $name): void;
 }

@@ -4,107 +4,93 @@ namespace App\Tests\Command;
 
 use App\Command\AddWordCategoryCommand;
 use App\Entity\WordCategory;
-use Doctrine\ORM\EntityManagerInterface;
+
+use App\Service\Word\WordCategoryServiceInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
 class AddWordCategoryCommandTest extends TestCase
 {
-    private $entityManager;
-    private $commandTester;
-    private $command;
+    private MockObject|WordCategoryServiceInterface $categoryService;
+    private CommandTester $commandTester;
 
     protected function setUp(): void
     {
-        $this->entityManager = $this->createMock(EntityManagerInterface::class);
-        
-        $command = new AddWordCategoryCommand($this->entityManager);
-        
+        $this->categoryService = $this->createMock(WordCategoryServiceInterface::class);
+
+        $command = new AddWordCategoryCommand($this->categoryService);
         $application = new Application();
         $application->add($command);
-        
-        $this->command = $application->find('app:add-word-category');
-        $this->commandTester = new CommandTester($this->command);
+
+        $this->commandTester = new CommandTester($application->find('app:add-word-category'));
     }
 
-    public function testCommandConfiguration()
+    public function testExecuteWithArgumentSuccess(): void
     {
-        $this->assertSame('app:add-word-category', $this->command->getName());
-        $this->assertSame('Creates word category and stores it in the database', $this->command->getDescription());
-        $this->assertTrue($this->command->getDefinition()->hasArgument('category_name'));
-        $argument = $this->command->getDefinition()->getArgument('category_name');
-        $this->assertFalse($argument->isRequired());
-        $this->assertSame('The name of the new word category', $argument->getDescription());
+        $categoryName = 'Technologia';
+
+        $mockCategory = $this->createMock(WordCategory::class);
+        $mockCategory->method('getName')->willReturn($categoryName);
+        $mockCategory->method('getId')->willReturn(10);
+
+        $this->categoryService->expects($this->once())
+            ->method('createCategory')
+            ->with($categoryName)
+            ->willReturn($mockCategory);
+
+        $result = $this->commandTester->execute([
+                                                    'category_name' => $categoryName
+                                                ]);
+
+        $this->assertEquals(Command::SUCCESS, $result);
+        $this->assertStringContainsString('Category "Technologia" (ID: 10) created successfully', $this->commandTester->getDisplay());
     }
 
-    public function testExecuteWithCategoryNameArgument()
+    public function testExecuteWithInteractiveInputSuccess(): void
     {
-        $this->entityManager->expects($this->once())
-            ->method('persist')
-            ->with($this->callback(function($wordCategory) {
-                return $wordCategory instanceof WordCategory && 
-                       $wordCategory->getName() === 'TestCategory';
-            }));
+        $categoryName = 'Podróże';
 
-        $this->entityManager->expects($this->once())
-            ->method('flush');
+        $mockCategory = $this->createMock(WordCategory::class);
+        $mockCategory->method('getName')->willReturn($categoryName);
+        $mockCategory->method('getId')->willReturn(20);
 
-        $this->commandTester->execute([
-            'category_name' => 'TestCategory',
-        ]);
+        $this->categoryService->expects($this->once())
+            ->method('createCategory')
+            ->with($categoryName)
+            ->willReturn($mockCategory);
 
-        $output = $this->commandTester->getDisplay();
-        $this->assertStringContainsString('Category created successfully', $output);
+        $this->commandTester->setInputs([$categoryName]);
+        $result = $this->commandTester->execute([]);
+
+        $this->assertEquals(Command::SUCCESS, $result);
+        $this->assertStringContainsString('Please enter the word category name', $this->commandTester->getDisplay());
+        $this->assertStringContainsString('created successfully', $this->commandTester->getDisplay());
     }
 
-    public function testExecuteWithInteractiveInput()
+    public function testExecuteFailsWhenEmpty(): void
     {
-        $this->entityManager->expects($this->once())
-            ->method('persist')
-            ->with($this->callback(function($wordCategory) {
-                return $wordCategory instanceof WordCategory && 
-                       $wordCategory->getName() === 'InteractiveCategory';
-            }));
+        $this->commandTester->setInputs([' ']);
+        $result = $this->commandTester->execute([]);
 
-        $this->entityManager->expects($this->once())
-            ->method('flush');
+        $this->assertEquals(Command::FAILURE, $result);
+        $this->assertStringContainsString('Category name cannot be empty.', $this->commandTester->getDisplay());
 
-        $this->commandTester->setInputs(['InteractiveCategory']);
-        $this->commandTester->execute([]);
-
-        $output = $this->commandTester->getDisplay();
-        $this->assertStringContainsString('Word category name', $output);
-        $this->assertStringContainsString('Category created successfully', $output);
+        $this->categoryService->expects($this->never())->method('createCategory');
     }
 
-    public function testExecuteWithEmptyCategoryName()
+    public function testExecuteHandlesServiceException(): void
     {
-        $this->entityManager->expects($this->never())
-            ->method('persist');
-            
-        $this->entityManager->expects($this->never())
-            ->method('flush');
+        $this->categoryService->method('createCategory')
+            ->willThrowException(new \Exception('Category already exists in MySQL'));
 
-        $this->commandTester->setInputs(['']);
-        $this->commandTester->execute([]);
+        $result = $this->commandTester->execute([
+                                                    'category_name' => 'Duplikat'
+                                                ]);
 
-        $output = $this->commandTester->getDisplay();
-        $this->assertStringContainsString('Error: Category name cannot be empty.', $output);
-    }
-
-    public function testExecuteWithWhitespaceCategoryName()
-    {
-        $this->entityManager->expects($this->never())
-            ->method('persist');
-            
-        $this->entityManager->expects($this->never())
-            ->method('flush');
-
-        $this->commandTester->setInputs(['   ']);
-        $this->commandTester->execute([]);
-
-        $output = $this->commandTester->getDisplay();
-        $this->assertStringContainsString('Error: Category name cannot be empty.', $output);
+        $this->assertEquals(Command::FAILURE, $result);
+        $this->assertStringContainsString('Category already exists in MySQL', $this->commandTester->getDisplay());
     }
 }

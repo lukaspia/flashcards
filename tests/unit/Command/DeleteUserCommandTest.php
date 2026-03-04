@@ -3,103 +3,85 @@
 namespace App\Tests\Command;
 
 use App\Command\DeleteUserCommand;
-use App\DTO\OperationResponseDTO;
+
 use App\Service\User\UserServiceInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
 class DeleteUserCommandTest extends TestCase
 {
-    private UserServiceInterface $userService;
+    private MockObject|UserServiceInterface $userService;
     private CommandTester $commandTester;
 
     protected function setUp(): void
     {
         $this->userService = $this->createMock(UserServiceInterface::class);
-
         $command = new DeleteUserCommand($this->userService);
-
-        $application = new Application();
-        $application->add($command);
-
         $this->commandTester = new CommandTester($command);
     }
 
-    public function testCommandConfiguration(): void
+    public function testExecuteWithArgumentSuccess(): void
     {
-        $application = new Application();
-        $command = new DeleteUserCommand($this->userService);
-        $application->add($command);
+        $username = 'jan_kowalski';
 
-        $this->assertEquals('app:delete-user', $command->getName());
-        $this->assertEquals(['app:remove-user'], $command->getAliases());
-        $this->assertEquals('Delete users from database', $command->getDescription());
-        $this->assertTrue($command->getDefinition()->hasArgument('username'));
+        $this->userService->expects($this->once())
+            ->method('deleteUser')
+            ->with($username);
+
+        $result = $this->commandTester->execute([
+                                                    'username' => $username
+                                                ]);
+
+        $this->assertEquals(Command::SUCCESS, $result);
+        $this->assertStringContainsString(
+            sprintf('User "%s" has been successfully deleted.', $username),
+            $this->commandTester->getDisplay()
+        );
     }
 
-    public function testSuccessfulUserDeletion(): void
+    public function testExecuteWithInteractiveInputSuccess(): void
     {
-        $username = 'test_user';
+        $username = 'anna_nowak';
 
-        $successResponse = new OperationResponseDTO(true, 'User deleted successfully');
-
-        $this->userService
-            ->expects($this->once())
+        $this->userService->expects($this->once())
             ->method('deleteUser')
-            ->with($username)
-            ->willReturn($successResponse);
-
-        $this->commandTester->execute([
-                                          'username' => $username,
-                                      ]);
-
-        $output = $this->commandTester->getDisplay();
-        $this->assertStringContainsString('User deleted successfully', $output);
-        $this->assertEquals(0, $this->commandTester->getStatusCode());
-    }
-
-    public function testFailedUserDeletion(): void
-    {
-        $username = 'nonexistent_user';
-
-        $failureResponse = new OperationResponseDTO(false, 'User not found');
-
-        $this->userService
-            ->expects($this->once())
-            ->method('deleteUser')
-            ->with($username)
-            ->willReturn($failureResponse);
-
-        $this->commandTester->execute([
-                                          'username' => $username,
-                                      ]);
-
-        $output = $this->commandTester->getDisplay();
-        $this->assertStringContainsString('Error deleting user', $output);
-        $this->assertStringContainsString('User not found', $output);
-        $this->assertEquals(1, $this->commandTester->getStatusCode());
-    }
-
-    public function testInteractiveUsernameInput(): void
-    {
-        $username = 'interactive_user';
-
-        $successResponse = new OperationResponseDTO(true, 'User deleted successfully');
-
-        $this->userService
-            ->expects($this->once())
-            ->method('deleteUser')
-            ->with($username)
-            ->willReturn($successResponse);
+            ->with($username);
 
         $this->commandTester->setInputs([$username]);
+        $result = $this->commandTester->execute([]);
 
-        $this->commandTester->execute([]);
+        $this->assertEquals(Command::SUCCESS, $result);
+        $this->assertStringContainsString('Please enter the username', $this->commandTester->getDisplay());
+        $this->assertStringContainsString('successfully deleted', $this->commandTester->getDisplay());
+    }
 
-        $output = $this->commandTester->getDisplay();
-        $this->assertStringContainsString('Username', $output);
-        $this->assertStringContainsString('User deleted successfully', $output);
-        $this->assertEquals(0, $this->commandTester->getStatusCode());
+    public function testExecuteFailsWhenUsernameEmpty(): void
+    {
+        $this->commandTester->setInputs(['']);
+        $result = $this->commandTester->execute([]);
+
+        $this->assertEquals(Command::FAILURE, $result);
+        $this->assertStringContainsString('Username cannot be empty.', $this->commandTester->getDisplay());
+
+        $this->userService->expects($this->never())->method('deleteUser');
+    }
+
+    public function testExecuteHandlesServiceException(): void
+    {
+        $username = 'nieistniejacy_user';
+
+        $this->userService->method('deleteUser')
+            ->willThrowException(new \Exception('User not found.'));
+
+        $result = $this->commandTester->execute([
+                                                    'username' => $username
+                                                ]);
+
+        $this->assertEquals(Command::FAILURE, $result);
+        $display = $this->commandTester->getDisplay();
+        $this->assertStringContainsString('Error deleting user.', $display);
+        $this->assertStringContainsString('User not found.', $display);
     }
 }

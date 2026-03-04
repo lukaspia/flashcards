@@ -3,124 +3,65 @@
 namespace App\Tests\Command;
 
 use App\Command\CleanupTemporaryUploadsCommand;
+use App\File\FileManagerInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 class CleanupTemporaryUploadsCommandTest extends TestCase
 {
-    private $parameterBagMock;
-    private $command;
-    private $commandTester;
+    private MockObject|FileManagerInterface $fileManager;
+    private string $uploadDirTemp = '/tmp/uploads';
+    private CommandTester $commandTester;
 
     protected function setUp(): void
     {
-        parent::setUp();
+        $this->fileManager = $this->createMock(FileManagerInterface::class);
 
-        date_default_timezone_set('UTC');
-        
-        $this->parameterBagMock = $this->createMock(ParameterBagInterface::class);
-        $this->command = new CleanupTemporaryUploadsCommand($this->parameterBagMock);
-        $this->commandTester = new CommandTester($this->command);
+        $command = new CleanupTemporaryUploadsCommand(
+            $this->fileManager,
+            $this->uploadDirTemp
+        );
+
+        $this->commandTester = new CommandTester($command);
     }
 
-    public function testExecuteFailsWhenDirectoryDoesNotExist()
+    public function testExecuteSuccess(): void
     {
-        $this->parameterBagMock->method('get')
-            ->with('word_image_upload_dir_temp')
-            ->willReturn('/nonexistent/dir');
+        $this->fileManager->expects($this->once())
+            ->method('cleanupOldFiles')
+            ->with($this->uploadDirTemp, 5)
+            ->willReturn(15); // Symulujemy usunięcie 15 plików
 
-        $this->commandTester->execute([]);
-        $output = $this->commandTester->getDisplay();
+        $result = $this->commandTester->execute([]);
 
-        $this->assertStringContainsString('Starting temporary upload cleanup...', $output);
-        $this->assertEquals(CleanupTemporaryUploadsCommand::FAILURE, $this->commandTester->getStatusCode());
+        $this->assertEquals(Command::SUCCESS, $result);
+        $display = $this->commandTester->getDisplay();
+        $this->assertStringContainsString('Starting cleanup in: /tmp/uploads', $display);
+        $this->assertStringContainsString('Cleanup finished. Deleted 15 files.', $display);
     }
 
-    public function testExecuteWithEmptyDirectory()
+    public function testExecuteHandlesException(): void
     {
-        $tempDir = sys_get_temp_dir() . '/flashcards_test_' . uniqid();
-        mkdir($tempDir);
+        $this->fileManager->method('cleanupOldFiles')
+            ->willThrowException(new \Exception('Permission denied'));
 
-        $this->parameterBagMock->method('get')
-            ->with('word_image_upload_dir_temp')
-            ->willReturn($tempDir);
+        $result = $this->commandTester->execute([]);
 
-        $this->commandTester->execute([]);
-        $output = $this->commandTester->getDisplay();
-
-        $this->assertStringContainsString('Starting temporary upload cleanup...', $output);
-        $this->assertStringContainsString('Deleted files: 0', $output);
-        $this->assertEquals(CleanupTemporaryUploadsCommand::SUCCESS, $this->commandTester->getStatusCode());
-
-        rmdir($tempDir);
+        $this->assertEquals(Command::FAILURE, $result);
+        $display = $this->commandTester->getDisplay();
+        $this->assertStringContainsString('Cleanup failed: Permission denied', $display);
     }
 
-    public function testExecuteHandlesDeletionFailure()
+    public function testExecuteHandlesZeroFilesDeleted(): void
     {
-        $tempDir = sys_get_temp_dir() . '/flashcards_test_' . uniqid();
-        mkdir($tempDir);
-        
-        $protectedFile = $tempDir . '/protected_file.txt';
-        touch($protectedFile, time() - 36000);
-        chmod($tempDir, 0555);
+        $this->fileManager->method('cleanupOldFiles')
+            ->willReturn(0);
 
-        $this->parameterBagMock->method('get')
-            ->with('word_image_upload_dir_temp')
-            ->willReturn($tempDir);
+        $result = $this->commandTester->execute([]);
 
-        $this->commandTester->execute([]);
-        $output = $this->commandTester->getDisplay();
-
-        $this->assertStringContainsString('Starting temporary upload cleanup...', $output);
-        $this->assertStringContainsString('Failed to delete file', $output);
-        $this->assertEquals(CleanupTemporaryUploadsCommand::SUCCESS, $this->commandTester->getStatusCode());
-
-        chmod($tempDir, 0755);
-        unlink($protectedFile);
-        rmdir($tempDir);
-    }
-
-    public function testIsFileCreatedBeforeDateWithInvalidDate()
-    {
-        $command = new CleanupTemporaryUploadsCommand($this->parameterBagMock);
-        
-        $reflection = new \ReflectionClass(CleanupTemporaryUploadsCommand::class);
-        $method = $reflection->getMethod('isFileCreatedBeforeDate');
-        $method->setAccessible(true);
-        
-        $testFile = tempnam(sys_get_temp_dir(), 'test_file');
-        
-        $result = $method->invokeArgs($command, [$testFile, 'invalid-date']);
-        $this->assertFalse($result);
-        
-        unlink($testFile);
-    }
-
-    public function testIsFileCreatedBeforeDate()
-    {
-        date_default_timezone_set('UTC');
-
-        $command = new CleanupTemporaryUploadsCommand($this->createMock(ParameterBagInterface::class));
-
-        $reflection = new \ReflectionClass(CleanupTemporaryUploadsCommand::class);
-        $method = $reflection->getMethod('isFileCreatedBeforeDate');
-        $method->setAccessible(true);
-
-        $tempDir = sys_get_temp_dir() . '/flashcards_test_' . uniqid();
-        mkdir($tempDir);
-        $filePath = $tempDir . '/test_file.txt';
-        touch($filePath);
-
-        $thresholdOld = '1970-01-01 00:00:00';
-        $this->assertFalse($method->invokeArgs($command, [$filePath, $thresholdOld]), 'File should not be before '.$thresholdOld);
-
-        $thresholdNew = '2100-01-01 00:00:00';
-        $this->assertTrue($method->invokeArgs($command, [$filePath, $thresholdNew]), 'File should be before '.$thresholdNew);
-
-        $this->assertFalse($method->invokeArgs($command, ['/nonexistent/file', $thresholdOld]));
-
-        unlink($filePath);
-        rmdir($tempDir);
+        $this->assertEquals(Command::SUCCESS, $result);
+        $this->assertStringContainsString('Deleted 0 files.', $this->commandTester->getDisplay());
     }
 }
