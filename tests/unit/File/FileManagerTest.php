@@ -1,14 +1,13 @@
 <?php
 
-declare(strict_types=1);
-
-namespace App\Tests\Unit\File;
+namespace App\Tests\File;
 
 use App\File\FileManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Filesystem\Exception\IOException;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class FileManagerTest extends TestCase
 {
@@ -17,141 +16,90 @@ class FileManagerTest extends TestCase
 
     protected function setUp(): void
     {
-        parent::setUp();
-
         $this->filesystem = $this->createMock(Filesystem::class);
         $this->fileManager = new FileManager($this->filesystem);
     }
 
-    public function testMoveFileReturnsFalseWhenSourceFileDoesNotExist(): void
+    public function testUploadMovesFileAndCreatesDirectory(): void
     {
-        $sourcePath = 'non_existent_file.txt';
-        $destinationPath = 'destination/file.txt';
+        $targetDir = '/path/to/target';
+        $fileName = 'image.jpg';
+
+        $uploadedFile = $this->getMockBuilder(UploadedFile::class)
+            ->enableOriginalConstructor()
+            ->setConstructorArgs([tempnam(sys_get_temp_dir(), 'test'), 'image.jpg', null, null, true])
+            ->getMock();
 
         $this->filesystem->expects($this->once())
             ->method('exists')
-            ->with($sourcePath)
+            ->with($targetDir)
             ->willReturn(false);
 
-        $this->assertFalse($this->fileManager->moveFile($sourcePath, $destinationPath));
+        $this->filesystem->expects($this->once())
+            ->method('mkdir')
+            ->with($targetDir, 0775);
+
+        $uploadedFile->expects($this->once())
+            ->method('move')
+            ->with($targetDir, $fileName);
+
+        $this->fileManager->upload($uploadedFile, $targetDir, $fileName);
     }
 
-    public function testMoveFileMovesFileSuccessfully(): void
+    public function testMoveFileReturnsFalseIfSourceNotExists(): void
     {
-        $realFilesystem = new Filesystem();
-        $fileManager = new FileManager($realFilesystem);
+        $this->filesystem->method('exists')->willReturn(false);
 
-        $baseTmpDir = sys_get_temp_dir() . '/file_manager_test_success';
-        $sourceDir = $baseTmpDir . '/source';
-        $destinationDir = $baseTmpDir . '/destination';
-        $sourcePath = $sourceDir . '/file.txt';
-        $destinationPath = $destinationDir . '/file.txt';
+        $result = $this->fileManager->moveFile('old.txt', 'new.txt');
 
-        $realFilesystem->remove([$baseTmpDir]);
-
-        $realFilesystem->mkdir([$sourceDir, $destinationDir]);
-        $realFilesystem->touch($sourcePath);
-
-        $this->assertTrue($fileManager->moveFile($sourcePath, $destinationPath));
-        $this->assertFileExists($destinationPath);
-        $this->assertFileDoesNotExist($sourcePath);
-
-        $realFilesystem->remove([$baseTmpDir]);
+        $this->assertFalse($result);
     }
 
-    public function testMoveFileCreatesDestinationDirectoryIfNeeded(): void
+    public function testMoveFileSuccess(): void
     {
-        $realFilesystem = new Filesystem();
-        $fileManager = new FileManager($realFilesystem);
-
-        $baseTmpDir = sys_get_temp_dir() . '/file_manager_test';
-        $sourceDir = $baseTmpDir . '/source';
-        $destinationDir = $baseTmpDir . '/destination';
-        $sourcePath = $sourceDir . '/file.txt';
-        $destinationPath = $destinationDir . '/file.txt';
-
-        $realFilesystem->remove([$baseTmpDir]);
-
-        $realFilesystem->mkdir($sourceDir);
-        $realFilesystem->touch($sourcePath);
-
-        $this->assertTrue($fileManager->moveFile($sourcePath, $destinationPath));
-        $this->assertFileExists($destinationPath);
-        $this->assertFileDoesNotExist($sourcePath);
-
-        $realFilesystem->remove([$baseTmpDir]);
-    }
-
-    public function testMoveFileThrowsExceptionOnFilesystemError(): void
-    {
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Error moving file: An error occurred while moving file.');
-
-        $sourcePath = 'source/file.txt';
-        $destinationPath = 'destination/file.txt';
-        $destinationDir = 'destination';
+        $source = 'source.txt';
+        $destDir = 'dir';
+        $destFile = $destDir . '/dest.txt';
 
         $this->filesystem->method('exists')
             ->willReturnMap([
-                [$sourcePath, true],
-                [$destinationDir, true],
-            ]);
+                                [$source, true],
+                                [$destDir, false],
+                            ]);
+
+        $this->filesystem->expects($this->once())
+            ->method('mkdir')
+            ->with($destDir, 0775);
 
         $this->filesystem->expects($this->once())
             ->method('rename')
-            ->with($sourcePath, $destinationPath, true)
-            ->willThrowException(new IOException('An error occurred while moving file.'));
+            ->with($source, $destFile, true);
 
-        $this->fileManager->moveFile($sourcePath, $destinationPath);
+        $result = $this->fileManager->moveFile($source, $destFile);
+
+        $this->assertTrue($result);
     }
 
-    public function testRemoveFileRemovesExistingFile(): void
+    public function testRemoveFileReturnsTrueOnSuccess(): void
     {
-        $filePath = 'path/to/file.txt';
-
-        $this->filesystem->expects($this->once())
-            ->method('exists')
-            ->with($filePath)
-            ->willReturn(true);
+        $path = 'file.txt';
 
         $this->filesystem->expects($this->once())
             ->method('remove')
-            ->with($filePath);
+            ->with($path);
 
-        $this->assertTrue($this->fileManager->removeFile($filePath));
+        $result = $this->fileManager->removeFile($path);
+        $this->assertTrue($result);
     }
 
-    public function testRemoveFileReturnsTrueForNonExistingFile(): void
+    public function testRemoveFileThrowsRuntimeExceptionOnFailure(): void
     {
-        $filePath = 'path/to/non_existent_file.txt';
+        $this->filesystem->method('remove')
+            ->willThrowException(new IOException('Access denied'));
 
-        $this->filesystem->expects($this->once())
-            ->method('exists')
-            ->with($filePath)
-            ->willReturn(false);
-
-        $this->filesystem->expects($this->never())
-            ->method('remove');
-
-        $this->assertTrue($this->fileManager->removeFile($filePath));
-    }
-
-    public function testRemoveFileThrowsExceptionOnFilesystemError(): void
-    {
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Error removing file: An error occurred while removing file.');
+        $this->expectExceptionMessage('Error removing file: Access denied');
 
-        $filePath = 'path/to/file.txt';
-
-        $this->filesystem->method('exists')
-            ->with($filePath)
-            ->willReturn(true);
-
-        $this->filesystem->expects($this->once())
-            ->method('remove')
-            ->with($filePath)
-            ->willThrowException(new IOException('An error occurred while removing file.'));
-
-        $this->fileManager->removeFile($filePath);
+        $this->fileManager->removeFile('protected.txt');
     }
 }

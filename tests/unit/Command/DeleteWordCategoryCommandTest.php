@@ -3,126 +3,84 @@
 namespace App\Tests\Command;
 
 use App\Command\DeleteWordCategoryCommand;
-use App\Entity\WordCategory;
-use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\EntityRepository;
+use App\Service\Word\WordCategoryServiceInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
 class DeleteWordCategoryCommandTest extends TestCase
 {
-    private $entityManager;
-    private $repository;
-    private $commandTester;
+    private MockObject|WordCategoryServiceInterface $categoryService;
+    private CommandTester $commandTester;
 
     protected function setUp(): void
     {
-        $this->entityManager = $this->createMock(EntityManagerInterface::class);
-        $this->repository = $this->createMock(EntityRepository::class);
-
-        $this->entityManager->method('getRepository')->willReturn($this->repository);
-
-        $command = new DeleteWordCategoryCommand($this->entityManager);
+        $this->categoryService = $this->createMock(WordCategoryServiceInterface::class);
+        $command = new DeleteWordCategoryCommand($this->categoryService);
         $this->commandTester = new CommandTester($command);
     }
 
-    public function testSuccessWhenCategoryExistsAndProvidedAsArgument(): void
+    public function testExecuteWithArgumentSuccess(): void
     {
-        $categoryName = 'TestCategory';
-        $wordCategory = new WordCategory();
-        $wordCategory->setName($categoryName);
+        $categoryName = 'Owoce';
 
-        $this->repository->expects($this->once())
-            ->method('findBy')
-            ->with(['name' => $categoryName])
-            ->willReturn([$wordCategory]);
+        $this->categoryService->expects($this->once())
+            ->method('deleteCategory')
+            ->with($categoryName);
 
-        $this->entityManager->expects($this->once())
-            ->method('remove')
-            ->with($wordCategory);
+        $result = $this->commandTester->execute([
+                                                    'category_name' => $categoryName
+                                                ]);
 
-        $this->entityManager->expects($this->once())
-            ->method('flush');
-
-        $this->commandTester->execute([
-            'category_name' => $categoryName,
-        ]);
-
-        $this->commandTester->assertCommandIsSuccessful();
-        $output = $this->commandTester->getDisplay();
-        $this->assertStringContainsString('Category deleted successfully', $output);
+        $this->assertEquals(Command::SUCCESS, $result);
+        $this->assertStringContainsString(
+            sprintf('Category "%s" deleted successfully.', $categoryName),
+            $this->commandTester->getDisplay()
+        );
     }
 
-    public function testSuccessWhenCategoryExistsAndProvidedInteractively(): void
+    public function testExecuteWithInteractiveInputSuccess(): void
     {
-        $categoryName = 'TestCategory';
-        $wordCategory = new WordCategory();
-        $wordCategory->setName($categoryName);
+        $categoryName = 'Warzywa';
 
-        $this->repository->expects($this->once())
-            ->method('findBy')
-            ->with(['name' => $categoryName])
-            ->willReturn([$wordCategory]);
-
-        $this->entityManager->expects($this->once())
-            ->method('remove')
-            ->with($wordCategory);
-
-        $this->entityManager->expects($this->once())
-            ->method('flush');
+        $this->categoryService->expects($this->once())
+            ->method('deleteCategory')
+            ->with($categoryName);
 
         $this->commandTester->setInputs([$categoryName]);
-        $this->commandTester->execute([]);
+        $result = $this->commandTester->execute([]);
 
-        $this->commandTester->assertCommandIsSuccessful();
-        $output = $this->commandTester->getDisplay();
-        $this->assertStringContainsString('Word category name', $output); // The question
-        $this->assertStringContainsString('Category deleted successfully', $output);
+        $this->assertEquals(Command::SUCCESS, $result);
+        $this->assertStringContainsString(
+            'Please enter the name of the category to delete',
+            $this->commandTester->getDisplay()
+        );
     }
 
-    public function testFailureWhenCategoryDoesNotExistAndProvidedAsArgument(): void
+    public function testExecuteFailsWhenCategoryNameEmpty(): void
     {
-        $categoryName = 'NonExistentCategory';
+        $this->commandTester->setInputs(['']);
+        $result = $this->commandTester->execute([]);
 
-        $this->repository->expects($this->once())
-            ->method('findBy')
-            ->with(['name' => $categoryName])
-            ->willReturn([]);
+        $this->assertEquals(Command::FAILURE, $result);
+        $this->assertStringContainsString('Category name cannot be empty.', $this->commandTester->getDisplay());
 
-        $this->entityManager->expects($this->never())
-            ->method('remove');
-        $this->entityManager->expects($this->never())
-            ->method('flush');
-
-        $this->commandTester->execute([
-            'category_name' => $categoryName,
-        ]);
-
-        $this->assertEquals(Command::FAILURE, $this->commandTester->getStatusCode());
-        $output = $this->commandTester->getDisplay();
-        $this->assertStringContainsString('Category not found', $output);
+        $this->categoryService->expects($this->never())->method('deleteCategory');
     }
 
-    public function testFailureWhenCategoryDoesNotExistAndProvidedInteractively(): void
+    public function testExecuteHandlesServiceException(): void
     {
-        $categoryName = 'NonExistentCategory';
+        $categoryName = 'Nieistniejąca';
 
-        $this->repository->expects($this->once())
-            ->method('findBy')
-            ->with(['name' => $categoryName])
-            ->willReturn([]);
+        $this->categoryService->method('deleteCategory')
+            ->willThrowException(new \Exception('Category not found in database.'));
 
-        $this->entityManager->expects($this->never())
-            ->method('remove');
-        $this->entityManager->expects($this->never())
-            ->method('flush');
+        $result = $this->commandTester->execute([
+                                                    'category_name' => $categoryName
+                                                ]);
 
-        $this->commandTester->setInputs([$categoryName]);
-        $this->commandTester->execute([]);
-
-        $this->assertEquals(Command::FAILURE, $this->commandTester->getStatusCode());
-        $output = $this->commandTester->getDisplay();
-        $this->assertStringContainsString('Category not found', $output);
+        $this->assertEquals(Command::FAILURE, $result);
+        $this->assertStringContainsString('Category not found in database.', $this->commandTester->getDisplay());
     }
 }

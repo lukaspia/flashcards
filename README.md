@@ -1,6 +1,6 @@
 # Flashcards
 
-**Flashcards** to intuicyjna aplikacja zaprojektowana do **nauki języków** i przeglądania słownictwa za pomocą cyfrowych fiszek. Stworzyłam ją, aby ułatwić efektywne przyswajanie nowych słów i zwrotów.
+**Flashcards** to aplikacja zaprojektowana do **nauki języków** i przeglądania słownictwa za pomocą cyfrowych fiszek. Stworzona, by ułatwić efektywne przyswajanie nowych słów i zwrotów.
 
 ![GitHub Release](https://img.shields.io/github/v/release/lukaspia/flashcards)
 ![GitHub License](https://img.shields.io/github/license/lukaspia/flashcards)
@@ -48,7 +48,7 @@ Aby uruchomić aplikację lokalnie, wykonaj następujące kroki:
     ```bash
     cp .env.dist .env
     ```
-    *Możesz również utworzyć plik `.env.local`, aby nadpisać zmienne dla swojego środowiska lokalnego. Plik ten ma wyższy priorytet niż `.env` i jest ignorowany przez Git.*
+    *Możesz również utworzyć plik `.env.local`, aby nadpisać zmienne dla swojego środowiska lokalnego.*
 5.  Otwórz nowo utworzony plik `.env` (lub `.env.local`) i uzupełnij wymagane wartości:
     *   `DATABASE_URL`: Pełny URL do Twojej bazy danych.
     *   `APP_SECRET`: Unikalny sekret dla Twojej aplikacji Symfony.
@@ -98,7 +98,3 @@ Planuję zaimplementować następujące funkcje w przyszłych wersjach:
 * Możliwość dodawania kategorii słów za pomocą formularza bezpośrednio w aplikacji.
 
 ---
-
-### Wsparcie i wkład
-
-Jeśli masz jakieś pytania, sugestie lub napotkasz problemy, śmiało otwórz **Issue** w tym repozytorium.

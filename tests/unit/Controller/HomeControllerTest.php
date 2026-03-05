@@ -12,7 +12,6 @@ class HomeControllerTest extends WebTestCase
     {
         $client = static::createClient();
 
-        // Ensure no user is authenticated
         $container = $client->getContainer();
         $container->get('security.token_storage')->setToken(null);
 

@@ -2,8 +2,7 @@
 
 namespace App\Command;
 
-use App\Entity\WordCategory;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Service\Word\WordCategoryServiceInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -18,17 +17,12 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 )]
 class DeleteWordCategoryCommand extends Command
 {
-    /**
-     * @param \Doctrine\ORM\EntityManagerInterface $entityManager
-     */
-    public function __construct(private readonly EntityManagerInterface $entityManager)
-    {
+    public function __construct(
+        private readonly WordCategoryServiceInterface $categoryService
+    ) {
         parent::__construct();
     }
 
-    /**
-     * @return void
-     */
     protected function configure(): void
     {
         $this
@@ -36,36 +30,34 @@ class DeleteWordCategoryCommand extends Command
             ->addArgument(
                 'category_name',
                 InputArgument::OPTIONAL,
-                'The category name of the new word category'
+                'The name of the category to delete'
             );
     }
 
-    /**
-     * @param \Symfony\Component\Console\Input\InputInterface $input
-     * @param \Symfony\Component\Console\Output\OutputInterface $output
-     * @return int
-     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
         $io->info($this->getHelp());
 
-        if (!($wordCategoryName = $input->getArgument('category_name'))) {
-            $wordCategoryName = $io->ask('Word category name');
-            $input->setArgument('category_name', $wordCategoryName);
+        $name = $input->getArgument('category_name');
+
+        if (!$name) {
+            $name = $io->ask('Please enter the name of the category to delete');
         }
 
-        $wordCategory = $this->entityManager->getRepository(WordCategory::class)->findBy(['name' => $wordCategoryName]);
-
-        if (empty($wordCategory)) {
-            $io->error(['Category not found.']);
+        if (empty($name)) {
+            $io->error('Category name cannot be empty.');
             return Command::FAILURE;
         }
 
-        $this->entityManager->remove(reset($wordCategory));
-        $this->entityManager->flush();
+        try {
+            $this->categoryService->deleteCategory($name);
+            $io->success(sprintf('Category "%s" deleted successfully.', $name));
 
-        $io->success(['Category deleted successfully']);
-        return Command::SUCCESS;
+            return Command::SUCCESS;
+        } catch (\Exception $e) {
+            $io->error($e->getMessage());
+            return Command::FAILURE;
+        }
     }
 }

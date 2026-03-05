@@ -23,4 +23,19 @@ interface LessonServiceInterface
      * @return \App\Entity\Lesson
      */
     public function removeLesson(Lesson $lesson): Lesson;
+
+    /**
+     * Get paginated lessons for a specific user
+     * 
+     * @param \App\Entity\User $user
+     * @param int $page
+     * @param int $limit
+     * @return array{
+     *   lessons: \App\Entity\Lesson[],
+     *   page: int,
+     *   totalItems: int,
+     *   totalPages: int
+     * }
+     */
+    public function getUserLessonsWithPagination(\App\Entity\User $user, int $page, int $limit): array;
 }

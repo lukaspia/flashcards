@@ -17,9 +17,6 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 )]
 class DeleteUserCommand extends Command
 {
-    /**
-     * @param \App\Service\User\UserService $userService
-     */
     public function __construct(private readonly UserServiceInterface $userService)
     {
         parent::__construct();
@@ -35,7 +32,7 @@ class DeleteUserCommand extends Command
             ->addArgument(
                 'username',
                 InputArgument::OPTIONAL,
-                'The username of the new user'
+                'The username of the user to delete'
             );
     }
 
@@ -49,19 +46,28 @@ class DeleteUserCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $io->info($this->getHelp());
 
-        if (!($username = $input->getArgument('username'))) {
-            $username = $io->ask('Username');
-            $input->setArgument('username', $username);
+        $username = $input->getArgument('username');
+
+        if (!$username) {
+            $username = $io->ask('Please enter the username of the user to delete');
         }
 
-        $response = $this->userService->deleteUser($username);
+        if (empty($username)) {
+            $io->error('Username cannot be empty.');
+            return Command::FAILURE;
+        }
 
-        if ($response->isSuccess()) {
-            $io->success($response->getMessage());
+        try {
+            $this->userService->deleteUser($username);
+
+            $io->success(sprintf('User "%s" has been successfully deleted.', $username));
             return Command::SUCCESS;
+        } catch (\Exception $e) {
+            $io->error([
+                           'Error deleting user.',
+                           $e->getMessage()
+                       ]);
+            return Command::FAILURE;
         }
-
-        $io->error(['Error deleting user.', $response->getMessage()]);
-        return Command::FAILURE;
     }
 }

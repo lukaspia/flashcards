@@ -18,7 +18,10 @@ class FileNameGenerator implements FileNameGeneratorInterface
      */
     public function generate(string $identifier, string $originalFilename): string
     {
-        $extension = pathinfo($originalFilename, PATHINFO_EXTENSION);
-        return md5($identifier) . ($extension ? '.' . $extension : '');
+        $extension = strtolower(pathinfo($originalFilename, PATHINFO_EXTENSION));
+
+        $hash = md5($identifier);
+
+        return $extension ? sprintf('%s.%s', $hash, $extension) : $hash;
     }
 }

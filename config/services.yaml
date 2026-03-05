@@ -25,17 +25,47 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
-    App\Factory\ImageProcessorFactory:
+    App\Command\CleanupTemporaryUploadsCommand:
         arguments:
-            $entityManager: '@doctrine.orm.entity_manager'
-            $wordServices: '@App\Service\Lesson\WordImageServiceInterface'
+          $uploadDirTemp: '%word_image_upload_dir_temp%'
+
+    App\EventListener\ApiExceptionListener:
+        arguments:
+          $environment: '%kernel.environment%'
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception }
+
+    App\ImageProcessing\Word\WordImageProcessor:
+        arguments:
             $wordImageUploadDir: '%word_image_upload_dir%'
             $wordImageUploadDirRelative: '%word_image_upload_dir_relative%'
             $wordImageUploadDirTemp: '%word_image_upload_dir_temp%'
 
+    App\Service\Lesson\WordImageService:
+        arguments:
+            $publicDir: '%public_dir%'
+            $uploadDirTemp: '%word_image_upload_dir_temp%'
+            $uploadDir: '%word_image_upload_dir%'
+            $uploadDirRelative: '%word_image_upload_dir_relative%'
+
+    Gemini\Client:
+        factory: ['Gemini', 'client']
+        arguments:
+            - '%env(GEMINI_API_KEY)%'
+
+    App\Service\AI\GeminiSdkClient:
+      arguments:
+        $client: '@Gemini\Client'
+
+    App\Service\AI\GeminiClientInterface: '@App\Service\AI\GeminiSdkClient'
+
     App\Service\AI\GeminiService:
-        arguments: ['%env(GEMINI_API_KEY)%']
+        arguments:
+            $geminiClient: '@App\Service\AI\GeminiClientInterface'
+            $logger: '@logger'
+            $modelName: 'gemini-2.5-flash-lite'
 
     App\Service\AI\AIGeneratorInterface: '@App\Service\AI\GeminiService'
+    App\Service\Word\WordCategoryServiceInterface: '@App\Service\Word\WordCategoryService'
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

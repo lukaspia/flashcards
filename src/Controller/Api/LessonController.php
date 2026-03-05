@@ -6,73 +6,59 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 
+use App\Controller\Traits\AuthenticationTrait;
+use App\DTO\AddLessonDTO;
+use App\DTO\UpdateLessonDTO;
 use App\Entity\Lesson;
+use App\Entity\User;
 use App\Factory\LessonFactoryInterface;
-use App\Service\AI\AIGeneratorInterface;
+use App\Repository\LessonRepository;
+use App\Security\Voter\LessonVoter;
+use App\Service\Lesson\LessonMessageProviderInterface;
 use App\Service\Lesson\LessonServiceInterface;
-use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Validator\Exception\InvalidArgumentException;
 
 class LessonController extends AbstractApiController
 {
     public function __construct(
-        EntityManagerInterface $entityManager,
+        private readonly LessonRepository $lessonRepository,
         private readonly LessonServiceInterface $lessonServices,
-        private readonly LoggerInterface $logger,
+        protected readonly LoggerInterface $logger,
         private readonly LessonFactoryInterface $lessonFactory,
+        private readonly SerializerInterface $serializer,
     ) {
-        parent::__construct($entityManager);
     }
 
     /**
      * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param \App\Entity\User $user
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     #[Route('/lessons', name: 'lessons', methods: ['GET'])]
-    public function index(Request $request): JsonResponse
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function index(Request $request, #[CurrentUser] User $user): JsonResponse
     {
-        if (!($user = $this->getUser())) {
-            return $this->createResponse(null, ['Authentication required.'], Response::HTTP_UNAUTHORIZED);
-        }
+        $params = $this->getPaginationParams($request);
 
-        $page = $request->query->getInt('page', 1);
-        $limit = $this->getParameter('pagination_default_limit');
-        $criteria = ['user' => $user];
-        $order = ['id' => 'DESC'];
+        $paginationData = $this->lessonServices->getUserLessonsWithPagination(
+            $user,
+            $params['page'],
+            $params['limit']
+        );
 
-        try {
-            /** @var \App\Repository\LessonRepository $lessonRepository */
-            $lessonRepository = $this->entityManager->getRepository(Lesson::class);
-            $lessons = $lessonRepository->findPaginatedLessons($criteria, $order, $limit, $page);
-            $totalItems = $lessonRepository->countLessonsByCriteria($criteria);
-            $totalPages = ceil($totalItems / $limit);
-
-            $page = min($page, $totalPages);
-
-            return $this->createResponse(
-                [
-                    'lessons' => $lessons,
-                    'page' => $page,
-                    'totalItems' => $totalItems,
-                    'totalPages' => $totalPages
-                ],
-                [],
-                Response::HTTP_OK,
-                ['groups' => Lesson::LESSON_READ_GROUP]
-            );
-        } catch (\Exception $e) {
-            $this->logger->error('Error fetching lessons: ' . $e->getMessage(), ['exception' => $e]);
-            return $this->createResponse(
-                null,
-                ['An error occurred while fetching lessons.'],
-                Response::HTTP_INTERNAL_SERVER_ERROR
-            );
-        }
+        return $this->createResponse(
+            $paginationData,
+            [],
+            Response::HTTP_OK,
+            ['groups' => Lesson::LESSON_READ_GROUP]
+        );
     }
 
     /**
@@ -80,22 +66,14 @@ class LessonController extends AbstractApiController
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     #[Route('/lessons/{id}', name: 'get_lesson', requirements: ['id' => '\d+'], methods: ['GET'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function getLesson(Lesson $lesson): JsonResponse
     {
-        if (!($this->getUser())) {
-            return $this->createResponse(null, ['Authentication required.'], Response::HTTP_UNAUTHORIZED);
-        }
-
-        if (!$this->isGranted('LESSON_VIEW', $lesson)) {
-            return $this->createResponse(
-                null,
-                ['You are not authorized to view this lesson.'],
-                Response::HTTP_FORBIDDEN
-            );
-        }
+        $this->denyAccessUnlessGranted(LessonVoter::VIEW, $lesson);
 
         return $this->createResponse(
-            ['lesson' => $lesson], [],
+            ['lesson' => $lesson],
+            [],
             Response::HTTP_OK,
             ['groups' => Lesson::LESSON_READ_GROUP]
         );
@@ -106,36 +84,22 @@ class LessonController extends AbstractApiController
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     #[Route('/lessons', name: 'add_lesson', methods: ['POST'])]
-    public function addLesson(Request $request): JsonResponse
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function addLesson(Request $request, #[CurrentUser] User $user): JsonResponse
     {
-        if (!($user = $this->getUser())) {
-            return $this->createResponse(null, ['Authentication required.'], Response::HTTP_UNAUTHORIZED);
-        }
+        $dto = $this->serializer->denormalize($request->request->all(), AddLessonDTO::class);
 
-        try {
-            $data = $request->request->all();
-            if (empty($data)) {
-                return $this->createResponse(
-                    null,
-                    ['No data provided'],
-                    Response::HTTP_BAD_REQUEST
-                );
-            }
+        $this->validateDto($dto);
 
-            $lesson = $this->lessonFactory->createFromRequestData($data, $user);
-            $this->lessonServices->addLesson($lesson);
+        $lesson = $this->lessonFactory->createFromDTO($dto, $user);
+        $this->lessonServices->addLesson($lesson);
 
-            $this->logger->info('Lesson created successfully', ['lesson' => $lesson]);
-            return $this->createResponse(
-                ['lesson' => $lesson],
-                ['Lesson created successfully'],
-                Response::HTTP_CREATED,
-                ['groups' => Lesson::LESSON_READ_GROUP]
-            );
-        } catch (\RuntimeException|InvalidArgumentException|\Exception $e) {
-            $this->logger->error('Lesson not created: ' . $e->getMessage());
-            return $this->createResponse(null, ['Lesson not created', $e], Response::HTTP_BAD_REQUEST);
-        }
+        return $this->createResponse(
+            ['lesson' => $lesson],
+            ['Lesson created successfully'],
+            Response::HTTP_CREATED,
+            ['groups' => Lesson::LESSON_READ_GROUP]
+        );
     }
 
     /**
@@ -143,47 +107,30 @@ class LessonController extends AbstractApiController
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     #[Route('/lessons', name: 'update_lesson', methods: ['PUT'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function updateLesson(Request $request): JsonResponse
     {
-        $data = $request->toArray();
+        /** @var UpdateLessonDTO $dto */
+        $dto = $this->serializer->denormalize($request->toArray(), UpdateLessonDTO::class);
+        $this->validateDto($dto);
 
-        if (empty($data)) {
-            return $this->createResponse(
-                null,
-                ['No data provided'],
-                Response::HTTP_BAD_REQUEST
-            );
-        }
-
-        $existingLesson = null;
-        if (isset($data['id'])) {
-            $existingLesson = $this->entityManager->getRepository(Lesson::class)->find($data['id']);
-        }
+        $existingLesson = $this->lessonRepository->find($dto->id);
 
         if (!$existingLesson) {
-            return $this->createResponse(null, ['Lesson not found'], Response::HTTP_NOT_FOUND);
+            throw $this->createNotFoundException('Lesson not found');
         }
 
-        if (!$this->isGranted('LESSON_EDIT', $existingLesson)) {
-            return $this->createResponse(
-                null,
-                ['You are not authorized to edit this lesson.'],
-                Response::HTTP_FORBIDDEN
-            );
-        }
+        $this->denyAccessUnlessGranted(LessonVoter::EDIT, $existingLesson);
 
-        try {
-            $lesson = $this->lessonFactory->updateFromRequestData($existingLesson, $data);
-            $this->lessonServices->updateLesson($lesson);
+        $lesson = $this->lessonFactory->updateFromDTO($existingLesson, $dto);
+        $this->lessonServices->updateLesson($lesson);
 
-            return $this->createResponse(
-                ['lesson' => $lesson], ['Lesson updated successfully'],
-                Response::HTTP_OK,
-                ['groups' => Lesson::LESSON_READ_GROUP]
-            );
-        } catch (\RuntimeException|InvalidArgumentException|\Exception $e) {
-            return $this->createResponse(null, ['Invalid data: ' . $e->getMessage()], Response::HTTP_BAD_REQUEST);
-        }
+        return $this->createResponse(
+            ['lesson' => $lesson],
+            ['Lesson updated successfully'],
+            Response::HTTP_OK,
+            ['groups' => Lesson::LESSON_READ_GROUP]
+        );
     }
 
     /**
@@ -191,29 +138,14 @@ class LessonController extends AbstractApiController
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     #[Route('/lessons/{id}', name: 'remove_lesson', methods: ['DELETE'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function removeLesson(Lesson $lesson): JsonResponse
     {
-        if (!$this->isGranted('LESSON_DELETE', $lesson)) {
-            return $this->createResponse(
-                null,
-                ['You are not authorized to delete this lesson.'],
-                Response::HTTP_FORBIDDEN
-            );
-        }
+        $this->denyAccessUnlessGranted(LessonVoter::DELETE, $lesson);
 
-        try {
-            $this->lessonServices->removeLesson($lesson);
+        $this->lessonServices->removeLesson($lesson);
 
-            $this->logger->info('Lesson removed successfully', ['lesson' => $lesson]);
-            return $this->createResponse(null, ['Lesson remove successfully'], Response::HTTP_NO_CONTENT);
-        } catch (\Exception $e) {
-            $this->logger->error('Lesson remove error: ' . $e->getMessage());
-            return $this->createResponse(
-                null,
-                ['Lesson remove error: ' . $e->getMessage()],
-                Response::HTTP_BAD_REQUEST
-            );
-        }
+        return $this->createResponse(null, ['Lesson removed successfully'], Response::HTTP_NO_CONTENT);
     }
 
     /**
@@ -221,24 +153,13 @@ class LessonController extends AbstractApiController
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     #[Route('/lessons/message', name: 'get_lesson_message', methods: ['GET'])]
-    public function getSuccessMessage(AIGeneratorInterface $aiGeneratorService): JsonResponse
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function getSuccessMessage(LessonMessageProviderInterface $messageProvider): JsonResponse
     {
-        try {
-            $prompt = 'Generate one, short, encouraging message just in Polish (don\'t give me translation in English), to congratulate someone on their successful foreign language vocabulary learning.';
-            $message = $aiGeneratorService->generateText($prompt);
-
-            return $this->createResponse(
-                ['message' => $message],
-                ['Lesson success message generated successfully'],
-                Response::HTTP_OK
-            );
-        } catch (\Exception $e) {
-            $this->logger->error('Lesson success message error: ' . $e->getMessage());
-            return $this->createResponse(
-                null,
-                ['Lesson success message error: ' . $e->getMessage()],
-                Response::HTTP_BAD_REQUEST
-            );
-        }
+        return $this->createResponse(
+            ['message' => $messageProvider->getCongratsMessage()],
+            ['Lesson success message generated successfully'],
+            Response::HTTP_OK
+        );
     }
 }

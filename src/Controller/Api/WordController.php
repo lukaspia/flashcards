@@ -6,22 +6,24 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 
-use App\Entity\WordCategory;
-use App\Schema\TranslationSchema;
-use App\Service\AI\AIGeneratorInterface;
-use Doctrine\ORM\EntityManagerInterface;
+use App\DTO\TranslateWordDTO;
+use App\Service\Word\WordCategoryServiceInterface;
+use App\Service\Word\WordTranslationServiceInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Serializer\SerializerInterface;
+
 
 class WordController extends AbstractApiController
 {
     public function __construct(
-        EntityManagerInterface $entityManager,
-        private readonly AIGeneratorInterface $aiGeneratorService
+        private readonly WordTranslationServiceInterface $wordTranslationService,
+        private readonly WordCategoryServiceInterface $wordCategoryService,
+        private readonly SerializerInterface $serializer
     ) {
-        parent::__construct($entityManager);
     }
 
     /**
@@ -29,38 +31,28 @@ class WordController extends AbstractApiController
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     #[Route('/words/translate', name: 'word_translate', methods: ['POST'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function translate(Request $request): JsonResponse
     {
-        $data = $request->toArray();
+        /** @var TranslateWordDTO $dto */
+        $dto = $this->serializer->denormalize($request->toArray(), TranslateWordDTO::class);
 
-        if (!isset($data['word'], $data['sourceLanguage'], $data['targetLanguage'])) {
-            return $this->createResponse(['prompt_data' => $data],
-                                         ['Invalid data. "word", "sourceLanguage", "targetLanguage" is required.'],
-                                         Response::HTTP_BAD_REQUEST);
-        }
+        $this->validateDto($dto);
 
-        $word = trim($data['word']);
-        $sourceLanguage = trim($data['sourceLanguage']);
-        $targetLanguage = trim($data['targetLanguage']);
-
-        $prompt = sprintf(
-            'Translate the following from %s to %s: "%s" (use most popular translation) and respond set as "translation", then show example of using this translation in some sentence, and answer set as "example".',
-            $sourceLanguage,
-            $targetLanguage,
-            $word
+        $result = $this->wordTranslationService->translate(
+            trim($dto->word),
+            $dto->sourceLanguage,
+            $dto->targetLanguage
         );
 
-        try {
-            $result = $this->aiGeneratorService->generateStructuredAnswer($prompt, TranslationSchema::getSchema());
-        } catch (\Exception $e) {
-            return $this->createResponse(['prompt_data' => $data],
-                                         ['Something went wrong.' . $e->getMessage()],
-                                         Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-
-        return $this->createResponse(['translation' => reset($result), 'prompt_data' => $data],
-                                     ['Translate successfully'],
-                                     Response::HTTP_OK);
+        return $this->createResponse(
+            [
+                'translation' => $result['translation'],
+                'prompt_data' => (array)$dto
+            ],
+            ['Translated successfully'],
+            Response::HTTP_OK
+        );
     }
 
     /**
@@ -69,7 +61,7 @@ class WordController extends AbstractApiController
     #[Route('/words/categories', name: 'word_categories', methods: ['GET'])]
     public function getCategories(): JsonResponse
     {
-        $categories = $this->entityManager->getRepository(WordCategory::class)->findAll();
+        $categories = $this->wordCategoryService->getAllCategories();
 
         return $this->createResponse($categories, ['Categories fetched successfully'], Response::HTTP_OK);
     }

@@ -1,174 +1,87 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App\Tests\Service\AI;
 
+use App\Service\AI\GeminiClientInterface;
+use App\Service\AI\GeminiModelInterface;
 use App\Service\AI\GeminiService;
 use Gemini\Data\Schema;
-use Gemini\Enums\DataType;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-
-class TestableGeminiService extends GeminiService
-{
-    private $mockResponses = [];
-    private $shouldThrow = [];
-    private $receivedPrompts = [];
-    private $receivedConfigs = [];
-    private $model;  
-
-    public function __construct()
-    {
-    }
-
-    public function initializeForTest(string $apiKey = 'test-key'): void
-    {
-        if (empty($apiKey)) {
-            throw new \InvalidArgumentException('API key cannot be empty');
-        }
-
-        $this->model = new class() {
-            public function generateContent($prompt) {
-                return (object)['text' => ''];
-            }
-            public function withGenerationConfig($config) {
-                return $this;
-            }
-            public function json() {
-                return [];
-            }
-        };
-    }
-
-    public function setMockResponse(string $method, $response): void
-    {
-        $this->mockResponses[$method] = $response;
-    }
-
-    public function setShouldThrow(string $method, \Throwable $exception): void
-    {
-        $this->shouldThrow[$method] = $exception;
-    }
-
-    public function getReceivedPrompts(): array
-    {
-        return $this->receivedPrompts;
-    }
-
-    public function getReceivedConfigs(): array
-    {
-        return $this->receivedConfigs;
-    }
-
-    public function generateText(string $prompt): string
-    {
-        $this->receivedPrompts[] = $prompt;
-
-        if (isset($this->shouldThrow[__FUNCTION__])) {
-            throw $this->shouldThrow[__FUNCTION__];
-        }
-
-        return $this->mockResponses[__FUNCTION__] ?? '';
-    }
-
-    public function generateStructuredAnswer(string $prompt, array $answerProperties): array
-    {
-        $this->receivedPrompts[] = $prompt;
-        $this->receivedConfigs[] = $answerProperties;
-
-        if (isset($this->shouldThrow[__FUNCTION__])) {
-            throw $this->shouldThrow[__FUNCTION__];
-        }
-
-        return $this->mockResponses[__FUNCTION__] ?? [];
-    }
-}
+use Psr\Log\LoggerInterface;
 
 class GeminiServiceTest extends TestCase
 {
-    private TestableGeminiService $geminiService;
+    private MockObject|GeminiClientInterface $client;
+    private MockObject|GeminiModelInterface $model;
+    private MockObject|LoggerInterface $logger;
+    private GeminiService $service;
 
     protected function setUp(): void
     {
-        $this->geminiService = new TestableGeminiService();
-        $this->geminiService->initializeForTest('test-api-key');
+        $this->client = $this->createMock(GeminiClientInterface::class);
+        $this->model = $this->createMock(GeminiModelInterface::class);
+        $this->logger = $this->createMock(LoggerInterface::class);
+
+        $this->client->method('generativeModel')->willReturn($this->model);
+
+        $this->service = new GeminiService($this->client, $this->logger);
     }
 
-    public function testConstructorWithEmptyApiKey(): void
+    public function testGenerateTextSuccess(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('API key cannot be empty');
+        $prompt = 'Cześć Gemini!';
+        $expectedText = 'Witaj Nieznajomy!';
 
-        $service = new TestableGeminiService();
-        $service->initializeForTest('');
-    }
-
-    public function testGenerateTextSuccessfully(): void
-    {
-        $testPrompt = 'Test prompt';
-        $expectedResponse = 'Generated response';
-
-        $this->geminiService->setMockResponse('generateText', $expectedResponse);
-        $result = $this->geminiService->generateText($testPrompt);
-
-        $this->assertSame($expectedResponse, $result);
-        $this->assertContains($testPrompt, $this->geminiService->getReceivedPrompts());
-    }
-
-    public function testGenerateTextThrowsException(): void
-    {
-        $testPrompt = 'Test prompt';
-        $errorMessage = 'API error';
-
-        $this->geminiService->setShouldThrow(
-            'generateText',
-            new \RuntimeException('Failed to generate text from Gemini: ' . $errorMessage)
-        );
-
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Failed to generate text from Gemini: ' . $errorMessage);
-
-        $this->geminiService->generateText($testPrompt);
-    }
-
-    public function testGenerateStructuredAnswerSuccessfully(): void
-    {
-        $testPrompt = 'Test prompt';
-        $testSchema = new Schema(DataType::STRING, description: 'Test schema');
-        $answerProperties = ['test' => $testSchema];
-        $expectedResponse = ['test' => 'value'];
-
-        $this->geminiService->setMockResponse('generateStructuredAnswer', $expectedResponse);
-        $result = $this->geminiService->generateStructuredAnswer($testPrompt, $answerProperties);
-
-        $this->assertSame($expectedResponse, $result);
-        $this->assertContains($testPrompt, $this->geminiService->getReceivedPrompts());
-        $this->assertContains($answerProperties, $this->geminiService->getReceivedConfigs());
-    }
-
-    public function testGenerateStructuredAnswerWithInvalidSchema(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Expected Schema instance');
-
-        $service = new class() extends TestableGeminiService {
-            public function validateSchema(array $answerProperties): void
+        $response = new class($expectedText) {
+            public function __construct(private string $t)
             {
-                foreach ($answerProperties as $answerProperty) {
-                    if (!($answerProperty instanceof Schema)) {
-                        throw new \InvalidArgumentException('Expected Schema instance');
-                    }
-                }
             }
 
-            public function generateStructuredAnswer(string $prompt, array $answerProperties): array
+            public function text(): string
             {
-                $this->validateSchema($answerProperties);
-                return parent::generateStructuredAnswer($prompt, $answerProperties);
+                return $this->t;
             }
         };
-        $service->initializeForTest('test-key');
-        
-        $service->generateStructuredAnswer('test', ['invalid' => 'schema']);
+
+        $this->model->expects($this->once())
+            ->method('generateContent')
+            ->with($prompt)
+            ->willReturn($response);
+
+        $result = $this->service->generateText($prompt);
+
+        $this->assertEquals($expectedText, $result);
+    }
+
+    public function testGenerateStructuredAnswerConfiguresJsonMode(): void
+    {
+        $prompt = 'Przetłumacz: Apple';
+        $properties = ['translation' => $this->createMock(Schema::class)];
+        $expectedData = [['translation' => 'Jabłko']];
+
+        $structuredModel = $this->createMock(GeminiModelInterface::class);
+
+        $this->model->method('withGenerationConfig')->willReturn($structuredModel);
+
+        $response = new class($expectedData) {
+            public function __construct(private array $j)
+            {
+            }
+
+            public function json(): array
+            {
+                return $this->j;
+            }
+        };
+
+        $structuredModel->expects($this->once())
+            ->method('generateContent')
+            ->with($prompt)
+            ->willReturn($response);
+
+        $result = $this->service->generateStructuredAnswer($prompt, $properties);
+
+        $this->assertEquals($expectedData, $result);
     }
 }

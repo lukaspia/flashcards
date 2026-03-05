@@ -6,80 +6,115 @@ declare(strict_types=1);
 namespace App\Factory;
 
 
+use App\DTO\AddLessonDTO;
+use App\DTO\UpdateLessonDTO;
 use App\Entity\Lesson;
 use App\Entity\Word;
-use App\Factory\LessonFactoryInterface;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
+/**
+ *
+ */
 readonly class LessonFactory implements LessonFactoryInterface
 {
+    /**
+     * @param \Symfony\Component\Serializer\SerializerInterface $serializer
+     */
     public function __construct(
-        private SerializerInterface $serializer,
-        private ValidatorInterface $validator,
-        private EntityManagerInterface $entityManager
+        private SerializerInterface $serializer
     ) {
     }
 
     /**
-     * @param array $data
+     * @param \App\DTO\AddLessonDTO $dto
      * @param \Symfony\Component\Security\Core\User\UserInterface $user
      * @return \App\Entity\Lesson
      */
-    public function createFromRequestData(array $data, UserInterface $user): Lesson
+    public function createFromDTO(AddLessonDTO $dto, UserInterface $user): Lesson
     {
-        try {
-            $lesson = $this->serializer->denormalize($data, Lesson::class, 'json');
-            $lesson->setUser($user);
+        $lesson = new Lesson();
 
-            $this->validateLesson($lesson);
+        $this->serializer->denormalize($dto, Lesson::class, null, [
+            AbstractNormalizer::OBJECT_TO_POPULATE => $lesson,
+            AbstractNormalizer::GROUPS => ['lesson:write']
+        ]);
 
-            return $lesson;
-        } catch (\Exception $e) {
-            throw new \RuntimeException('Failed to create lesson: ' . $e->getMessage());
-        }
+        $lesson->setUser($user);
+
+        return $lesson;
     }
 
     /**
      * @param \App\Entity\Lesson $lesson
-     * @param array $data
+     * @param \App\DTO\UpdateLessonDTO $dto
      * @return \App\Entity\Lesson
      */
-    public function updateFromRequestData(Lesson $lesson, array $data): Lesson
+    public function updateFromDTO(Lesson $lesson, UpdateLessonDTO $dto): Lesson
     {
-        if (empty($data)) {
-            return $lesson;
+        $this->serializer->denormalize($dto, Lesson::class, null, [
+            AbstractNormalizer::OBJECT_TO_POPULATE => $lesson,
+            AbstractNormalizer::GROUPS => ['lesson:write']
+        ]);
+
+        if ($dto->words !== null) {
+            $this->updateLessonWords($lesson, $dto->words);
         }
 
-        try {
-            $this->updateLessonWords($lesson, $data);
-
-            $updatedLesson = $this->serializer->denormalize($data, Lesson::class, null, [
-                AbstractNormalizer::OBJECT_TO_POPULATE => $lesson,
-                AbstractNormalizer::GROUPS => [Lesson::LESSON_WRITE_GROUP],
-            ]);
-
-            $this->validateLesson($updatedLesson);
-
-            return $updatedLesson;
-        } catch (\Exception $e) {
-            throw new \RuntimeException('Failed to update lesson: ' . $e->getMessage(), 0, $e);
-        }
+        return $lesson;
     }
 
     /**
      * @param \App\Entity\Lesson $lesson
+     * @param array $wordsData
      * @return void
      */
-    private function validateLesson(Lesson $lesson): void
+    private function updateLessonWords(Lesson $lesson, array $wordsData): void
     {
-        $errors = $this->validator->validate($lesson);
-        if ($errors->count() > 0) {
-            throw new \RuntimeException('Validation failed: ' . $errors);
+        $existingWords = $this->indexWordsById($lesson->getWords());
+        $processedIds = [];
+
+        foreach ($wordsData as $data) {
+            $wordId = $data['id'] ?? null;
+
+            if ($wordId && isset($existingWords[$wordId])) {
+                $this->updateExistingWord($existingWords[$wordId], $data);
+                $processedIds[] = $wordId;
+            } else {
+                $this->addNewWordToLesson($lesson, $data);
+            }
         }
+
+        $this->removeOrphanedWords($lesson, $existingWords, $processedIds);
+    }
+
+    /**
+     * @param iterable $words
+     * @return array
+     */
+    private function indexWordsById(iterable $words): array
+    {
+        $map = [];
+        foreach ($words as $word) {
+            if ($word->getId()) {
+                $map[$word->getId()] = $word;
+            }
+        }
+        return $map;
+    }
+
+    /**
+     * @param \App\Entity\Word $word
+     * @param array $data
+     * @return void
+     */
+    private function updateExistingWord(Word $word, array $data): void
+    {
+        $this->serializer->denormalize($data, Word::class, null, [
+            AbstractNormalizer::OBJECT_TO_POPULATE => $word,
+            AbstractNormalizer::IGNORED_ATTRIBUTES => ['lesson']
+        ]);
     }
 
     /**
@@ -87,34 +122,26 @@ readonly class LessonFactory implements LessonFactoryInterface
      * @param array $data
      * @return void
      */
-    private function updateLessonWords(Lesson $lesson, array $data): void
+    private function addNewWordToLesson(Lesson $lesson, array $data): void
     {
-        if (isset($data['words'])) {
-            $words = $lesson->getWords();
-            $words->clear();
-
-            $lessonWords = $this->entityManager->getRepository(Word::class)->findByLessonId($lesson->getId());
-
-            foreach ($data['words'] as $wordData) {
-                $wordEntity = $this->createWordEntity($wordData, $lessonWords);
-                $wordEntity->setLesson($lesson);
-                $words->add($wordEntity);
-            }
-        }
+        $newWord = $this->serializer->denormalize($data, Word::class, null, [
+            AbstractNormalizer::IGNORED_ATTRIBUTES => ['lesson']
+        ]);
+        $lesson->addWord($newWord);
     }
 
     /**
-     * @param array $wordData
-     * @param array $lessonWords
-     * @return \App\Entity\Word
+     * @param \App\Entity\Lesson $lesson
+     * @param array $existingWords
+     * @param array $processedIds
+     * @return void
      */
-    private function createWordEntity(array $wordData, array $lessonWords): Word
+    private function removeOrphanedWords(Lesson $lesson, array $existingWords, array $processedIds): void
     {
-        $context = [];
-        if (isset($wordData['id'], $lessonWords[$wordData['id']])) {
-            $context = [AbstractNormalizer::OBJECT_TO_POPULATE => $lessonWords[$wordData['id']]];
+        foreach ($existingWords as $id => $word) {
+            if (!in_array($id, $processedIds, true)) {
+                $lesson->removeWord($word);
+            }
         }
-
-        return $this->serializer->denormalize($wordData, Word::class, null, $context);
     }
 }

@@ -15,4 +15,15 @@ class WordCategoryRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, WordCategory::class);
     }
+
+    /**
+     * @return WordCategory[]
+     */
+    public function findAllOrderedByName(): array
+    {
+        return $this->createQueryBuilder('c')
+            ->orderBy('c.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }

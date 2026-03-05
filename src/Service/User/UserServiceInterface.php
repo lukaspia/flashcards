@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service\User;
 
-use App\DTO\OperationResponse;
+use App\Entity\User;
 
 interface UserServiceInterface
 {
@@ -12,17 +12,17 @@ interface UserServiceInterface
      * @param string $username
      * @param string $password
      * @param bool $isAdmin
-     * @return \App\DTO\OperationResponse
+     * @return \App\DTO\OperationResponseDTO
      */
     public function addUser(
         string $username,
         string $password,
         bool $isAdmin = false
-    ): OperationResponse;
+    ): User;
 
     /**
      * @param string $username
-     * @return \App\DTO\OperationResponse
+     * @return \App\DTO\OperationResponseDTO
      */
-    public function deleteUser(string $username): OperationResponse;
+    public function deleteUser(string $username): void;
 }
