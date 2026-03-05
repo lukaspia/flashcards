@@ -1,0 +1,80 @@
+services:
+
+  #mysql
+  mysql:
+    container_name: "${CONTAINER_NAME_PREFIX}-mysql"
+    image: mysql:${MYSQL_VERSION}
+    volumes:
+      - ${PATH_TO_DB_DATA}:/var/lib/mysql
+      - mysql-backups:/backups
+    restart: unless-stopped
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: ${ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - app_network
+
+  #phpmyadmin
+  phpmyadmin:
+    container_name: "${CONTAINER_NAME_PREFIX}-phpmyadmin"
+    depends_on:
+      - mysql
+    image: phpmyadmin:${PHPMYADMIN_VERSION}
+    restart: unless-stopped
+    ports:
+      - '8080:80'
+    environment:
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: ${ROOT_PASSWORD}
+    networks:
+      - app_network
+
+  #php-apache
+  php-apache:
+    container_name: "${CONTAINER_NAME_PREFIX}-php-apache"
+    depends_on:
+      - mysql
+    build:
+      context: ./docker
+      args:
+        APCU_VERSION: ${APCU_VERSION}
+      dockerfile: Dockerfile
+    ports:
+      - ${WEB_PORT_HTTP}:80 #http
+      - ${WEB_PORT_HTTPS}:443 #https
+    restart: unless-stopped
+    volumes:
+      - ./docker/php.conf.ini:/usr/local/etc/php/conf.d/conf.ini
+      - ${PATH_TO_PROJECT}:/var/www/html
+    networks:
+      - app_network
+      
+  #mysql-backup
+  mysql-backup:
+    container_name: "${CONTAINER_NAME_PREFIX}-mysql-backup"
+    image: mysql:${MYSQL_VERSION}
+    depends_on:
+      - mysql
+    volumes:
+      - mysql-backups:/backups
+      - ./docker/mysql/backup-script.sh:/backup-script.sh
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${ROOT_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${ROOT_PASSWORD}
+    entrypoint: ["/bin/sh", "/backup-script.sh"]
+    restart: unless-stopped
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    name: "${CONTAINER_NAME_PREFIX}-network"
+
+volumes:
+  mysql-backups:

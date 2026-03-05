@@ -13,9 +13,11 @@ class WordCategory
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['category:read'])]
     private ?int $id = null;
 
     #[ORM\Column(type: "string", length: 255)]
+    #[Groups(['category:read'])]
     private string $name;
 
     public function getId(): ?int

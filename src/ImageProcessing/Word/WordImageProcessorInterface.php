@@ -9,8 +9,8 @@ interface WordImageProcessorInterface
 {
     /**
      * @param \Symfony\Component\HttpFoundation\File\UploadedFile $imageFile
-     * @param string $newFilename
+     * @param \App\Entity\Word|null $word
      * @return string
      */
-    public function process(UploadedFile $imageFile, string $newFilename): string;
+    public function process(UploadedFile $imageFile, ?Word $word = null): string;
 }

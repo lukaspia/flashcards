@@ -17,15 +17,15 @@ class WordRepository extends ServiceEntityRepository
     }
 
     /**
-     * @param int $lessonId
-     * @return array
+     * @param int|\App\Repository\Lesson $lesson
+     * @return Word[]
      * @throws \Doctrine\ORM\Query\QueryException
      */
-    public function findByLessonId(int $lessonId): array
+    public function findByLessonId(int|Lesson $lesson): array
     {
         return $this->createQueryBuilder('w')
-            ->andWhere('w.lesson = :lessonId')
-            ->setParameter('lessonId', $lessonId)
+            ->andWhere('w.lesson = :lesson')
+            ->setParameter('lesson', $lesson)
             ->indexBy('w', 'w.id')
             ->getQuery()
             ->getResult();

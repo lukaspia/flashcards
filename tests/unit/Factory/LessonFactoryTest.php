@@ -2,136 +2,100 @@
 
 namespace App\Tests\Factory;
 
+use App\DTO\AddLessonDTO;
+use App\DTO\UpdateLessonDTO;
 use App\Entity\Lesson;
+use App\Entity\Word;
 use App\Entity\User;
+
+// Importujemy konkretną klasę User
 use App\Factory\LessonFactory;
-use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Validator\ConstraintViolationList;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
+
+interface FullSerializerInterface extends SerializerInterface
+{
+    public function denormalize($data, string $type, string $format = null, array $context = []);
+}
 
 class LessonFactoryTest extends TestCase
 {
-    public function testCreateFromRequestDataSuccess(): void
-    {
-        $serializer = $this->getMockBuilder(SerializerInterface::class)
-            ->disableOriginalConstructor()
-            ->addMethods(['denormalize'])
-            ->getMockForAbstractClass();
-        $validator = $this->createMock(ValidatorInterface::class);
-        $entityManager = $this->createMock(EntityManagerInterface::class);
+    private MockObject $serializer;
+    private LessonFactory $factory;
 
-        $data = ['name' => 'Test Lesson'];
+    protected function setUp(): void
+    {
+        $this->serializer = $this->createMock(FullSerializerInterface::class);
+        $this->factory = new LessonFactory($this->serializer);
+    }
+
+    public function testCreateFromDTO(): void
+    {
+        $dto = new AddLessonDTO('New Lesson');
+
         $user = $this->createMock(User::class);
 
-        $lesson = new Lesson();
-
-        $serializer->expects($this->once())
+        $this->serializer->expects($this->once())
             ->method('denormalize')
-            ->with($data, Lesson::class, 'json')
-            ->willReturn($lesson);
+            ->willReturnCallback(function ($data, $type, $format, $context) {
+                return $context[AbstractNormalizer::OBJECT_TO_POPULATE] ?? new Lesson();
+            });
 
-        $validator->expects($this->once())
-            ->method('validate')
-            ->with($lesson)
-            ->willReturn(new ConstraintViolationList());
+        $lesson = $this->factory->createFromDTO($dto, $user);
 
-        $factory = new LessonFactory($serializer, $validator, $entityManager);
-        $result = $factory->createFromRequestData($data, $user);
-
-        $this->assertSame($lesson, $result);
+        $this->assertInstanceOf(Lesson::class, $lesson);
         $this->assertSame($user, $lesson->getUser());
     }
 
-    public function testCreateFromRequestDataFailure(): void
+    public function testUpdateFromDTOWithWordSynchronization(): void
     {
-        $serializer = $this->getMockBuilder(SerializerInterface::class)
-            ->disableOriginalConstructor()
-            ->addMethods(['denormalize'])
-            ->getMockForAbstractClass();
-        $validator = $this->createMock(ValidatorInterface::class);
-        $entityManager = $this->createMock(EntityManagerInterface::class);
+        $lesson = new Lesson();
 
-        $data = ['name' => 'Test Lesson'];
-        $user = $this->createMock(User::class);
+        $word1 = $this->createMock(Word::class);
+        $word1->method('getId')->willReturn(1);
+        $word2 = $this->createMock(Word::class);
+        $word2->method('getId')->willReturn(2);
 
-        $exception = new \Exception('Denormalization error');
+        $lesson->addWord($word1);
+        $lesson->addWord($word2);
 
-        $serializer->expects($this->once())
-            ->method('denormalize')
-            ->willThrowException($exception);
+        $dto = new UpdateLessonDTO(
+            123,
+            'Updated Title',
+            'Description',
+            'en',
+            [
+                ['id' => 1, 'text' => 'Updated'],
+                ['text' => 'New Word']
+            ]
+        );
 
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Failed to create lesson: ' . $exception->getMessage());
+        $this->serializer->method('denormalize')
+            ->willReturnCallback(function ($data, $type, $format, $context) {
+                if ($type === Word::class) {
+                    return new Word();
+                }
+                return $context[AbstractNormalizer::OBJECT_TO_POPULATE] ?? null;
+            });
 
-        $factory = new LessonFactory($serializer, $validator, $entityManager);
-        $factory->createFromRequestData($data, $user);
+        $updatedLesson = $this->factory->updateFromDTO($lesson, $dto);
+
+        $this->assertCount(2, $updatedLesson->getWords());
+        $this->assertFalse($updatedLesson->getWords()->contains($word2));
+        $this->assertTrue($updatedLesson->getWords()->contains($word1));
     }
 
-    public function testUpdateFromRequestDataSuccess(): void
+    public function testUpdateFromDTOWithoutWords(): void
     {
-        $serializer = $this->getMockBuilder(SerializerInterface::class)
-            ->disableOriginalConstructor()
-            ->addMethods(['denormalize'])
-            ->getMockForAbstractClass();
-        $validator = $this->createMock(ValidatorInterface::class);
-        $entityManager = $this->createMock(EntityManagerInterface::class);
-
-        $data = ['name' => 'Updated Lesson'];
         $lesson = new Lesson();
-        $originalName = 'Original Lesson';
-        $lesson->setName($originalName);
+        $dto = new UpdateLessonDTO(123, 'Title', 'Desc', 'pl', null);
 
-        $serializer->expects($this->once())
-            ->method('denormalize')
-            ->with(
-                $data,
-                Lesson::class,
-                null,
-                $this->callback(function ($context) use ($lesson) {
-                    return $context['object_to_populate'] === $lesson &&
-                           $context['groups'] == ['lesson:write'];
-                })
-            )
-            ->willReturn($lesson);
+        $this->serializer->expects($this->once())->method('denormalize');
 
-        $lesson->setName($data['name']);
-
-        $validator->expects($this->once())
-            ->method('validate')
-            ->with($lesson)
-            ->willReturn(new ConstraintViolationList());
-
-        $factory = new LessonFactory($serializer, $validator, $entityManager);
-        $result = $factory->updateFromRequestData($lesson, $data);
+        $result = $this->factory->updateFromDTO($lesson, $dto);
 
         $this->assertSame($lesson, $result);
-        $this->assertEquals($data['name'], $result->getName());
-    }
-
-    public function testUpdateFromRequestDataFailure(): void
-    {
-        $serializer = $this->getMockBuilder(SerializerInterface::class)
-            ->disableOriginalConstructor()
-            ->addMethods(['denormalize'])
-            ->getMockForAbstractClass();
-        $validator = $this->createMock(ValidatorInterface::class);
-        $entityManager = $this->createMock(EntityManagerInterface::class);
-
-        $data = ['name' => 'Updated Lesson'];
-        $lesson = new Lesson();
-
-        $exception = new \Exception('Update error');
-
-        $serializer->expects($this->once())
-            ->method('denormalize')
-            ->willThrowException($exception);
-
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Failed to update lesson: ' . $exception->getMessage());
-
-        $factory = new LessonFactory($serializer, $validator, $entityManager);
-        $factory->updateFromRequestData($lesson, $data);
     }
 }

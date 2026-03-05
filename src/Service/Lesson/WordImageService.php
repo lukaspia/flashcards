@@ -14,15 +14,13 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 readonly class WordImageService implements WordImageServiceInterface
 {
-    /**
-     * @param \Doctrine\ORM\EntityManagerInterface $entityManager
-     * @param \Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface $parameterBag
-     * @param \App\File\FileManager $fileManager
-     */
     public function __construct(
         private EntityManagerInterface $entityManager,
-        private ParameterBagInterface $parameterBag,
-        private FileManagerInterface $fileManager
+        private FileManagerInterface $fileManager,
+        private string $publicDir,
+        private string $uploadDirTemp,
+        private string $uploadDir,
+        private string $uploadDirRelative
     ) {
     }
 
@@ -32,14 +30,12 @@ readonly class WordImageService implements WordImageServiceInterface
      */
     public function getWordImageFilePath(Word $word): ?string
     {
-        if (!$word->getImage()) {
+        $imagePath = $word->getImage();
+        if (!$imagePath) {
             return null;
         }
 
-        $publicDir = $this->parameterBag->get('public_dir');
-        $imagePath = $word->getImage();
-
-        return rtrim($publicDir, '/') . $imagePath;
+        return rtrim($this->publicDir, '/') . '/' . ltrim($imagePath, '/');
     }
 
     /**
@@ -51,26 +47,16 @@ readonly class WordImageService implements WordImageServiceInterface
         if (!$word->getImage()) {
             return false;
         }
-
-        try {
-            $this->entityManager->beginTransaction();
-
-            $fileRemoved = $this->removeWordImageFile($word);
-
-            if (!$fileRemoved) {
+        return $this->entityManager->wrapInTransaction(function () use ($word) {
+            if (!$this->removeWordImageFile($word)) {
                 throw new \RuntimeException('Failed to remove the image file');
             }
 
             $word->setImage(null);
-            $this->entityManager->persist($word);
             $this->entityManager->flush();
 
-            $this->entityManager->commit();
             return true;
-        } catch (\Exception $e) {
-            $this->entityManager->rollback();
-            throw new \RuntimeException('Failed to remove word image: ' . $e->getMessage());
-        }
+        });
     }
 
     /**
@@ -79,54 +65,77 @@ readonly class WordImageService implements WordImageServiceInterface
      */
     public function removeWordImageFile(Word $word): bool
     {
-        if (!($wordFilePath = $this->getWordImageFilePath($word))) {
+        $filePath = $this->getWordImageFilePath($word);
+        if (!$filePath) {
             return false;
         }
 
-        try {
-            return $this->fileManager->removeFile($wordFilePath);
-        } catch (\RuntimeException $e) {
-            throw new \RuntimeException(
-                sprintf('Failed to remove image file for word ID %s: %s', $word->getId(), $e->getMessage())
-            );
-        }
+        return $this->fileManager->removeFile($filePath);
     }
 
     /**
-     * @param \Doctrine\Common\Collections\Collection $words
+     * @param \Doctrine\Common\Collections\Collection<int, Word> $words
      * @return void
      */
     public function moveWordsImagesFromTemporary(Collection $words): void
     {
-        if ($words->isEmpty()) {
-            return;
-        }
-
-        $uploadDirTemp = $this->parameterBag->get('word_image_upload_dir_temp');
-        $uploadDir = $this->parameterBag->get('word_image_upload_dir');
-        $uploadDirRelative = $this->parameterBag->get('word_image_upload_dir_relative');
+        $hasChanges = false;
 
         foreach ($words as $word) {
-            if (!($word instanceof Word)) {
+            if (!$this->shouldProcessWordImage($word)) {
                 continue;
             }
 
-            $image = $word->getImage();
-            if(empty($image)) {
-                continue;
-            }
+            $imageName = basename($word->getImage());
+            $relativeDir = $this->generateRelativePath($word);
+            $relativeDestination = $relativeDir . $imageName;
 
-            $fileName = basename($image);
-            $fileRelativePath = $word->getImageRelativePath() . $fileName;
-            $wordFile = $uploadDir . $fileRelativePath;
-            $urlFile = $uploadDirRelative . $fileRelativePath;
+            $sourcePath = rtrim($this->uploadDirTemp, '/') . '/' . ltrim($imageName, '/');
+            $destinationPath = rtrim($this->uploadDir, '/') . '/' . ltrim($relativeDestination, '/');
 
-            if ($this->fileManager->moveFile($uploadDirTemp . $fileName, $wordFile)) {
-                $word->setImage('/' . $urlFile);
-                $this->entityManager->persist($word);
+            if ($this->fileManager->moveFile($sourcePath, $destinationPath)) {
+                $word->setImage('/' . rtrim($this->uploadDirRelative, '/') . '/' . ltrim($relativeDestination, '/'));
+                $hasChanges = true;
             }
         }
 
-        $this->entityManager->flush();
+        if ($hasChanges) {
+            $this->entityManager->flush();
+        }
+    }
+
+    /**
+     * @param \App\Entity\Word $word
+     * @return string
+     */
+    public function generateRelativePath(Word $word): string
+    {
+        $lesson = $word->getLesson();
+        if (!$lesson) {
+            throw new \RuntimeException(sprintf('Word ID %s has no lesson assigned.', $word->getId()));
+        }
+
+        $user = $lesson->getUser();
+        if (!$user) {
+            throw new \RuntimeException(sprintf('Lesson ID %s has no user assigned.', $lesson->getId()));
+        }
+
+        return sprintf('%d/%d/', $user->getId(), $lesson->getId());
+    }
+
+    /**
+     * @param \App\Entity\Word $word
+     * @return bool
+     */
+    private function shouldProcessWordImage(Word $word): bool
+    {
+        $image = $word->getImage();
+        if (empty($image)) {
+            return false;
+        }
+
+        $targetPrefix = '/' . ltrim($this->uploadDirRelative, '/');
+
+        return !str_starts_with($image, $targetPrefix);
     }
 }

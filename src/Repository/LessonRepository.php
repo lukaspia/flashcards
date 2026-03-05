@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Lesson;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -18,28 +19,31 @@ class LessonRepository extends ServiceEntityRepository
 
     /**
      * @param array $criteria
-     * @param array|null $order
+     * @param array $orderBy
      * @param int $limit
      * @param int $page
-     * @return array
+     * @return \Doctrine\ORM\Tools\Pagination\Paginator
      */
-    public function findPaginatedLessons(
+    public function getPaginatedLessons(
         array $criteria = [],
-        ?array $order = null,
+        array $orderBy = ['id' => 'DESC'],
         int $limit = 10,
         int $page = 1
-    ): array {
-        $offset = ($page - 1) * $limit;
+    ): Paginator {
+        $query = $this->createQueryBuilder('l');
 
-        return $this->findBy($criteria, $order, $limit, $offset);
-    }
+        foreach ($criteria as $field => $value) {
+            $query->andWhere(sprintf('l.%s = :%s', $field, $field))
+                ->setParameter($field, $value);
+        }
 
-    /**
-     * @param array $criteria
-     * @return int
-     */
-    public function countLessonsByCriteria(array $criteria = []): int
-    {
-        return $this->count($criteria);
+        foreach ($orderBy as $field => $direction) {
+            $query->addOrderBy(sprintf('l.%s', $field), $direction);
+        }
+
+        $query->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit);
+
+        return new Paginator($query);
     }
 }

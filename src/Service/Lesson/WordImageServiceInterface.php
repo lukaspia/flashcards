@@ -32,4 +32,10 @@ interface WordImageServiceInterface
      * @return void
      */
     public function moveWordsImagesFromTemporary(Collection $words): void;
+
+    /**
+     * @param \App\Entity\Word $word
+     * @return string
+     */
+    public function generateRelativePath(Word $word): string;
 }

@@ -25,7 +25,7 @@ class Word
     private string $example;
 
     #[ORM\Column(type: "string", length: 255, nullable: true)]
-    private ?string $image;
+    private ?string $image = null;
 
     #[ORM\ManyToOne(targetEntity: Lesson::class, inversedBy: "words")]
     #[ORM\JoinColumn(name: "lesson", referencedColumnName: "id")]
@@ -107,11 +107,6 @@ class Word
     public function setSequence(int $sequence): void
     {
         $this->sequence = $sequence;
-    }
-
-    public function getImageRelativePath(): ?string
-    {
-        return $this->getLesson()->getUser()->getId() . '/' . $this->getLesson()->getId() . '/';
     }
 
     public function getErrors(): int
