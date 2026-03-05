@@ -93,13 +93,20 @@ class WordControllerTest extends WebTestCase
 
         static::getContainer()->set(WordTranslationServiceInterface::class, $translationServiceMock);
 
-        $this->client->request('POST', '/api/v1/words/translate', [], [], [
-            'CONTENT_TYPE' => 'application/json'
-        ], json_encode([
-                           'word' => 'programista',
-                           'sourceLanguage' => 'pl-PL',
-                           'targetLanguage' => 'en-US'
-                       ]));
+        $this->client->request(
+            'POST',
+            '/api/v1/words/translate',
+            [],
+            [],
+            [
+                'CONTENT_TYPE' => 'application/json'
+            ],
+            json_encode([
+                            'word' => 'programista',
+                            'sourceLanguage' => 'pl-PL',
+                            'targetLanguage' => 'en-US'
+                        ])
+        );
 
         $this->assertResponseIsSuccessful();
 
@@ -126,12 +133,19 @@ class WordControllerTest extends WebTestCase
     {
         $this->loginAsTestUser();
 
-        $this->client->request('POST', '/api/v1/words/translate', [], [], [
-            'CONTENT_TYPE' => 'application/json'
-        ], json_encode([
-                           'word' => '',
-                           'sourceLanguage' => 'pl',
-                       ]));
+        $this->client->request(
+            'POST',
+            '/api/v1/words/translate',
+            [],
+            [],
+            [
+                'CONTENT_TYPE' => 'application/json'
+            ],
+            json_encode([
+                            'word' => '',
+                            'sourceLanguage' => 'pl',
+                        ])
+        );
 
         $this->assertEquals(Response::HTTP_UNPROCESSABLE_ENTITY, $this->client->getResponse()->getStatusCode());
 

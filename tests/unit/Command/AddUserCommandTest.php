@@ -50,7 +50,10 @@ class AddUserCommandTest extends TestCase
         $result = $this->commandTester->execute([]);
 
         $this->assertEquals(Command::SUCCESS, $result);
-        $this->assertStringContainsString('New test_user user successfully created', $this->commandTester->getDisplay());
+        $this->assertStringContainsString(
+            'New test_user user successfully created',
+            $this->commandTester->getDisplay()
+        );
     }
 
     public function testExecutePasswordsDoNotMatch(): void

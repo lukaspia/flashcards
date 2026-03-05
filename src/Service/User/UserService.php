@@ -52,7 +52,6 @@ readonly class UserService implements UserServiceInterface
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
-        // 6. Eventy
         $this->eventDispatcher->dispatch(
             new AddUserEvent($user),
             AddUserEvent::NAME
@@ -93,7 +92,7 @@ readonly class UserService implements UserServiceInterface
         $errors = $this->validator->validate($user);
 
         if (count($errors) > 0) {
-            throw new \InvalidArgumentException((string) $errors);
+            throw new \InvalidArgumentException((string)$errors);
         }
     }
 }

@@ -46,7 +46,10 @@ class AddWordCategoryCommandTest extends TestCase
                                                 ]);
 
         $this->assertEquals(Command::SUCCESS, $result);
-        $this->assertStringContainsString('Category "Technologia" (ID: 10) created successfully', $this->commandTester->getDisplay());
+        $this->assertStringContainsString(
+            'Category "Technologia" (ID: 10) created successfully',
+            $this->commandTester->getDisplay()
+        );
     }
 
     public function testExecuteWithInteractiveInputSuccess(): void

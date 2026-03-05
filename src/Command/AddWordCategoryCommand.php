@@ -53,7 +53,9 @@ class AddWordCategoryCommand extends Command
 
         try {
             $category = $this->categoryService->createCategory($name);
-            $io->success(sprintf('Category "%s" (ID: %d) created successfully', $category->getName(), $category->getId()));
+            $io->success(
+                sprintf('Category "%s" (ID: %d) created successfully', $category->getName(), $category->getId())
+            );
 
             return Command::SUCCESS;
         } catch (\Exception $e) {

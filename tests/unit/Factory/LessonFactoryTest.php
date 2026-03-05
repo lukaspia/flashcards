@@ -6,14 +6,17 @@ use App\DTO\AddLessonDTO;
 use App\DTO\UpdateLessonDTO;
 use App\Entity\Lesson;
 use App\Entity\Word;
-use App\Entity\User; // Importujemy konkretną klasę User
+use App\Entity\User;
+
+// Importujemy konkretną klasę User
 use App\Factory\LessonFactory;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\SerializerInterface;
 
-interface FullSerializerInterface extends SerializerInterface {
+interface FullSerializerInterface extends SerializerInterface
+{
     public function denormalize($data, string $type, string $format = null, array $context = []);
 }
 
@@ -32,7 +35,6 @@ class LessonFactoryTest extends TestCase
     {
         $dto = new AddLessonDTO('New Lesson');
 
-        // Zmieniamy Mocka z UserInterface na konkretną klasę User
         $user = $this->createMock(User::class);
 
         $this->serializer->expects($this->once())

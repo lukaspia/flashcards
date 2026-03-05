@@ -52,7 +52,10 @@ class DeleteWordCategoryCommandTest extends TestCase
         $result = $this->commandTester->execute([]);
 
         $this->assertEquals(Command::SUCCESS, $result);
-        $this->assertStringContainsString('Please enter the name of the category to delete', $this->commandTester->getDisplay());
+        $this->assertStringContainsString(
+            'Please enter the name of the category to delete',
+            $this->commandTester->getDisplay()
+        );
     }
 
     public function testExecuteFailsWhenCategoryNameEmpty(): void

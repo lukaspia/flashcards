@@ -34,8 +34,14 @@ class GeminiServiceTest extends TestCase
         $expectedText = 'Witaj Nieznajomy!';
 
         $response = new class($expectedText) {
-            public function __construct(private string $t) {}
-            public function text(): string { return $this->t; }
+            public function __construct(private string $t)
+            {
+            }
+
+            public function text(): string
+            {
+                return $this->t;
+            }
         };
 
         $this->model->expects($this->once())
@@ -59,8 +65,14 @@ class GeminiServiceTest extends TestCase
         $this->model->method('withGenerationConfig')->willReturn($structuredModel);
 
         $response = new class($expectedData) {
-            public function __construct(private array $j) {}
-            public function json(): array { return $this->j; }
+            public function __construct(private array $j)
+            {
+            }
+
+            public function json(): array
+            {
+                return $this->j;
+            }
         };
 
         $structuredModel->expects($this->once())
